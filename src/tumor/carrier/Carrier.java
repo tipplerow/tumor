@@ -49,6 +49,22 @@ public abstract class Carrier extends Propagator {
     }
 
     /**
+     * Counts the total number of cells in a collection of carriers.
+     *
+     * @param carriers the carriers to aggregate.
+     *
+     * @return the total number of cells in a collection of carriers.
+     */
+    public static int countCells(Collection<? extends Carrier> carriers) {
+        int total = 0;
+
+        for (Carrier carrier : carriers)
+            total += carrier.countCells();
+
+        return total;
+    }
+
+    /**
      * Assembles all mutations that have accumulated in this carrier
      * (traced by to the original founding carrier).
      *

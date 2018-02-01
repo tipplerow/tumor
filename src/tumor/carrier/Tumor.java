@@ -1,6 +1,8 @@
 
 package tumor.carrier;
 
+import java.util.Collection;
+
 import jam.lang.OrdinalIndex;
 
 import tumor.growth.GrowthRate;
@@ -47,4 +49,21 @@ public abstract class Tumor<T extends TumorComponent> extends Carrier {
      * component.
      */
     public abstract MutationList generateMutations(UniformComponent component);
+
+    /**
+     * Returns a read-only view of the active (living) components in
+     * this tumor.
+     *
+     * @return a read-only view of the active (living) components in
+     * this tumor.
+     */
+    public abstract Collection<T> viewComponents();
+
+    @Override public int countCells() {
+        return countCells(viewComponents());
+    }
+
+    @Override public MutationList getOriginalMutations() {
+        return accumulateMutations(viewComponents());
+    }
 }
