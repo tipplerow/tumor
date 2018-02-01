@@ -190,7 +190,7 @@ public final class Lineage extends UniformComponent {
         return isEmpty() ? State.DEAD : State.ALIVE;
     }
 
-    @Override public int countCells() {
+    @Override public long countCells() {
         return cellCount;
     }
 

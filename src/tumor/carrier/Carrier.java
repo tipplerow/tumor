@@ -55,8 +55,8 @@ public abstract class Carrier extends Propagator {
      *
      * @return the total number of cells in a collection of carriers.
      */
-    public static int countCells(Collection<? extends Carrier> carriers) {
-        int total = 0;
+    public static long countCells(Collection<? extends Carrier> carriers) {
+        long total = 0;
 
         for (Carrier carrier : carriers)
             total += carrier.countCells();
@@ -81,7 +81,7 @@ public abstract class Carrier extends Propagator {
      * @return the number of individual (living) cells contained in
      * this carrier.
      */
-    public abstract int countCells();
+    public abstract long countCells();
 
     /**
      * Returns the mutations that originated in this carrier.

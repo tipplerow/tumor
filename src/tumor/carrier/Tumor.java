@@ -59,7 +59,7 @@ public abstract class Tumor<T extends TumorComponent> extends Carrier {
      */
     public abstract Collection<T> viewComponents();
 
-    @Override public int countCells() {
+    @Override public long countCells() {
         return countCells(viewComponents());
     }
 

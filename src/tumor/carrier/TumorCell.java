@@ -94,8 +94,8 @@ public final class TumorCell extends UniformComponent {
         return Collections.emptyList();
     }
     
-    @Override public int countCells() {
-        return 1;
+    @Override public long countCells() {
+        return 1L;
     }
 
     @Override public State getState() {
