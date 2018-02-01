@@ -13,29 +13,19 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 public class MutationTest extends NumericTestBase {
-    private static final NeutralMutation neutral1 = Mutation.neutral(10);
-    private static final NeutralMutation neutral2 = Mutation.neutral(11);
-    private static final NeutralMutation neutral3 = Mutation.neutral(12);
+    private static final NeutralMutation neutral1 = Mutation.neutral();
+    private static final NeutralMutation neutral2 = Mutation.neutral();
+    private static final NeutralMutation neutral3 = Mutation.neutral();
 
     private static final MutationList neutralList =
         MutationList.create(neutral1, neutral2, neutral3);
 
-    private static final ScalarMutation scalar1 = Mutation.scalar(100, -0.1);
-    private static final ScalarMutation scalar2 = Mutation.scalar(200,  0.2);
-    private static final ScalarMutation scalar3 = Mutation.scalar(300,  0.3);
+    private static final ScalarMutation scalar1 = Mutation.scalar(-0.1);
+    private static final ScalarMutation scalar2 = Mutation.scalar( 0.2);
+    private static final ScalarMutation scalar3 = Mutation.scalar( 0.3);
 
     private static final MutationList scalarList =
         MutationList.create(scalar1, scalar2, scalar3);
-
-    @Test public void testCreationTime() {
-        assertEquals(10, neutral1.getCreationTime());
-        assertEquals(11, neutral2.getCreationTime());
-        assertEquals(12, neutral3.getCreationTime());
-
-        assertEquals(100, scalar1.getCreationTime());
-        assertEquals(200, scalar2.getCreationTime());
-        assertEquals(300, scalar3.getCreationTime());
-    }
 
     @Test public void testInstanceCount() {
         assertEquals(0, Mutation.TRANSFORMER.getIndex());

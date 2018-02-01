@@ -10,12 +10,9 @@ import tumor.growth.GrowthRate;
 public final class NeutralMutation extends Mutation {
     /**
      * Creates a new neutral mutation.
-     *
-     * @param creationTime the index of the current time step (when 
-     * the mutation is created).
      */
-    public NeutralMutation(int creationTime) {
-        super(creationTime);
+    public NeutralMutation() {
+        super();
     }
 
     @Override public GrowthRate apply(GrowthRate rate) {

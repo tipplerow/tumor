@@ -22,14 +22,9 @@ public final class ScalarMutation extends Mutation {
     /**
      * Creates a scalar mutation with a fixed selection coefficient.
      *
-     * @param creationTime the index of the current time step (when 
-     * the mutation is created).
-     *
      * @param selectionCoeff the scalar selection coefficient.
      */
-    public ScalarMutation(int creationTime, double selectionCoeff) {
-        super(creationTime);
-
+    public ScalarMutation(double selectionCoeff) {
         validateSelectionCoeff(selectionCoeff);
         this.selectionCoeff = selectionCoeff;
     }

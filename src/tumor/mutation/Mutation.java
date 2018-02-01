@@ -20,36 +20,27 @@ import tumor.growth.GrowthRate;
  * only independent mutations.
  */
 public abstract class Mutation extends Ordinal {
-    private final int creationTime;
-
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
     /**
      * The single mutation responsible for transformation to malignancy.
      */
-    public static final Mutation TRANSFORMER = neutral(0);
+    public static final Mutation TRANSFORMER = neutral();
 
     /**
      * Creates a new mutation with an automatically generated index.
-     *
-     * @param creationTime the index of the current time step (when 
-     * the mutation is created).
      */
-    protected Mutation(int creationTime) {
+    protected Mutation() {
         super(ordinalIndex.next());
-        this.creationTime = creationTime;
     }
 
     /**
      * Creates a new neutral (passenger) mutation.
      *
-     * @param creationTime the index of the current time step (when
-     * the mutation is created).
-     *
      * @return the new neutral mutation.
      */
-    public static NeutralMutation neutral(int creationTime) {
-        return new NeutralMutation(creationTime);
+    public static NeutralMutation neutral() {
+        return new NeutralMutation();
     }
 
     /**
@@ -60,15 +51,12 @@ public abstract class Mutation extends Ordinal {
      * factor {@code (1 + s)}, where {@code s} is the selection
      * coefficient.
      *
-     * @param creationTime the index of the current time step (when
-     * the mutation is created).
-     *
      * @param selectionCoeff the scalar selection coefficient.
      *
      * @return the new selective mutation.
      */
-    public static ScalarMutation scalar(int creationTime, double selectionCoeff) {
-        return new ScalarMutation(creationTime, selectionCoeff);
+    public static ScalarMutation scalar(double selectionCoeff) {
+        return new ScalarMutation(selectionCoeff);
     }
 
     /**
@@ -107,18 +95,7 @@ public abstract class Mutation extends Ordinal {
         return !isNeutral();
     }
 
-    /**
-     * Returns the index of the time step when the mutation was
-     * created.
-     *
-     * @return the index of the time step when the mutation was
-     * created.
-     */
-    public final int getCreationTime() {
-        return creationTime;
-    }
-
     @Override public String toString() {
-        return String.format("%s(%d; %d)", getClass().getSimpleName(), getIndex(), getCreationTime());
+        return String.format("%s(%d)", getClass().getSimpleName(), getIndex());
     }
 }

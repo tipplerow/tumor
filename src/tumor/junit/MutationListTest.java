@@ -11,11 +11,11 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 public class MutationListTest {
-    private static final Mutation neutral1 = Mutation.neutral(0);
-    private static final Mutation neutral2 = Mutation.neutral(0);
-    private static final Mutation neutral3 = Mutation.neutral(0);
-    private static final Mutation neutral4 = Mutation.neutral(0);
-    private static final Mutation neutral5 = Mutation.neutral(0);
+    private static final Mutation neutral1 = Mutation.neutral();
+    private static final Mutation neutral2 = Mutation.neutral();
+    private static final Mutation neutral3 = Mutation.neutral();
+    private static final Mutation neutral4 = Mutation.neutral();
+    private static final Mutation neutral5 = Mutation.neutral();
 
     private static final MutationList founderList = 
         MutationList.create(neutral1, neutral2, neutral3);
@@ -117,7 +117,7 @@ public class MutationListTest {
 
     @Test(expected = UnsupportedOperationException.class) 
     public void testSetViewAdd() {
-        founderList.setView().add(Mutation.neutral(0));
+        founderList.setView().add(Mutation.neutral());
     }
 
     @Test(expected = UnsupportedOperationException.class) 
