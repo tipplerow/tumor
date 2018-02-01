@@ -1,0 +1,9 @@
+<project>
+  <path id="classpath.build.tumor">
+    <path refid="classpath.build.jam"/>
+    <pathelement path="${jam.home}/lib/jam.jar"/>
+    <fileset dir="${dir.jlib}">
+      <!-- Just a placeholder for now... -->
+    </fileset>
+  </path>
+</project>

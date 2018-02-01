@@ -1,0 +1,11 @@
+<project name="tumor" basedir="." default="compile">
+  <!-- Environment variable XYZ may be dereferenced by ${env.XYZ} -->
+  <property environment="env"/>
+  
+  <property name="jam.home" value="${env.JAM_HOME}"/>
+
+  <import file="${jam.home}/conf/build_common.xml"/>
+  <import file="${jam.home}/conf/classpath_build.xml"/>
+
+  <import file="conf/classpath_build.xml"/>
+</project>
