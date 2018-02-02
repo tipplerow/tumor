@@ -163,13 +163,13 @@ public final class GrowthRate {
      *
      * @return the expected number of cell divisions and deaths.
      */
-    public GrowthCount compute(int population) {
+    public GrowthCount compute(long population) {
         double eventRate = birthRate.doubleValue() + deathRate.doubleValue();
         double birthFrac = birthRate.doubleValue() / eventRate;
 
-        int eventCount = JamRandom.global().discretize(population * eventRate);
-        int birthCount = JamRandom.global().discretize(eventCount * birthFrac);
-        int deathCount = eventCount - birthCount;
+        long eventCount = JamRandom.global().discretize(population * eventRate);
+        long birthCount = JamRandom.global().discretize(eventCount * birthFrac);
+        long deathCount = eventCount - birthCount;
 
         return new GrowthCount(birthCount, deathCount);
     }
@@ -186,12 +186,12 @@ public final class GrowthRate {
      *
      * @return the realized number of cell divisions.
      */
-    public GrowthCount sample(int population) {
-        int birthCount = 0;
-        int deathCount = 0;
+    public GrowthCount sample(long population) {
+        long birthCount = 0;
+        long deathCount = 0;
 
-        for (int trial = 0; trial < population; ++trial) {
-            int eventIndex = JamRandom.global().selectCDF(eventCDF);
+        for (long trial = 0; trial < population; ++trial) {
+            long eventIndex = JamRandom.global().selectCDF(eventCDF);
 
             if (eventIndex == BIRTH_EVENT)
                 ++birthCount;

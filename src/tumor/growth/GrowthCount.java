@@ -3,15 +3,13 @@ package tumor.growth;
 
 import java.util.Collection;
 
-import jam.math.IntRange;
-
 /**
  * Encapsulates the number of birth (division) and death events that
  * occur in a population of cells (or other biological entities).
  */
 public final class GrowthCount {
-    private final int birthCount;
-    private final int deathCount;
+    private final long birthCount;
+    private final long deathCount;
 
     /**
      * Creates a new growth count with fixed birth and death counts.
@@ -22,7 +20,7 @@ public final class GrowthCount {
      *
      * @throws IllegalArgumentException if either count is negative.
      */
-    public GrowthCount(int birthCount, int deathCount) {
+    public GrowthCount(long birthCount, long deathCount) {
         validate(birthCount, deathCount);
 
         this.birthCount = birthCount;
@@ -38,9 +36,12 @@ public final class GrowthCount {
      *
      * @throws IllegalArgumentException if either count is negative.
      */
-    public static void validate(int birthCount, int deathCount) {
-        IntRange.NON_NEGATIVE.validate(birthCount);
-        IntRange.NON_NEGATIVE.validate(deathCount);
+    public static void validate(long birthCount, long deathCount) {
+        if (birthCount < 0L)
+            throw new IllegalArgumentException("Birth count must be non-negative.");
+        
+        if (deathCount < 0L)
+            throw new IllegalArgumentException("Death count must be non-negative.");
     }
 
     /**
@@ -52,8 +53,8 @@ public final class GrowthCount {
      * deaths in the input collection.
      */
     public static GrowthCount sum(Collection<GrowthCount> counts) {
-        int birthTotal = 0;
-        int deathTotal = 0;
+        long birthTotal = 0L;
+        long deathTotal = 0L;
 
         for (GrowthCount count : counts) {
             birthTotal += count.getBirthCount();
@@ -68,7 +69,7 @@ public final class GrowthCount {
      *
      * @return the number of cell divisions that occurred.
      */
-    public int getBirthCount() {
+    public long getBirthCount() {
         return birthCount;
     }
 
@@ -77,7 +78,7 @@ public final class GrowthCount {
      *
      * @return the number of cell deaths that occurred.
      */
-    public int getDeathCount() {
+    public long getDeathCount() {
         return deathCount;
     }
 
@@ -86,7 +87,7 @@ public final class GrowthCount {
      *
      * @return the total number of cell divisions and deaths.
      */
-    public int getEventCount() {
+    public long getEventCount() {
         return birthCount + deathCount;
     }
 
@@ -96,7 +97,7 @@ public final class GrowthCount {
      *
      * @return the net change in cell population.
      */
-    public int getNetChange() {
+    public long getNetChange() {
         return birthCount - deathCount;
     }
 
