@@ -66,4 +66,8 @@ public abstract class Tumor<T extends TumorComponent> extends Carrier {
     @Override public MutationList getOriginalMutations() {
         return accumulateMutations(viewComponents());
     }
+
+    @Override public State getState() {
+        return countCells() == 0 ? State.DEAD : State.ALIVE;
+    }
 }
