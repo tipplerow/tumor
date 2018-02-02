@@ -19,18 +19,18 @@ import tumor.mutation.MutationList;
  */
 public final class Lineage extends UniformComponent {
     // The number of cells in this lineage...
-    private int cellCount; 
+    private long cellCount;
 
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
-    private Lineage(Lineage parent, GrowthRate growthRate, MutationList originalMut, int cellCount) {
+    private Lineage(Lineage parent, GrowthRate growthRate, MutationList originalMut, long cellCount) {
         super(ordinalIndex.next(), parent, growthRate, originalMut);
 
         validateInitialCellCount(cellCount);
         this.cellCount = cellCount;
     }
 
-    private static void validateInitialCellCount(int cellCount) {
+    private static void validateInitialCellCount(long cellCount) {
         if (cellCount <= 0)
             throw new IllegalArgumentException("Initial cell count must be positive.");
     }
@@ -51,7 +51,7 @@ public final class Lineage extends UniformComponent {
      *
      * @return the new founding lineage.
      */
-    public static Lineage founder(GrowthRate growthRate, int cellCount) {
+    public static Lineage founder(GrowthRate growthRate, long cellCount) {
         return new Lineage(null, growthRate, MutationList.EMPTY, cellCount);
     }
 
@@ -61,12 +61,12 @@ public final class Lineage extends UniformComponent {
      * with cell counts at or below this limit will be treated with
      * exact iteration over all member cells.
      */
-    public static final int EXACT_ENUMERATION_LIMIT = 10;
+    public static final long EXACT_ENUMERATION_LIMIT = 10L;
 
     /**
      * Number of cells in a newly mutated daughter lineage.
      */
-    public static final int DAUGHTER_CELL_COUNT = 1;
+    public static final long DAUGHTER_CELL_COUNT = 1L;
 
     /**
      * Stochastically partitions the cells in this lineage between
@@ -88,21 +88,38 @@ public final class Lineage extends UniformComponent {
      * retained all cells (not unlikely for a small lineage).
      */
     public Lineage divide(Probability retentionProb) {
-        Probability transferProb = retentionProb.not();
-        BinomialDistribution transferDist = BinomialDistribution.create(cellCount, transferProb);
+        long fissionCount =
+            computeFissionCount(retentionProb);
 
-        Lineage fissionObj   = null;
-        int     fissionCount = transferDist.sample();
+        cellCount -=
+            fissionCount;
 
-        if (fissionCount > 0) {
-            cellCount -= fissionCount;
-            fissionObj = fissionProduct(fissionCount);
-        }
-
-        return fissionObj;
+        return fissionProduct(fissionCount);
     }
 
-    private Lineage fissionProduct(int cellCount) {
+    private long computeFissionCount(Probability retentionProb) {
+        Probability transferProb = retentionProb.not();
+
+        if (cellCount < 10000) {
+            //
+            // Sample the number of cells transfered from the binomial
+            // distribution...
+            //
+            return BinomialDistribution.create((int) cellCount, transferProb).sample();
+        }
+        else {
+            //
+            // The number of cells is so large that the binomial
+            // distribution approaches a delta function...
+            //
+            return (long) (transferProb.doubleValue() * cellCount);
+        }
+    }
+
+    private Lineage fissionProduct(long cellCount) {
+        if (cellCount < 1L)
+            return null;
+
         Lineage      parent      = this;
         GrowthRate   growthRate  = this.getGrowthRate();
         MutationList originalMut = MutationList.EMPTY; // No new original mutations...
@@ -133,14 +150,14 @@ public final class Lineage extends UniformComponent {
         cellCount -= growthCount.getDeathCount();
 
         // Each birth event creates two daughter cells... 
-        int daughterCount = 2 * growthCount.getBirthCount();
+        long daughterCount = 2 * growthCount.getBirthCount();
         assert daughterCount <= cellCount;
 
         // Store each mutated daughter cell as a new single-cell
         // lineage...
         List<Lineage> daughters = new ArrayList<Lineage>();
 
-        for (int daughterIndex = 0; daughterIndex < daughterCount; ++daughterIndex) {
+        for (long daughterIndex = 0; daughterIndex < daughterCount; ++daughterIndex) {
             //
             // Stochastically generate the mutations originating in
             // this daughter cell...
