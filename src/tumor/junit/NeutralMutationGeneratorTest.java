@@ -10,21 +10,22 @@ import jam.util.MultisetUtil;
 
 import tumor.mutation.MutationList;
 import tumor.mutation.MutationRate;
-import tumor.mutation.NeutralGenerator;
+import tumor.mutation.NeutralMutationGenerator;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
-public class NeutralMutatorTest extends NumericTestBase {
+public class NeutralMutationGeneratorTest extends NumericTestBase {
 
     @Test public void testPoisson() {
         double mean = 0.2;
         MutationRate rate = MutationRate.poisson(mean);
         PoissonDistribution dist = PoissonDistribution.create(mean);
+        NeutralMutationGenerator generator = new NeutralMutationGenerator(rate);
         Multiset<Integer> counts = HashMultiset.create();
 
         for (int trial = 0; trial < 100000; ++trial) {
-            MutationList mutations = NeutralGenerator.INSTANCE.generate(rate);
+            MutationList mutations = generator.generate();
             counts.add(mutations.size());
         }
 
@@ -33,6 +34,6 @@ public class NeutralMutatorTest extends NumericTestBase {
     }
 
     public static void main(String[] args) {
-        org.junit.runner.JUnitCore.main("tumor.junit.NeutralMutatorTest");
+        org.junit.runner.JUnitCore.main("tumor.junit.NeutralMutationGeneratorTest");
     }
 }

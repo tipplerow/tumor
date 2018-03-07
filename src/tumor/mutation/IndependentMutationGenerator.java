@@ -5,21 +5,16 @@ package tumor.mutation;
  * Generates a series of mutations with each mutation arising
  * independently.
  */
-public abstract class IndependentGenerator {
+public abstract class IndependentMutationGenerator implements MutationGenerator {
     /**
-     * Stochastically generates the mutations that originate in a
-     * single daughter carrier produced during cell division.
+     * Generates a single mutation (independently of all others).
      *
-     * <p>Note that the list will frequently be empty because
-     * mutations are typically rare.
-     *
-     * @param mutationRate the rate at which mutations are generated.
-     *
-     * @return the stochastically generated mutations (or an empty
-     * list if no mutations occurred).
+     * @return the new mutation.
      */
-    public MutationList generate(MutationRate mutationRate) {
-        int mutationCount = mutationRate.sample();
+    public abstract Mutation generateOne();
+
+    @Override public MutationList generate() {
+        int mutationCount = getMutationRate().sample();
 
         switch (mutationCount) {
             //
@@ -48,11 +43,4 @@ public abstract class IndependentGenerator {
 
         return MutationList.create(mutations);
     }
-    
-    /**
-     * Generates a single mutation (independently of all others).
-     *
-     * @return the new mutation.
-     */
-    public abstract Mutation generateOne();
 }

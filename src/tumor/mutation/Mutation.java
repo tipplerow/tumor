@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import jam.lang.Ordinal;
 import jam.lang.OrdinalIndex;
+import jam.sim.DiscreteTimeSimulation;
 
 import tumor.growth.GrowthRate;
 
@@ -20,6 +21,8 @@ import tumor.growth.GrowthRate;
  * only independent mutations.
  */
 public abstract class Mutation extends Ordinal {
+    private final int timeStep = DiscreteTimeSimulation.getTimeStep();
+    
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
     /**
@@ -95,7 +98,16 @@ public abstract class Mutation extends Ordinal {
         return !isNeutral();
     }
 
+    /**
+     * Returns the discrete time step when this mutation originated.
+     *
+     * @return the discrete time step when this mutation originated.
+     */
+    public final int getTimeStep() {
+        return timeStep;
+    }
+
     @Override public String toString() {
-        return String.format("%s(%d)", getClass().getSimpleName(), getIndex());
+        return String.format("%s(%d; %d)", getClass().getSimpleName(), getIndex(), getTimeStep());
     }
 }

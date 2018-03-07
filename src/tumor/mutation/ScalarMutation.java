@@ -25,8 +25,9 @@ public final class ScalarMutation extends Mutation {
      * @param selectionCoeff the scalar selection coefficient.
      */
     public ScalarMutation(double selectionCoeff) {
-        validateSelectionCoeff(selectionCoeff);
+        super();
         this.selectionCoeff = selectionCoeff;
+        validateSelectionCoeff(selectionCoeff);
     }
 
     private static void validateSelectionCoeff(double selectionCoeff) {
