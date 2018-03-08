@@ -5,7 +5,7 @@ package tumor.mutation;
  * Generates a series of mutations with each mutation arising
  * independently.
  */
-public abstract class IndependentMutationGenerator implements MutationGenerator {
+public abstract class IndependentMutationGenerator extends MutationGenerator {
     /**
      * Generates a single mutation (independently of all others).
      *
