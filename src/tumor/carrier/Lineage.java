@@ -17,7 +17,7 @@ import tumor.mutation.MutationList;
  * Represents a multi-cell lineage in which each cell is identical
  * (has accumulated the same mutations).
  */
-public final class Lineage extends UniformComponent {
+public abstract class Lineage extends TumorKernel {
     // The number of cells in this lineage...
     private long cellCount;
 
@@ -36,26 +36,6 @@ public final class Lineage extends UniformComponent {
     }
 
     /**
-     * Creates a founding lineage.
-     *
-     * <p>Note that any mutations that triggered the transformation to
-     * malignancy will be carried by all daughter cells (and therefore
-     * may be tracked in the tumor itself), so they do not need to be
-     * explicitly specified in the founding lineage.
-     *
-     * @param growthRate the intrinsic growth rate of the (identical)
-     * cells in the founding lineage.
-     *
-     * @param cellCount the number of (identical) cells in the
-     * founding lineage.
-     *
-     * @return the new founding lineage.
-     */
-    public static Lineage founder(GrowthRate growthRate, long cellCount) {
-        return new Lineage(null, growthRate, MutationList.EMPTY, cellCount);
-    }
-
-    /**
      * Lineages with cell counts above this limit will be treated in a
      * <em>semi-stochastic</em> manner for improved efficiency; those
      * with cell counts at or below this limit will be treated with
@@ -67,6 +47,67 @@ public final class Lineage extends UniformComponent {
      * Number of cells in a newly mutated daughter lineage.
      */
     public static final long DAUGHTER_CELL_COUNT = 1L;
+
+    /**
+     * Creates a founding lineage.
+     *
+     * <p>Note that any mutations that triggered the transformation to
+     * malignancy will be carried by all daughter cells (and therefore
+     * may be tracked in the tumor itself), so they do not need to be
+     * explicitly specified in the founding lineage.
+     *
+     * @param growthRate the intrinsic growth rate of the (identical)
+     * cells in the founding lineage.
+     *
+     * @param cellCount the number of (identical) cells in the founding 
+     * lineage.
+     */
+    protected Lineage(GrowthRate growthRate, long cellCount) {
+        this(null, growthRate, MutationList.EMPTY, cellCount);
+    }
+
+    /**
+     * Creates a cloned lineage (fission product) with no original
+     * mutations.
+     *
+     * @param parent the parent lineage.
+     *
+     * @param cellCount the number of (identical) cells in the cloned
+     * lineage.
+     */
+    protected Lineage(Lineage parent, long cellCount) {
+        this(parent, parent.getGrowthRate(), MutationList.EMPTY, cellCount);
+    }
+
+    /**
+     * Creates a daughter lineage.
+     *
+     * @param parent the parent lineage.
+     *
+     * @param daughterMut the mutations originating in the daughter.
+     */
+    protected Lineage(Lineage parent, MutationList daughterMut) {
+        this(parent, parent.computeDaughterGrowthRate(daughterMut), daughterMut, DAUGHTER_CELL_COUNT);
+    }
+
+    /**
+     * Creates a (multi-celled) clone lineage with no new mutations.
+     *
+     * @param cellCount the number of cells in the cloned lineage.
+     *
+     * @return the cloned lineage.
+     */
+    public abstract Lineage newClone(long cellCount);
+
+    /**
+     * Creates a (single-celled) daughter lineage with new original
+     * mutations.
+     *
+     * @param daughterMut the mutations originating in the daughter.
+     *
+     * @return the daughter lineage.
+     */
+    public abstract Lineage newDaughter(MutationList daughterMut);
 
     /**
      * Stochastically partitions the cells in this lineage between
@@ -91,10 +132,13 @@ public final class Lineage extends UniformComponent {
         long fissionCount =
             computeFissionCount(retentionProb);
 
+        if (fissionCount < 1L)
+            return null;
+
         cellCount -=
             fissionCount;
 
-        return fissionProduct(fissionCount);
+        return newClone(fissionCount);
     }
 
     private long computeFissionCount(Probability retentionProb) {
@@ -116,26 +160,16 @@ public final class Lineage extends UniformComponent {
         }
     }
 
-    private Lineage fissionProduct(long cellCount) {
-        if (cellCount < 1L)
-            return null;
-
-        Lineage      parent      = this;
-        GrowthRate   growthRate  = this.getGrowthRate();
-        MutationList originalMut = MutationList.EMPTY; // No new original mutations...
-
-        return new Lineage(parent, growthRate, originalMut, cellCount);
-    }
-
     /**
      * Advances this lineage through one discrete time step.
      *
-     * @param tumor the tumor that contains this lineage.
+     * @param tumorEnv the local tumor environment where this lineage
+     * resides.
      *
      * @return a list containing any new lineages created by mutation;
      * the list will be empty if no mutations originate in the cycle.
      */
-    @Override public List<Lineage> advance(Tumor tumor) {
+    @Override public List<Lineage> advance(TumorEnv tumorEnv) {
         //
         // Dead lineages do not advance further...
         //
@@ -144,7 +178,7 @@ public final class Lineage extends UniformComponent {
 
         // Update the cell count for the number of birth and death
         // events...
-        GrowthCount growthCount = resolveGrowthCount(tumor);
+        GrowthCount growthCount = resolveGrowthCount(tumorEnv);
 
         cellCount += growthCount.getBirthCount();
         cellCount -= growthCount.getDeathCount();
@@ -162,14 +196,14 @@ public final class Lineage extends UniformComponent {
             // Stochastically generate the mutations originating in
             // this daughter cell...
             //
-            MutationList daughterMut = tumor.generateMutations(this);
+            MutationList daughterMut = tumorEnv.getLocalMutationGenerator(this).generate();
 
             if (!daughterMut.isEmpty()) {
                 //
                 // Spawn a new lineage for this mutated daughter
                 // cell...
                 //
-                Lineage daughter = daughterLineage(daughterMut);
+                Lineage daughter = newDaughter(daughterMut);
                 
                 daughters.add(daughter);
                 cellCount -= daughter.countCells();
@@ -180,17 +214,13 @@ public final class Lineage extends UniformComponent {
         return daughters;
     }
 
-    private GrowthCount resolveGrowthCount(Tumor tumor) {
-        GrowthRate growthRate = tumor.adjustGrowthRate(this);
+    private GrowthCount resolveGrowthCount(TumorEnv tumorEnv) {
+        GrowthRate growthRate = tumorEnv.getLocalGrowthRate(this);
 
         if (cellCount <= EXACT_ENUMERATION_LIMIT)
             return growthRate.sample(cellCount);
         else
             return growthRate.compute(cellCount);
-    }
-
-    private Lineage daughterLineage(MutationList daughterMut) {
-        return new Lineage(this, computeDaughterGrowthRate(daughterMut), daughterMut, DAUGHTER_CELL_COUNT);
     }
 
     /**

@@ -9,12 +9,13 @@ import jam.lang.OrdinalIndex;
 
 import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
+import tumor.mutation.MutationGenerator;
 import tumor.mutation.MutationList;
 
 /**
  * Represents a single tumor cell.
  */
-public final class TumorCell extends UniformComponent {
+public abstract class TumorCell extends TumorKernel {
     //
     // Tumor cells are alive when created; the state becomes DEAD
     // during the time-step advancement if a death event occurs.
@@ -36,57 +37,78 @@ public final class TumorCell extends UniformComponent {
      * explicitly specified in the founder cell.
      *
      * @param growthRate the intrinsic growth rate of the founder.
-     *
-     * @return the new founding tumor cell.
      */
-    public static TumorCell founder(GrowthRate growthRate) {
-        return new TumorCell(null, growthRate, MutationList.EMPTY);
+    protected TumorCell(GrowthRate growthRate) {
+        this(null, growthRate, MutationList.EMPTY);
     }
+
+    /**
+     * Creates a daughter cell.
+     *
+     * @param parent the parent cell.
+     *
+     * @param daughterMut the mutations originating in the daughter.
+     */
+    protected TumorCell(TumorCell parent, MutationList daughterMut) {
+        this(parent, parent.computeDaughterGrowthRate(daughterMut), daughterMut);
+    }
+
+    /**
+     * Creates a daughter cell with new original mutations.
+     *
+     * @param daughterMut the mutations originating in the daughter.
+     *
+     * @return the daughter cell.
+     */
+    public abstract TumorCell newDaughter(MutationList daughterMut);
 
     /**
      * Advances this tumor cell through one discrete time step.
      *
-     * @param tumor the tumor that contains this cell.
+     * @param tumorEnv the local tumor environment where this cell
+     * resides.
      *
      * @return a list containing any new tumor cells created by cell
      * division; the list will be empty if this parent cell does not
      * divide in the time step.
      */
-    @Override public List<TumorCell> advance(Tumor tumor) {
+    @Override public List<TumorCell> advance(TumorEnv tumorEnv) {
         // Dead cells do not divide...
         if (isDead())
             return Collections.emptyList();
 
         // Stochastically sample the event to occur on this step...
-        GrowthRate  growthRate  = tumor.adjustGrowthRate(this);
+        GrowthRate  growthRate  = tumorEnv.getLocalGrowthRate(this);
         GrowthCount growthCount = growthRate.sample(1);
 
         assert growthCount.getEventCount() <= 1;
 
         if (growthCount.getBirthCount() == 1)
-            return advanceBirth(tumor);
-        else if (growthCount.getDeathCount() == 1)
-            return advanceDeath();
-        else
-            return Collections.emptyList(); // Nothing happened...
+            return birthEvent(tumorEnv);
+        
+        if (growthCount.getDeathCount() == 1)
+            return deathEvent();
+
+        // Nothing happenend...
+        return Collections.emptyList();
     }
 
-    private List<TumorCell> advanceBirth(Tumor tumor) {
+    private List<TumorCell> birthEvent(TumorEnv tumorEnv) {
         //
         // This cell dies and is replaced by two daughters...
         //
         state = State.DEAD;
-        return Arrays.asList(daughter(tumor), daughter(tumor));
+        return Arrays.asList(newDaughter(tumorEnv), newDaughter(tumorEnv));
     }
 
-    private TumorCell daughter(Tumor tumor) {
-        MutationList daughterMut  = tumor.generateMutations(this);
-        GrowthRate   daughterRate = computeDaughterGrowthRate(daughterMut);
+    private TumorCell newDaughter(TumorEnv tumorEnv) {
+        MutationGenerator mutGenerator = tumorEnv.getLocalMutationGenerator(this);
+        MutationList      daughterMut  = mutGenerator.generate();
         
-        return new TumorCell(this, daughterRate, daughterMut);
+        return newDaughter(daughterMut);
     }
 
-    private List<TumorCell> advanceDeath() {
+    private List<TumorCell> deathEvent() {
         //
         // This cell dies without reproducing...
         //

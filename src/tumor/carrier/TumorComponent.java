@@ -24,14 +24,16 @@ public abstract class TumorComponent extends Carrier {
      * Advances this tumor component through one discrete time step.
      *
      * <p>After calling this method, the replication state (identified
-     * by the {@code getState()} method) may be changed: cells may die.
+     * by the {@code getState()} method) may be changed: components
+     * may die.
      *
      * <p>Subclasses are encouraged to change the return type to the
      * most concrete type possible.
      *
-     * @param tumor the tumor that contains this component.
+     * @param tumorEnv the local tumor environment where this tumor
+     * component resides.
      *
      * @return any new components created during the time step.
      */
-    public abstract Collection<? extends TumorComponent> advance(Tumor tumor);
+    public abstract Collection<? extends TumorComponent> advance(TumorEnv tumorEnv);
 }
