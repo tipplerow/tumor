@@ -56,7 +56,7 @@ public abstract class TumorEnv {
             return kernelObj.getMutationGenerator();
         }
 
-        @Override public int getLocalMaximumDemeSize(Deme deme) {
+        @Override public long getLocalMaximumDemeSize(Deme deme) {
             return deme.getMaximumSize();
         }
     }
@@ -123,7 +123,7 @@ public abstract class TumorEnv {
      * @return the maximum number of tumor cells that can be contained
      * in the specified deme.
      */
-    public abstract int getLocalMaximumDemeSize(Deme deme);
+    public abstract long getLocalMaximumDemeSize(Deme deme);
 
     private static abstract class OverrideEnv extends TumorEnv {
         //
@@ -150,7 +150,7 @@ public abstract class TumorEnv {
             return getParent().getLocalMutationGenerator(kernelObj);
         }
 
-        @Override public int getLocalMaximumDemeSize(Deme deme) {
+        @Override public long getLocalMaximumDemeSize(Deme deme) {
             return getParent().getLocalMaximumDemeSize(deme);
         }
     }

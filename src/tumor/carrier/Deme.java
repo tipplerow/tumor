@@ -82,7 +82,7 @@ public abstract class Deme extends TumorComponent {
      * @return the maximum number of tumor cells that can be contained
      * in this deme.
      */
-    public abstract int getMaximumSize();
+    public abstract long getMaximumSize();
 
     /**
      * Creates a cloned deme with lineages that have divided in the
