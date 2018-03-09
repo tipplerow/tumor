@@ -87,6 +87,12 @@ public class GrowthRateTest extends NumericTestBase {
     @Test public void testGrowthFactor() {
         assertDouble(0.95, rate2025.getGrowthFactor());
         assertDouble(1.10, rate5545.getGrowthFactor());
+
+        assertDouble(1.0,    rate5545.getGrowthFactor(0));
+        assertDouble(1.10,   rate5545.getGrowthFactor(1));
+        assertDouble(1.21,   rate5545.getGrowthFactor(2));
+        assertDouble(1.331,  rate5545.getGrowthFactor(3));
+        assertDouble(1.4641, rate5545.getGrowthFactor(4));
     }
 
     @Test public void testNet() {

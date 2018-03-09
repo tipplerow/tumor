@@ -236,7 +236,8 @@ public final class GrowthRate {
     }
 
     /**
-     * Returns the (non-negative) population growth factor.
+     * Returns the (non-negative) population growth factor: the factor
+     * by which the population increases during one time step.
      *
      * <p>Let {@code N(t)} be the population at time {@code t} and
      * let {@code g} be the population growth factor; the expected
@@ -252,6 +253,28 @@ public final class GrowthRate {
      */
     public double getGrowthFactor() {
         return 1.0 + getNetRate();
+    }
+
+    /**
+     * Computes the cumulative growth factor after a fixed number of
+     * time steps.
+     *
+     * <p>Let {@code N(t)} be the population at time {@code t} and
+     * let {@code g} be the population growth factor; the expected
+     * population at time {@code t + k} is {@code N(t) * pow(g, k)}.
+     *
+     * @param timeSteps the number of time steps.
+     *
+     * @return the cumulative growth factor.
+     *
+     * @throws IllegalArgumentException if the number of time steps is
+     * negative.
+     */
+    public double getGrowthFactor(int timeSteps) {
+        if (timeSteps < 0)
+            throw new IllegalArgumentException("Number of time steps must be positive.");
+        
+        return Math.pow(getGrowthFactor(), timeSteps);
     }
 
     /**
