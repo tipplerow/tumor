@@ -7,6 +7,7 @@ import jam.junit.NumericTestBase;
 import jam.math.DoubleUtil;
 
 import tumor.carrier.Lineage;
+import tumor.carrier.PerfectLineage;
 import tumor.carrier.SystemLineage;
 import tumor.carrier.TumorEnv;
 import tumor.growth.GrowthRate;
@@ -39,6 +40,26 @@ public class LineageTest extends NumericTestBase {
         double expectedMean = MutationGenerator.global().getMutationRate().getMean();
             
         assertEquals(expectedMean, actualMean, 0.01);
+    }
+
+    @Test public void testPerfect() {
+        int        stepCount  = 100;
+        long       initCount  = 1000L;
+        GrowthRate growthRate = GrowthRate.net(0.1);
+        Lineage    lineage    = PerfectLineage.founder(growthRate, initCount);
+
+        for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {
+            //
+            // A perfect lineage never mutates and therefore should
+            // never create daughter lineages...
+            //
+            assertTrue(lineage.advance(TumorEnv.UNRESTRICTED).isEmpty());
+
+            double actualFactor   = DoubleUtil.ratio(lineage.countCells(), initCount);
+            double expectedFactor = growthRate.getGrowthFactor(stepIndex);
+
+            assertEquals(1.0, actualFactor / expectedFactor, 0.001);
+        }
     }
 
     public static void main(String[] args) {
