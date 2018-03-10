@@ -193,8 +193,8 @@ public abstract class Deme extends TumorComponent {
                 deadParents.add(parent);
         }
 
-        updateLinages(deadParents);
-        updateLinages(liveDaughters);
+        updateLineages(deadParents);
+        updateLineages(liveDaughters);
 
         if (mustDivide(tumorEnv))
             return fissionList(lineageEnv);
@@ -254,7 +254,7 @@ public abstract class Deme extends TumorComponent {
                 fissionList.add(fission);
         }
 
-        updateLinages(deadParents);
+        updateLineages(deadParents);
 
         if (fissionList.isEmpty())
             return null;
