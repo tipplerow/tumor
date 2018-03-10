@@ -65,6 +65,10 @@ public class GrowthRateTest extends NumericTestBase {
         assertEquals(POP_5545 * TRIAL_COUNT, sum5545.getEventCount());
     }
 
+    @Test public void testDoublingTime() {
+        assertEquals(7.272541, rate5545.getDoublingTime(), 1.0E-06);
+    }
+
     @Test public void testEquals() {
         GrowthRate r1 = new GrowthRate(0.1, 0.2);
         GrowthRate r2 = new GrowthRate(0.1, 0.2);

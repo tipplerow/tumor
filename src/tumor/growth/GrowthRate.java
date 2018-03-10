@@ -2,6 +2,7 @@
 package tumor.growth;
 
 import jam.math.DoubleComparator;
+import jam.math.DoubleUtil;
 import jam.math.JamRandom;
 import jam.math.Probability;
 
@@ -222,6 +223,19 @@ public final class GrowthRate {
      */
     public Probability getDeathRate() {
         return deathRate;
+    }
+
+    /**
+     * Returns the average time required for a population with this
+     * growth rate to double in size.
+     *
+     * @return the doubling time for this growth rate.
+     */
+    public double getDoublingTime() {
+        //
+        // 2.0 = pow(getGrowthFactor(), doublingTime)
+        //
+        return DoubleUtil.LOG2 / Math.log(getGrowthFactor());
     }
 
     /**
