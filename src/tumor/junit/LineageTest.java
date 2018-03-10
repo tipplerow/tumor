@@ -8,10 +8,10 @@ import jam.math.DoubleUtil;
 
 import tumor.carrier.Lineage;
 import tumor.carrier.PerfectLineage;
-import tumor.carrier.SystemLineage;
 import tumor.carrier.TumorEnv;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
+import tumor.system.SystemLineage;
 
 import org.junit.*;
 import static org.junit.Assert.*;

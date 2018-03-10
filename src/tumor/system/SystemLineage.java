@@ -1,6 +1,7 @@
 
-package tumor.carrier;
+package tumor.system;
 
+import tumor.carrier.Lineage;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
 import tumor.mutation.MutationList;
