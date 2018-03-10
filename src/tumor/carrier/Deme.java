@@ -42,10 +42,10 @@ public abstract class Deme extends TumorComponent {
      */
     protected Deme(Deme parent, Collection<Lineage> lineages) {
         super(ordinalIndex.next(), parent);
-        updateLinages(lineages);
+        updateLineages(lineages);
     }
 
-    private void updateLinages(Collection<Lineage> lineages) {
+    private void updateLineages(Collection<Lineage> lineages) {
         for (Lineage lineage : lineages)
             updateLineage(lineage);
     }
