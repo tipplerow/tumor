@@ -25,8 +25,14 @@ public final class SystemDeme extends Deme {
      * Creates a new deme with a single founding lineage.
      *
      * @param lineage the founding lineage.
+     *
+     * @return the founding deme.
      */
-    public SystemDeme(Lineage lineage) {
+    public static SystemDeme founder(Lineage lineage) {
+        return new SystemDeme(lineage);
+    }
+
+    private SystemDeme(Lineage lineage) {
         super(lineage);
     }
 
