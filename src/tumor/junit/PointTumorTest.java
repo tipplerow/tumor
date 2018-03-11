@@ -8,10 +8,10 @@ import jam.junit.NumericTestBase;
 import jam.math.DoubleUtil;
 
 import tumor.carrier.Lineage;
-import tumor.carrier.PerfectCell;
-import tumor.carrier.PerfectLineage;
 import tumor.carrier.TumorComponent;
 import tumor.growth.GrowthRate;
+import tumor.perfect.PerfectCell;
+import tumor.perfect.PerfectLineage;
 import tumor.point.PointTumor;
 
 import org.junit.*;
@@ -52,7 +52,7 @@ public class PointTumorTest extends NumericTestBase {
             factorRatios[stepIndex] /= testCount;
         
         for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex)
-            assertEquals(factorRatios[stepIndex], 1.0, 0.025);
+            assertEquals(1.0, factorRatios[stepIndex], 0.02);
     }
 
     @Test public void testPerfectLineage() {
@@ -91,7 +91,7 @@ public class PointTumorTest extends NumericTestBase {
         // member cell, so the noise is reduced compared to the
         // tumor with individual cells...
         for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex)
-            assertEquals(factorRatios[stepIndex], 1.0, 0.001);
+            assertEquals(1.0, factorRatios[stepIndex], 0.001);
     }
 
     public static void main(String[] args) {

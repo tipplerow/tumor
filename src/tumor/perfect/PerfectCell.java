@@ -1,6 +1,8 @@
 
-package tumor.carrier;
 
+package tumor.perfect;
+
+import tumor.carrier.TumorCell;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
 import tumor.mutation.MutationList;

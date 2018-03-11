@@ -7,10 +7,10 @@ import jam.junit.NumericTestBase;
 import jam.math.DoubleUtil;
 
 import tumor.carrier.Lineage;
-import tumor.carrier.PerfectLineage;
 import tumor.carrier.TumorEnv;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
+import tumor.perfect.PerfectLineage;
 import tumor.system.SystemLineage;
 
 import org.junit.*;
