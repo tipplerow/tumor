@@ -62,7 +62,7 @@ PointPerfect.plotSizeStat <- function(fileName) {
     lines(x, y4, col = 4, lwd = 2)
 
     legend("topleft", bty = "n",
-           legend = c("Q1", "Median", "Mean", "Q3"),
+           legend = c("Q3", "Mean", "Median", "Q1"),
            lty = c(1, 1, 1, 1),
-           col = c(2, 4, 1, 3))
+           col = c(3, 1, 4, 2))
 }
