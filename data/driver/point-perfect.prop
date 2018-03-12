@@ -7,8 +7,8 @@ PointPerfect.initSize  = 10
 PointPerfect.birthRate = 0.55
 PointPerfect.deathRate = 0.45
 
-PointPerfect.stepCount  = 50
-PointPerfect.trialCount = 10
+PointPerfect.stepCount  = 60
+PointPerfect.trialCount = 20
 
 PointPerfect.writeTrajectory = true
 
