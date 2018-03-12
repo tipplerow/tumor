@@ -1,0 +1,15 @@
+########################################################################
+# Sample property file to simulate the growth of a point (well-mixed)
+# tumor containing perfectly replicating cells.
+########################################################################
+
+PointPerfect.initSize  = 10
+PointPerfect.birthRate = 0.55
+PointPerfect.deathRate = 0.45
+
+PointPerfect.stepCount  = 50
+PointPerfect.trialCount = 10
+
+PointPerfect.writeTrajectory = true
+
+jam.math.JamRandom.seed = 20180311
