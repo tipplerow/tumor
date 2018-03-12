@@ -109,8 +109,8 @@ public final class PointPerfect extends TumorDriver {
         this.growthRate = resolveGrowthRate();
 
         // Note that we record the tumor size at steps [0, stepCount],
-        // so we must size the data structures with (stepCount + 1)
-        // elements...
+        // so we must create the matrix with (stepCount + 1) rows and
+        // the vector with (stepCount + 1) elements...
         this.sizeRatios = MatrixUtil.create(stepCount + 1, trialCount, 1.0);
         this.summaryVec = new StatSummary[stepCount + 1];
     }
@@ -156,12 +156,15 @@ public final class PointPerfect extends TumorDriver {
             runTrial();
         
         closeWriters();
+
+        computeStat();
+        reportStat();
     }
 
     private void openWriters() {
         if (writeTraj) {
             tumorSizeWriter = openWriter(TUMOR_SIZE_TRAJ_FILE_NAME);
-            sizeRatioWriter = openWriter(SIZE_RATIO_STAT_FILE_NAME);
+            sizeRatioWriter = openWriter(SIZE_RATIO_TRAJ_FILE_NAME);
         }
     }
 
@@ -227,6 +230,26 @@ public final class PointPerfect extends TumorDriver {
         double expectedGrowthFactor = growthRate.getGrowthFactor(stepIndex);
 
         return actualGrowthFactor / expectedGrowthFactor;
+    }
+
+    private void computeStat() {
+        for (stepIndex = 0; stepIndex <= stepCount; ++stepIndex)
+            summaryVec[stepIndex] = StatSummary.compute(sizeRatios[stepIndex]);
+    }
+
+    private void reportStat() {
+        PrintWriter writer = openWriter(SIZE_RATIO_STAT_FILE_NAME);
+        writer.println("timeStep,sizeRatioQ1,sizeRatioMean,sizeRatioMedian,sizeRatioQ3");
+
+        for (stepIndex = 0; stepIndex <= stepCount; ++stepIndex)
+            writer.println(String.format("%d,%.4f,%.4f,%.4f,%.4f",
+                                         stepIndex,
+                                         summaryVec[stepIndex].getQuartile1(),
+                                         summaryVec[stepIndex].getMean(),
+                                         summaryVec[stepIndex].getMedian(),
+                                         summaryVec[stepIndex].getQuartile3()));
+
+        IOUtil.close(writer);
     }
 
     /**
