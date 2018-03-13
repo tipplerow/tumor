@@ -19,7 +19,7 @@ public final class SystemDeme extends Deme {
     /**
      * Name of the system property that defines the maximum deme size.
      */
-    public static final String MAXIMUM_DEME_SIZE_PROPERTY = "tumor.carrier.maximumDemeSize";
+    public static final String MAXIMUM_DEME_SIZE_PROPERTY = "tumor.system.maximumDemeSize";
     
     /**
      * Creates a new deme with a single founding lineage.

@@ -25,7 +25,7 @@ public abstract class TumorDriver {
      * report files will be written into the directory containing the
      * first property file.
      */
-    public static final String REPORT_DIR_PROPERTY = "TumorDriver.reportDir";
+    public static final String REPORT_DIR_PROPERTY = "tumor.driver.reportDir";
 
     /**
      * Creates a new driver and reads system properties from a set of
