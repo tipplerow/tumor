@@ -76,18 +76,6 @@ public final class PointTumor extends Tumor {
         return new PointTumor(founders);
     }
 
-    /**
-     * Advances this tumor component through one discrete time step.
-     *
-     * <p>After calling this method, the replication state (identified
-     * by the {@code getState()} method) may be changed: all cells may
-     * die.
-     *
-     * <p>This base class advances all living components but never
-     * creates a new tumor.
-     *
-     * @return any new tumors (metastases) created during the step.
-     */
     @Override public Collection<Tumor> advance() {
         //
         // Collect the parent components that die and the offspring
