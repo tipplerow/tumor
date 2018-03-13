@@ -4,7 +4,6 @@ package tumor.carrier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -20,44 +19,22 @@ import tumor.mutation.MutationList;
  * Represents a single solid tumor.
  */
 public abstract class Tumor extends Carrier {
-    //
-    // The component collection is declared as private so that all
-    // modifications must use "addComponent" or "removeComponent",
-    // where any additional bookkeeping required by subclasses will
-    // be implemented...
-    //
-    private final Set<TumorComponent> components = new HashSet<TumorComponent>();
-    
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
     /**
-     * Creates a tumor seeded by a single component.
-     *
-     * @param parent the parent of the new tumor; {@code null} for
-     * primary tumors.
-     *
-     * @param founder the component that seeds the new tumor.
-     *
-     * @throws IllegalArgumentException unless the founder is alive.
+     * Creates a new primary tumor.
      */
-    protected Tumor(Tumor parent, TumorComponent founder) {
-        super(ordinalIndex.next(), parent);
-        addComponent(founder);
+    protected Tumor() {
+        this(null);
     }
 
     /**
-     * Creates a multi-component tumor.
+     * Creates a new metastatic tumor.
      *
-     * @param parent the parent of the new tumor; {@code null} for
-     * primary tumors.
-     *
-     * @param founders the components that seed the new tumor.
-     *
-     * @throws IllegalArgumentException unless the founders are alive.
+     * @param parent the parent of the new tumor.
      */
-    protected Tumor(Tumor parent, Collection<TumorComponent> founders) {
+    protected Tumor(Tumor parent) {
         super(ordinalIndex.next(), parent);
-        addComponents(founders);
     }
 
     /**
@@ -84,8 +61,15 @@ public abstract class Tumor extends Carrier {
         if (!component.isAlive())
             throw new IllegalArgumentException("Added components must be alive.");
         
-        components.add(component);
+        addLiveComponent(component);
     }
+
+    /**
+     * Adds one living component to this tumor.
+     *
+     * @param component the component to add.
+     */
+    protected abstract void addLiveComponent(TumorComponent component);
 
     /**
      * Removes dead components from this tumor.
@@ -111,8 +95,15 @@ public abstract class Tumor extends Carrier {
         if (!component.isDead())
             throw new IllegalArgumentException("Added components must be dead.");
         
-        components.remove(component);
+        removeDeadComponent(component);
     }
+
+    /**
+     * Removes one dead component from this tumor.
+     *
+     * @param component the component to remove.
+     */
+    protected abstract void removeDeadComponent(TumorComponent component);
 
     /**
      * Advances this tumor component through one discrete time step.
@@ -168,7 +159,7 @@ public abstract class Tumor extends Carrier {
      * @return the living components arranged into advancement order.
      */
     protected Collection<TumorComponent> orderAdvancement() {
-        List<TumorComponent> shuffled = new ArrayList<TumorComponent>(components);
+        List<TumorComponent> shuffled = new ArrayList<TumorComponent>(viewComponents());
         ListUtil.shuffle(shuffled, JamRandom.global());
         
         return shuffled;
@@ -203,8 +194,8 @@ public abstract class Tumor extends Carrier {
      *
      * @return the number of active (living) components in this tumor.
      */
-    public int countComponents() {
-        return components.size();
+    public long countComponents() {
+        return viewComponents().size();
     }
 
     /**
@@ -214,16 +205,14 @@ public abstract class Tumor extends Carrier {
      * @return a read-only view of the active (living) components in
      * this tumor.
      */
-    public Set<TumorComponent> viewComponents() {
-        return Collections.unmodifiableSet(components);
-    }
+    public abstract Set<TumorComponent> viewComponents();
 
     @Override public long countCells() {
-        return countCells(components);
+        return countCells(viewComponents());
     }
 
     @Override public MutationList getOriginalMutations() {
-        return accumulateMutations(components);
+        return accumulateMutations(viewComponents());
     }
 
     @Override public State getState() {

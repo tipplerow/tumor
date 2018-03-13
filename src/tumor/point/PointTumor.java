@@ -2,26 +2,26 @@
 package tumor.point;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.carrier.TumorEnv;
 
 /**
- * Represents a <em>zero-dimensional</em> (point) tumor having a
- * constant mutation rate and no geometrical constraints on cell
- * growth.
+ * Represents a <em>zero-dimensional</em> (point) tumor with no
+ * geometrical constraints on cell growth.
  *
  * <p>The spatial locations of the cell lineages are not tracked;
  * the intrinsic growth rates of the lineages are never adjusted.
  */
 public final class PointTumor extends Tumor {
-    private PointTumor(TumorComponent founder) {
-        super(null, founder);
-    }
-
-    private PointTumor(Collection<TumorComponent> founders) {
-        super(null, founders);
+    private final Set<TumorComponent> components = new HashSet<TumorComponent>();
+    
+    private PointTumor() {
+        super();
     }
 
     /**
@@ -33,7 +33,10 @@ public final class PointTumor extends Tumor {
      * @return the new primary tumor.
      */
     public static PointTumor primary(TumorComponent founder) {
-        return new PointTumor(founder);
+        PointTumor tumor = new PointTumor();
+        tumor.addComponent(founder);
+
+        return tumor;
     }
 
     /**
@@ -45,7 +48,18 @@ public final class PointTumor extends Tumor {
      * @return the new primary tumor.
      */
     public static PointTumor primary(Collection<TumorComponent> founders) {
-        return new PointTumor(founders);
+        PointTumor tumor = new PointTumor();
+        tumor.addComponents(founders);
+
+        return tumor;
+    }
+
+    @Override protected void addLiveComponent(TumorComponent component) {
+        components.add(component);
+    }
+
+    @Override protected void removeDeadComponent(TumorComponent component) {
+        components.remove(component);
     }
 
     @Override protected Collection<TumorComponent> orderAdvancement() {
@@ -54,10 +68,18 @@ public final class PointTumor extends Tumor {
         // is irrelevant, just return the components in their default
         // order...
         //
-        return viewComponents();
+        return components;
+    }
+    
+    @Override public long countComponents() {
+        return components.size();
     }
     
     @Override protected TumorEnv getLocalEnvironment(TumorComponent component) {
         return TumorEnv.UNRESTRICTED;
+    }
+    
+    @Override public Set<TumorComponent> viewComponents() {
+        return Collections.unmodifiableSet(components);
     }
 }
