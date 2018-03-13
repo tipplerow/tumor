@@ -9,7 +9,6 @@ import jam.math.DoubleUtil;
 
 import tumor.carrier.Deme;
 import tumor.carrier.Lineage;
-import tumor.carrier.TumorComponent;
 import tumor.carrier.Tumor;
 import tumor.growth.GrowthRate;
 import tumor.perfect.PerfectCell;
@@ -34,12 +33,12 @@ public class PointTumorTest extends NumericTestBase {
         GrowthRate growthRate = GrowthRate.net(0.1);
         
         for (int testIndex = 0; testIndex < testCount; ++testIndex) {
-            Collection<TumorComponent> founders = new LinkedList<TumorComponent>();
+            Collection<PerfectCell> founders = new LinkedList<PerfectCell>();
 
             while (founders.size() < founderCount)
                 founders.add(PerfectCell.founder(growthRate));
 
-            Tumor tumor = PointTumor.primary(founders);
+            Tumor<PerfectCell> tumor = PointTumor.primary(founders);
 
             for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {
                 //
@@ -74,7 +73,8 @@ public class PointTumorTest extends NumericTestBase {
         for (int testIndex = 0; testIndex < testCount; ++testIndex) {
             Lineage lineage = PerfectLineage.founder(growthRate, founderCount);
             Deme    deme    = SystemDeme.founder(lineage);
-            Tumor   tumor   = PointTumor.primary(deme);
+            
+            Tumor<Deme> tumor = PointTumor.primary(deme);
             
             for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {
                 //
@@ -115,7 +115,7 @@ public class PointTumorTest extends NumericTestBase {
         
         for (int testIndex = 0; testIndex < testCount; ++testIndex) {
             Lineage founder = PerfectLineage.founder(growthRate, founderCount);
-            Tumor   tumor   = PointTumor.primary(founder);
+            Tumor<Lineage> tumor = PointTumor.primary(founder);
 
             for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {
                 //

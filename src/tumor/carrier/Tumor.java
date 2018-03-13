@@ -16,8 +16,10 @@ import tumor.mutation.MutationList;
 
 /**
  * Represents a single solid tumor.
+ *
+ * @param <E> the concrete tumor component type.
  */
-public abstract class Tumor extends Carrier {
+public abstract class Tumor<E extends TumorComponent> extends Carrier {
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
     /**
@@ -45,7 +47,7 @@ public abstract class Tumor extends Carrier {
      *
      * @return any new tumors (metastases) created during the step.
      */
-    public abstract Collection<Tumor> advance();
+    public abstract Collection<Tumor<E>> advance();
 
     /**
      * Returns a read-only view of the active (living) components in
@@ -54,7 +56,7 @@ public abstract class Tumor extends Carrier {
      * @return a read-only view of the active (living) components in
      * this tumor.
      */
-    public abstract Set<TumorComponent> viewComponents();
+    public abstract Set<E> viewComponents();
 
     /**
      * Returns the active (living) components of this tumor in random
@@ -64,8 +66,8 @@ public abstract class Tumor extends Carrier {
      * @return the active (living) components of this tumor in random
      * order.
      */
-    protected List<TumorComponent> shuffleComponents() {
-        List<TumorComponent> shuffled = new ArrayList<TumorComponent>(viewComponents());
+    protected List<E> shuffleComponents() {
+        List<E> shuffled = new ArrayList<E>(viewComponents());
         ListUtil.shuffle(shuffled, JamRandom.global());
         
         return shuffled;

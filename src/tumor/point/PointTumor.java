@@ -19,33 +19,35 @@ import tumor.carrier.TumorEnv;
  *
  * <p>The spatial locations of the cell lineages are not tracked;
  * the intrinsic growth rates of the lineages are never adjusted.
+ *
+ * @param <E> the concrete type for the tumor components.
  */
-public final class PointTumor extends Tumor {
-    private final Set<TumorComponent> components = new HashSet<TumorComponent>();
+public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
+    private final Set<E> components = new HashSet<E>();
     
-    private PointTumor(Collection<TumorComponent> components) {
+    private PointTumor(Collection<E> components) {
         super();
         addComponents(components);
     }
 
-    private void addComponents(Collection<TumorComponent> components) {
-        for (TumorComponent component : components)
+    private void addComponents(Collection<E> components) {
+        for (E component : components)
             addComponent(component);
     }
 
-    private void addComponent(TumorComponent component) {
+    private void addComponent(E component) {
         if (!component.isAlive())
             throw new IllegalArgumentException("Added components must be alive.");
         
         components.add(component);
     }
 
-    private void removeComponents(Collection<TumorComponent> components) {
-        for (TumorComponent component : components)
+    private void removeComponents(Collection<E> components) {
+        for (E component : components)
             removeComponent(component);
     }
 
-    private void removeComponent(TumorComponent component) {
+    private void removeComponent(E component) {
         if (!component.isDead())
             throw new IllegalArgumentException("Added components must be dead.");
         
@@ -56,11 +58,13 @@ public final class PointTumor extends Tumor {
      * Creates a new primary point tumor with a single founding
      * component.
      *
+     * @param <E> the concrete type for the tumor components.
+     *
      * @param founder the founding component.
      *
      * @return the new primary tumor.
      */
-    public static PointTumor primary(TumorComponent founder) {
+    public static <E extends TumorComponent> PointTumor<E> primary(E founder) {
         return primary(Arrays.asList(founder));
     }
 
@@ -68,27 +72,28 @@ public final class PointTumor extends Tumor {
      * Creates a new primary point tumor with a collection of founding
      * component.
      *
+     * @param <E> the concrete type for the tumor components.
+     *
      * @param founders the founding components.
      *
      * @return the new primary tumor.
      */
-    public static PointTumor primary(Collection<TumorComponent> founders) {
-        return new PointTumor(founders);
+    public static <E extends TumorComponent> PointTumor<E> primary(Collection<E> founders) {
+        return new PointTumor<E>(founders);
     }
 
-    @Override public Collection<Tumor> advance() {
+    @Override public Collection<Tumor<E>> advance() {
         //
         // Collect the parent components that die and the offspring
         // that are created so that the living component collection
         // may be updated after the iteration over parents.
         //
-        Collection<TumorComponent> deadParents = new LinkedList<TumorComponent>();
-        Collection<TumorComponent> allChildren = new LinkedList<TumorComponent>();
+        Collection<E> deadParents = new LinkedList<E>();
+        Collection<E> allChildren = new LinkedList<E>();
         
-        for (TumorComponent parent : components) {
+        for (E parent : components) {
             @SuppressWarnings("unchecked")
-                Collection<TumorComponent> children =
-                (Collection<TumorComponent>) parent.advance(TumorEnv.UNRESTRICTED);
+                Collection<E> children = (Collection<E>) parent.advance(TumorEnv.UNRESTRICTED);
             
             allChildren.addAll(children);
 
@@ -106,7 +111,7 @@ public final class PointTumor extends Tumor {
         return components.size();
     }
     
-    @Override public Set<TumorComponent> viewComponents() {
+    @Override public Set<E> viewComponents() {
         return Collections.unmodifiableSet(components);
     }
 }

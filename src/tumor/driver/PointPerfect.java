@@ -43,7 +43,9 @@ public final class PointPerfect extends TumorDriver {
     private PrintWriter tumorSizeWriter;
     private PrintWriter sizeRatioWriter;
 
-    private Tumor tumor;    // Tumor for the current growth trial...
+    // Tumor for the current growth trial...
+    private Tumor<PerfectCell> tumor;
+
     private int trialIndex; // Index of the current growth trial...
     private int stepIndex;  // Index of the time step within the current growth trial...
 
@@ -188,12 +190,12 @@ public final class PointPerfect extends TumorDriver {
         }
     }
 
-    private Tumor createTumor() {
+    private Tumor<PerfectCell> createTumor() {
         return PointTumor.primary(createFounders());
     }
 
-    private Collection<TumorComponent> createFounders() {
-        Collection<TumorComponent> founders = new ArrayList<TumorComponent>(initSize);
+    private Collection<PerfectCell> createFounders() {
+        Collection<PerfectCell> founders = new ArrayList<PerfectCell>(initSize);
 
         while (founders.size() < initSize)
             founders.add(PerfectCell.founder(growthRate));
