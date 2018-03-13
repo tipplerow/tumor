@@ -1,9 +1,12 @@
 
 package tumor.point;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import tumor.carrier.Tumor;
@@ -20,8 +23,33 @@ import tumor.carrier.TumorEnv;
 public final class PointTumor extends Tumor {
     private final Set<TumorComponent> components = new HashSet<TumorComponent>();
     
-    private PointTumor() {
+    private PointTumor(Collection<TumorComponent> components) {
         super();
+        addComponents(components);
+    }
+
+    private void addComponents(Collection<TumorComponent> components) {
+        for (TumorComponent component : components)
+            addComponent(component);
+    }
+
+    private void addComponent(TumorComponent component) {
+        if (!component.isAlive())
+            throw new IllegalArgumentException("Added components must be alive.");
+        
+        components.add(component);
+    }
+
+    private void removeComponents(Collection<TumorComponent> components) {
+        for (TumorComponent component : components)
+            removeComponent(component);
+    }
+
+    private void removeComponent(TumorComponent component) {
+        if (!component.isDead())
+            throw new IllegalArgumentException("Added components must be dead.");
+        
+        components.remove(component);
     }
 
     /**
@@ -33,10 +61,7 @@ public final class PointTumor extends Tumor {
      * @return the new primary tumor.
      */
     public static PointTumor primary(TumorComponent founder) {
-        PointTumor tumor = new PointTumor();
-        tumor.addComponent(founder);
-
-        return tumor;
+        return primary(Arrays.asList(founder));
     }
 
     /**
@@ -48,35 +73,49 @@ public final class PointTumor extends Tumor {
      * @return the new primary tumor.
      */
     public static PointTumor primary(Collection<TumorComponent> founders) {
-        PointTumor tumor = new PointTumor();
-        tumor.addComponents(founders);
-
-        return tumor;
+        return new PointTumor(founders);
     }
 
-    @Override protected void addLiveComponent(TumorComponent component) {
-        components.add(component);
-    }
-
-    @Override protected void removeDeadComponent(TumorComponent component) {
-        components.remove(component);
-    }
-
-    @Override protected Collection<TumorComponent> orderAdvancement() {
+    /**
+     * Advances this tumor component through one discrete time step.
+     *
+     * <p>After calling this method, the replication state (identified
+     * by the {@code getState()} method) may be changed: all cells may
+     * die.
+     *
+     * <p>This base class advances all living components but never
+     * creates a new tumor.
+     *
+     * @return any new tumors (metastases) created during the step.
+     */
+    @Override public Collection<Tumor> advance() {
         //
-        // The components are independent so the order of advancement
-        // is irrelevant, just return the components in their default
-        // order...
+        // Collect the parent components that die and the offspring
+        // that are created so that the living component collection
+        // may be updated after the iteration over parents.
         //
-        return components;
+        Collection<TumorComponent> deadParents = new LinkedList<TumorComponent>();
+        Collection<TumorComponent> allChildren = new LinkedList<TumorComponent>();
+        
+        for (TumorComponent parent : components) {
+            @SuppressWarnings("unchecked")
+                Collection<TumorComponent> children =
+                (Collection<TumorComponent>) parent.advance(TumorEnv.UNRESTRICTED);
+            
+            allChildren.addAll(children);
+
+            if (parent.isDead())
+                deadParents.add(parent);
+        }
+
+        addComponents(allChildren);
+        removeComponents(deadParents);
+        
+        return Collections.emptyList();
     }
-    
+
     @Override public long countComponents() {
         return components.size();
-    }
-    
-    @Override protected TumorEnv getLocalEnvironment(TumorComponent component) {
-        return TumorEnv.UNRESTRICTED;
     }
     
     @Override public Set<TumorComponent> viewComponents() {
