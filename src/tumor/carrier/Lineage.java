@@ -223,16 +223,6 @@ public abstract class Lineage extends TumorKernel {
             return growthRate.compute(cellCount);
     }
 
-    /**
-     * Identifies empty (extinguished or dead) lineages.
-     *
-     * @return {@code true} iff there are no cells remaining in this
-     * lineage.
-     */
-    public final boolean isEmpty() {
-        return cellCount == 0;
-    }
-
     @Override public State getState() {
         return isEmpty() ? State.DEAD : State.ALIVE;
     }

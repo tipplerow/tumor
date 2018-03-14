@@ -108,6 +108,16 @@ public abstract class Carrier extends Propagator {
         return accumulatedMut;
     }
 
+    /**
+     * Identifies empty carriers.
+     *
+     * @return {@code true} iff there are no cells remaining in this
+     * carrier.
+     */
+    public boolean isEmpty() {
+        return countCells() == 0;
+    }
+
     @SuppressWarnings("unchecked")
     @Override public List<? extends Carrier> traceLineage() {
         return (List<? extends Carrier>) super.traceLineage();
