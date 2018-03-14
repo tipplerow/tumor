@@ -12,6 +12,7 @@ import java.util.Set;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.carrier.TumorEnv;
+import tumor.carrier.WellMixedPopulation;
 
 /**
  * Represents a <em>zero-dimensional</em> (point) tumor with no
@@ -23,35 +24,11 @@ import tumor.carrier.TumorEnv;
  * @param <E> the concrete type for the tumor components.
  */
 public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
-    private final Set<E> components = new HashSet<E>();
+    private final WellMixedPopulation<E> components;
     
-    private PointTumor(Collection<E> components) {
+    private PointTumor(Collection<E> founders) {
         super();
-        addComponents(components);
-    }
-
-    private void addComponents(Collection<E> components) {
-        for (E component : components)
-            addComponent(component);
-    }
-
-    private void addComponent(E component) {
-        if (!component.isAlive())
-            throw new IllegalArgumentException("Added components must be alive.");
-        
-        components.add(component);
-    }
-
-    private void removeComponents(Collection<E> components) {
-        for (E component : components)
-            removeComponent(component);
-    }
-
-    private void removeComponent(E component) {
-        if (!component.isDead())
-            throw new IllegalArgumentException("Added components must be dead.");
-        
-        components.remove(component);
+        this.components = new WellMixedPopulation<E>(founders);
     }
 
     /**
@@ -83,27 +60,7 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     @Override public Collection<Tumor<E>> advance() {
-        //
-        // Collect the parent components that die and the offspring
-        // that are created so that the living component collection
-        // may be updated after the iteration over parents.
-        //
-        Collection<E> deadParents = new LinkedList<E>();
-        Collection<E> allChildren = new LinkedList<E>();
-        
-        for (E parent : components) {
-            @SuppressWarnings("unchecked")
-                Collection<E> children = (Collection<E>) parent.advance(TumorEnv.UNRESTRICTED);
-            
-            allChildren.addAll(children);
-
-            if (parent.isDead())
-                deadParents.add(parent);
-        }
-
-        addComponents(allChildren);
-        removeComponents(deadParents);
-        
+        components.advance(TumorEnv.UNRESTRICTED);
         return Collections.emptyList();
     }
 
