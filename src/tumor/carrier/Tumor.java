@@ -34,7 +34,7 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      *
      * @param parent the parent of the new tumor.
      */
-    protected Tumor(Tumor parent) {
+    protected Tumor(Tumor<E> parent) {
         super(ordinalIndex.next(), parent);
     }
 
