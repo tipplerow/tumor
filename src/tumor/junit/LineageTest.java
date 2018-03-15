@@ -7,10 +7,11 @@ import jam.junit.NumericTestBase;
 import jam.math.DoubleUtil;
 
 import tumor.carrier.Lineage;
-import tumor.carrier.TumorEnv;
+import tumor.carrier.Tumor;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
 import tumor.perfect.PerfectLineage;
+import tumor.point.PointTumor;
 import tumor.system.SystemLineage;
 
 import org.junit.*;
@@ -27,7 +28,9 @@ public class LineageTest extends NumericTestBase {
         GrowthRate growthRate = GrowthRate.net(0.0);
         
         Lineage founder = SystemLineage.founder(growthRate, initCount);
-        List<Lineage> children = founder.advance(TumorEnv.UNRESTRICTED);
+        Tumor   tumor   = PointTumor.primary(founder);
+
+        List<Lineage> children = founder.advance(tumor);
 
         // With such a low mutation arrival rate, all children should
         // carry only one mutation...
@@ -47,13 +50,14 @@ public class LineageTest extends NumericTestBase {
         long       initCount  = 1000L;
         GrowthRate growthRate = GrowthRate.net(0.1);
         Lineage    lineage    = PerfectLineage.founder(growthRate, initCount);
+        Tumor      tumor      = PointTumor.primary(lineage);
 
         for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {
             //
             // A perfect lineage never mutates and therefore should
             // never create daughter lineages...
             //
-            assertTrue(lineage.advance(TumorEnv.UNRESTRICTED).isEmpty());
+            assertTrue(lineage.advance(tumor).isEmpty());
 
             double actualFactor   = DoubleUtil.ratio(lineage.countCells(), initCount);
             double expectedFactor = growthRate.getGrowthFactor(stepIndex);

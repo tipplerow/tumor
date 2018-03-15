@@ -9,10 +9,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import tumor.carrier.Population;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
-import tumor.carrier.TumorEnv;
-import tumor.carrier.WellMixedPopulation;
+
+import tumor.growth.GrowthRate;
+import tumor.mutation.MutationGenerator;
 
 /**
  * Represents a <em>zero-dimensional</em> (point) tumor with no
@@ -24,11 +26,11 @@ import tumor.carrier.WellMixedPopulation;
  * @param <E> the concrete type for the tumor components.
  */
 public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
-    private final WellMixedPopulation<E> components;
+    private final Population<E> components;
     
     private PointTumor(Collection<E> founders) {
         super();
-        this.components = new WellMixedPopulation<E>(founders);
+        this.components = new Population<E>(founders);
     }
 
     /**
@@ -59,8 +61,16 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
         return new PointTumor<E>(founders);
     }
 
+    @Override protected GrowthRate getLocalGrowthRate(TumorComponent component) {
+        return component.getGrowthRate();
+    }
+    
+    @Override protected MutationGenerator getLocalMutationGenerator(TumorComponent component) {
+        return component.getMutationGenerator();
+    }
+    
     @Override public Collection<Tumor<E>> advance() {
-        components.advance(TumorEnv.UNRESTRICTED);
+        components.advance(this);
         return Collections.emptyList();
     }
 

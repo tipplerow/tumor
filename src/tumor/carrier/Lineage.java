@@ -17,7 +17,7 @@ import tumor.mutation.MutationList;
  * Represents a multi-cell lineage in which each cell is identical
  * (has accumulated the same mutations).
  */
-public abstract class Lineage extends TumorKernel {
+public abstract class Lineage extends TumorComponent {
     // The number of cells in this lineage...
     private long cellCount;
 
@@ -163,13 +163,12 @@ public abstract class Lineage extends TumorKernel {
     /**
      * Advances this lineage through one discrete time step.
      *
-     * @param tumorEnv the local tumor environment where this lineage
-     * resides.
+     * @param tumor the tumor in which this lineage resides.
      *
      * @return a list containing any new lineages created by mutation;
      * the list will be empty if no mutations originate in the cycle.
      */
-    @Override public List<Lineage> advance(TumorEnv tumorEnv) {
+    @Override public List<Lineage> advance(Tumor tumor) {
         //
         // Dead lineages do not advance further...
         //
@@ -178,7 +177,7 @@ public abstract class Lineage extends TumorKernel {
 
         // Update the cell count for the number of birth and death
         // events...
-        GrowthCount growthCount = resolveGrowthCount(tumorEnv);
+        GrowthCount growthCount = resolveGrowthCount(tumor);
 
         cellCount += growthCount.getBirthCount();
         cellCount -= growthCount.getDeathCount();
@@ -196,7 +195,7 @@ public abstract class Lineage extends TumorKernel {
             // Stochastically generate the mutations originating in
             // this daughter cell...
             //
-            MutationList daughterMut = tumorEnv.getLocalMutationGenerator(this).generate();
+            MutationList daughterMut = tumor.getLocalMutationGenerator(this).generate();
 
             if (!daughterMut.isEmpty()) {
                 //
@@ -214,8 +213,8 @@ public abstract class Lineage extends TumorKernel {
         return daughters;
     }
 
-    private GrowthCount resolveGrowthCount(TumorEnv tumorEnv) {
-        GrowthRate growthRate = tumorEnv.getLocalGrowthRate(this);
+    private GrowthCount resolveGrowthCount(Tumor tumor) {
+        GrowthRate growthRate = tumor.getLocalGrowthRate(this);
 
         if (cellCount <= EXACT_ENUMERATION_LIMIT)
             return growthRate.sample(cellCount);

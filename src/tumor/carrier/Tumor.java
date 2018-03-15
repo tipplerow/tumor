@@ -1,17 +1,14 @@
 
 package tumor.carrier;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import jam.lang.OrdinalIndex;
-import jam.math.JamRandom;
-import jam.util.ListUtil;
 
 import tumor.growth.GrowthRate;
+import tumor.mutation.MutationGenerator;
 import tumor.mutation.MutationList;
 
 /**
@@ -39,6 +36,34 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     /**
+     * Returns the local growth rate for a tumor component: a function
+     * of the intrinsic growth rate and factors operating in the local
+     * environment.
+     *
+     * @param component a component of this tumor.
+     *
+     * @return the local growth rate.
+     *
+     * @throws IllegalArgumentException unless the component is a
+     * member of this tumor.
+     */
+    protected abstract GrowthRate getLocalGrowthRate(TumorComponent component);
+
+    /**
+     * Returns the local mutation generator for a tumor component: a
+     * function of the intrinsic mutation generator and the factors
+     * operating in the local environment.
+     *
+     * @param component a component of this tumor.
+     *
+     * @return the local mutation generator.
+     *
+     * @throws IllegalArgumentException unless the component is a
+     * member of this tumor.
+     */
+    protected abstract MutationGenerator getLocalMutationGenerator(TumorComponent component);
+
+    /**
      * Advances this tumor component through one discrete time step.
      *
      * <p>After calling this method, the replication state (identified
@@ -58,21 +83,6 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      */
     public abstract Set<E> viewComponents();
 
-    /**
-     * Returns the active (living) components of this tumor in random
-     * order (e.g., the order in which they will be advanced during a
-     * single time step).
-     *
-     * @return the active (living) components of this tumor in random
-     * order.
-     */
-    protected List<E> shuffleComponents() {
-        List<E> shuffled = new ArrayList<E>(viewComponents());
-        ListUtil.shuffle(shuffled, JamRandom.global());
-        
-        return shuffled;
-    }
-            
     /**
      * Returns the number of active (living) components in this tumor.
      *

@@ -8,9 +8,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
-import tumor.carrier.TumorComponent;
-import tumor.carrier.TumorEnv;
-
 /**
  * Represents a well-mixed population of tumor components (with no
  * spatial structure).
@@ -21,13 +18,13 @@ import tumor.carrier.TumorEnv;
  *
  * @param <E> the concrete type for the tumor components.
  */
-public final class WellMixedPopulation<E extends TumorComponent> extends AbstractSet<E> {
+public final class Population<E extends TumorComponent> extends AbstractSet<E> {
     private final Set<E> components = new HashSet<E>();
 
     /**
      * Creates an empty population.
      */
-    public WellMixedPopulation() {
+    public Population() {
     }
 
     /**
@@ -35,7 +32,7 @@ public final class WellMixedPopulation<E extends TumorComponent> extends Abstrac
      *
      * @param founder the founding component.
      */
-    public WellMixedPopulation(E founder) {
+    public Population(E founder) {
         this.components.add(founder);
     }
 
@@ -44,7 +41,7 @@ public final class WellMixedPopulation<E extends TumorComponent> extends Abstrac
      *
      * @param founders the founding components.
      */
-    public WellMixedPopulation(Collection<E> founders) {
+    public Population(Collection<E> founders) {
         this.components.addAll(founders);
     }
 
@@ -56,10 +53,9 @@ public final class WellMixedPopulation<E extends TumorComponent> extends Abstrac
      * population, while members that die during advancement are
      * removed.
      *
-     * @param tumorEnv the local environment where the population
-     * resides.
+     * @param tumor the tumor in which this population resides.
      */
-    public void advance(TumorEnv tumorEnv) {
+    public void advance(Tumor tumor) {
         //
         // Collect the parent components that die and the offspring
         // that are created so that the living component collection
@@ -70,7 +66,7 @@ public final class WellMixedPopulation<E extends TumorComponent> extends Abstrac
         
         for (E parent : components) {
             @SuppressWarnings("unchecked")
-                Collection<E> children = (Collection<E>) parent.advance(tumorEnv);
+                Collection<E> children = (Collection<E>) parent.advance(tumor);
             
             allChildren.addAll(children);
 
