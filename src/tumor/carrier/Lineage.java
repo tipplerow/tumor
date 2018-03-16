@@ -214,12 +214,13 @@ public abstract class Lineage extends TumorComponent {
     }
 
     private GrowthCount resolveGrowthCount(Tumor tumor) {
+        long netCapacity = tumor.getLocalGrowthCapacity(this);
         GrowthRate growthRate = tumor.getLocalGrowthRate(this);
 
         if (cellCount <= EXACT_ENUMERATION_LIMIT)
-            return growthRate.sample(cellCount);
+            return growthRate.sample(cellCount, netCapacity);
         else
-            return growthRate.compute(cellCount);
+            return growthRate.compute(cellCount, netCapacity);
     }
 
     @Override public State getState() {

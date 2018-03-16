@@ -61,11 +61,15 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
         return new PointTumor<E>(founders);
     }
 
-    @Override protected GrowthRate getLocalGrowthRate(TumorComponent component) {
+    @Override public long getLocalGrowthCapacity(TumorComponent component) {
+        return Long.MAX_VALUE;
+    }
+
+    @Override public GrowthRate getLocalGrowthRate(TumorComponent component) {
         return component.getGrowthRate();
     }
     
-    @Override protected MutationGenerator getLocalMutationGenerator(TumorComponent component) {
+    @Override public MutationGenerator getLocalMutationGenerator(TumorComponent component) {
         return component.getMutationGenerator();
     }
     

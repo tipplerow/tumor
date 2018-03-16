@@ -36,6 +36,31 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     /**
+     * Advances this tumor component through one discrete time step.
+     *
+     * <p>After calling this method, the replication state (identified
+     * by the {@code getState()} method) may be changed: all cells may
+     * die.
+     *
+     * @return any new tumors (metastases) created during the step.
+     */
+    public abstract Collection<Tumor<E>> advance();
+
+    /**
+     * Returns the local growth <em>capacity</em> for a given tumor
+     * component: the maximum number of new cells that the tumor can
+     * support in the local environment surrounding the component.
+     *
+     * @param component a component of this tumor.
+     *
+     * @return the local growth capacity.
+     *
+     * @throws IllegalArgumentException unless the component is a
+     * member of this tumor.
+     */
+    public abstract long getLocalGrowthCapacity(TumorComponent component);
+
+    /**
      * Returns the local growth rate for a tumor component: a function
      * of the intrinsic growth rate and factors operating in the local
      * environment.
@@ -47,7 +72,7 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      * @throws IllegalArgumentException unless the component is a
      * member of this tumor.
      */
-    protected abstract GrowthRate getLocalGrowthRate(TumorComponent component);
+    public abstract GrowthRate getLocalGrowthRate(TumorComponent component);
 
     /**
      * Returns the local mutation generator for a tumor component: a
@@ -61,18 +86,7 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      * @throws IllegalArgumentException unless the component is a
      * member of this tumor.
      */
-    protected abstract MutationGenerator getLocalMutationGenerator(TumorComponent component);
-
-    /**
-     * Advances this tumor component through one discrete time step.
-     *
-     * <p>After calling this method, the replication state (identified
-     * by the {@code getState()} method) may be changed: all cells may
-     * die.
-     *
-     * @return any new tumors (metastases) created during the step.
-     */
-    public abstract Collection<Tumor<E>> advance();
+    public abstract MutationGenerator getLocalMutationGenerator(TumorComponent component);
 
     /**
      * Returns a read-only view of the active (living) components in
