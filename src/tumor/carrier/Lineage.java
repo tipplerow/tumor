@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import jam.app.JamProperties;
 import jam.dist.BinomialDistribution;
 import jam.lang.OrdinalIndex;
 import jam.math.Probability;
@@ -16,12 +17,32 @@ import tumor.mutation.MutationList;
 /**
  * Represents a multi-cell lineage in which each cell is identical
  * (has accumulated the same mutations).
+ *
+ * <p><b>Explicit sampling limit.</b> When a lineage advances through
+ * one discrete time step, the number of birth and death events can be
+ * sampled explicitly (by iterating over all cells in the lineage and
+ * choosing an event at random for each cell) or computed implicitly
+ * using the limit of large cell counts (assuming that the number of
+ * birth and death events is exactly equal to the product of the
+ * lineage population and the birth and death rates, respectively).
+ * Implicit calculation is much more efficient for large lineages.
+ * The system property {@code tumor.carrier.lineageSamplingLimit}
+ * defines the boundary between the two algorithms.
  */
 public abstract class Lineage extends TumorComponent {
     // The number of cells in this lineage...
     private long cellCount;
 
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
+
+    // Lineages larger than this will use implicit computation of
+    // birth and death rates...
+    private static final long EXPLICIT_SAMPLING_LIMIT = resolveSamplingLimit();
+
+    private static long resolveSamplingLimit() {
+        return JamProperties.getOptionalInt(EXPLICIT_SAMPLING_LIMIT_PROPERTY,
+                                            EXPLICIT_SAMPLING_LIMIT_DEFAULT);
+    }
 
     private Lineage(Lineage parent, GrowthRate growthRate, MutationList originalMut, long cellCount) {
         super(ordinalIndex.next(), parent, growthRate, originalMut);
@@ -36,12 +57,15 @@ public abstract class Lineage extends TumorComponent {
     }
 
     /**
-     * Lineages with cell counts above this limit will be treated in a
-     * <em>semi-stochastic</em> manner for improved efficiency; those
-     * with cell counts at or below this limit will be treated with
-     * exact iteration over all member cells.
+     * Name of the system property that defines the maximum cell count
+     * for which explicit event sampling will be performed.
      */
-    public static final long EXACT_ENUMERATION_LIMIT = 10L;
+    public static final String EXPLICIT_SAMPLING_LIMIT_PROPERTY = "tumor.carrier.lineageSamplingLimit";
+
+    /**
+     * Default value for the explicit event sampling limit.
+     */
+    public static final int EXPLICIT_SAMPLING_LIMIT_DEFAULT = 10;
 
     /**
      * Number of cells in a newly mutated daughter lineage.
@@ -217,7 +241,7 @@ public abstract class Lineage extends TumorComponent {
         long netCapacity = tumor.getLocalGrowthCapacity(this);
         GrowthRate growthRate = tumor.getLocalGrowthRate(this);
 
-        if (cellCount <= EXACT_ENUMERATION_LIMIT)
+        if (cellCount <= EXPLICIT_SAMPLING_LIMIT)
             return growthRate.sample(cellCount, netCapacity);
         else
             return growthRate.compute(cellCount, netCapacity);
