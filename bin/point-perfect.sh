@@ -24,4 +24,4 @@ then
     exit 1
 fi
 
-$JAMRUN ${TUMOR_HOME} tumor.driver.PointPerfect "$@"
+$JAMRUN ${TUMOR_HOME} tumor.driver.pp.PointPerfect "$@"
