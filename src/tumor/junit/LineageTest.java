@@ -62,7 +62,7 @@ public class LineageTest extends NumericTestBase {
             double actualFactor   = DoubleUtil.ratio(lineage.countCells(), initCount);
             double expectedFactor = growthRate.getGrowthFactor(stepIndex);
 
-            assertEquals(1.0, actualFactor / expectedFactor, 0.001);
+            assertEquals(1.0, actualFactor / expectedFactor, 0.002);
         }
     }
 

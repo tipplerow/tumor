@@ -13,6 +13,13 @@ import jam.math.Probability;
  * <p>This class is defined in the context of discrete-time simulation
  * where at most one birth (division) or death event may occur at a
  * single time step.
+ *
+ * <p><b>Growth capacity.</b> Must tumors have limited resources for
+ * growth.  When computing or sampling growth counts for a population,
+ * we therefore specify a <em>capacity</em>: the maximum net growth in
+ * the population.  When the net growth count exceeds the capacity, the
+ * birth rate falls to zero until cell death events bring the net growth
+ * count back below the capacity.
  */
 public final class GrowthRate {
     private final Probability birthRate;
@@ -152,8 +159,8 @@ public final class GrowthRate {
     }
 
     /**
-     * Computes the expected number of cell divisions and deaths in a
-     * population.
+     * Computes the expected number of cell divisions and deaths in an
+     * unconstrained population.
      *
      * <p>Note that this is a <em>semi-stochastic</em> calculation,
      * with a random number source used only to discretize the exact
@@ -165,19 +172,43 @@ public final class GrowthRate {
      * @return the expected number of cell divisions and deaths.
      */
     public GrowthCount compute(long population) {
+        return compute(population, Long.MAX_VALUE);
+    }
+
+    /**
+     * Computes the expected number of cell divisions and deaths in a
+     * population with finite capacity.
+     *
+     * <p>Note that this is a <em>semi-stochastic</em> calculation,
+     * with a random number source used only to discretize the exact
+     * expectation value.
+     *
+     * @param population the number of entities having this growth
+     * rate.
+     *
+     * @param netCapacity the maximum allowed increase in population.
+     *
+     * @return the expected number of cell divisions and deaths.
+     */
+    public GrowthCount compute(long population, long netCapacity) {
         double eventRate = birthRate.doubleValue() + deathRate.doubleValue();
-        double birthFrac = birthRate.doubleValue() / eventRate;
+        double deathFrac = deathRate.doubleValue() / eventRate;
 
         long eventCount = JamRandom.global().discretize(population * eventRate);
-        long birthCount = JamRandom.global().discretize(eventCount * birthFrac);
-        long deathCount = eventCount - birthCount;
+        long deathCount = JamRandom.global().discretize(eventCount * deathFrac);
+        long birthCount = eventCount - deathCount;
+        long netGrowth  = birthCount - deathCount;
 
+        if (netGrowth > netCapacity)
+            birthCount = deathCount + netCapacity;
+
+        assert birthCount - deathCount <= netCapacity;
         return new GrowthCount(birthCount, deathCount);
     }
 
     /**
-     * Samples the realized number of cell divisions and deaths in a
-     * population.
+     * Samples the realized number of cell divisions and deaths in an
+     * unconstrained population.
      *
      * <p>Note that this is a <em>fully stochastic</em> calculation,
      * with a random number drawn for each member of the population.
@@ -185,21 +216,45 @@ public final class GrowthRate {
      * @param population the number of entities having this growth
      * rate.
      *
-     * @return the realized number of cell divisions.
+     * @return the realized number of cell divisions and deaths.
      */
     public GrowthCount sample(long population) {
+        return sample(population, Long.MAX_VALUE);
+    }
+
+    /**
+     * Samples the realized number of cell divisions and deaths in a
+     * population with finite capacity.
+     *
+     * <p>Note that this is a <em>fully stochastic</em> calculation,
+     * with a random number drawn for each member of the population.
+     *
+     * @param population the number of entities having this growth
+     * rate.
+     *
+     * @param netCapacity the maximum allowed increase in population.
+     *
+     * @return the realized number of cell divisions and deaths.
+     */
+    public GrowthCount sample(long population, long netCapacity) {
+        long netGrowth = 0;
         long birthCount = 0;
         long deathCount = 0;
 
         for (long trial = 0; trial < population; ++trial) {
             long eventIndex = JamRandom.global().selectCDF(eventCDF);
 
-            if (eventIndex == BIRTH_EVENT)
+            if (eventIndex == BIRTH_EVENT && netGrowth < netCapacity) {
+                ++netGrowth;
                 ++birthCount;
-            else if (eventIndex == DEATH_EVENT)
+            }
+            else if (eventIndex == DEATH_EVENT) {
+                --netGrowth;
                 ++deathCount;
+            }
         }
 
+        assert netGrowth <= netCapacity;
         return new GrowthCount(birthCount, deathCount);
     }
 

@@ -17,52 +17,101 @@ import static org.junit.Assert.*;
 public class GrowthRateTest extends NumericTestBase {
     private static final GrowthRate rate2025 = new GrowthRate(0.20, 0.25);
     private static final GrowthRate rate5545 = new GrowthRate(0.55, 0.45);
+    private static final GrowthRate rate7525 = new GrowthRate(0.75, 0.25);
 
     @Test public void testComputeExact() {
-        int TRIAL_COUNT = 1000;
-
-        Collection<GrowthCount> coll2025 = new ArrayList<GrowthCount>();
-        Collection<GrowthCount> coll5545 = new ArrayList<GrowthCount>();
+        int TRIAL_COUNT = 100;
 
         for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
-            coll2025.add(rate2025.compute(100));
-            coll5545.add(rate5545.compute(100));
+            GrowthCount count = rate2025.compute(100);
+
+            assertEquals(20, count.getBirthCount());
+            assertEquals(25, count.getDeathCount());
+
+            count = rate5545.compute(100);
+
+            assertEquals(55, count.getBirthCount());
+            assertEquals(45, count.getDeathCount());
         }
+    }
 
-        GrowthCount sum2025 = GrowthCount.sum(coll2025);
-        GrowthCount sum5545 = GrowthCount.sum(coll5545);
+    @Test public void testComputeExactConstrained() {
+        int TRIAL_COUNT = 100;
 
-        assertEquals(20, sum2025.getBirthCount() / TRIAL_COUNT);
-        assertEquals(25, sum2025.getDeathCount() / TRIAL_COUNT);
+        for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
+            GrowthCount count = rate7525.compute(100, -10);
 
-        assertEquals(55, sum5545.getBirthCount() / TRIAL_COUNT);
-        assertEquals(45, sum5545.getDeathCount() / TRIAL_COUNT);
+            assertEquals(15, count.getBirthCount());
+            assertEquals(25, count.getDeathCount());
+
+            count = rate7525.compute(100, 0);
+
+            assertEquals(25, count.getBirthCount());
+            assertEquals(25, count.getDeathCount());
+
+            count = rate7525.compute(100, 20);
+
+            assertEquals(45, count.getBirthCount());
+            assertEquals(25, count.getDeathCount());
+        }
     }
 
     @Test public void testComputeFractional() {
-        int POP_2025    = 7;
-        int POP_5545    = 13;
+        int POP_2025    = 77;
+        int POP_5545    = 23;
         int TRIAL_COUNT = 10000;
 
         Collection<GrowthCount> coll2025 = new ArrayList<GrowthCount>();
         Collection<GrowthCount> coll5545 = new ArrayList<GrowthCount>();
 
         for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
-            coll2025.add(rate2025.compute(POP_2025));
-            coll5545.add(rate5545.compute(POP_5545));
+            GrowthCount count2025 = rate2025.compute(POP_2025);
+            GrowthCount count5545 = rate5545.compute(POP_5545);
+
+            assertTrue(34 <= count2025.getEventCount() && count2025.getEventCount() <= 35);
+            assertTrue(18 <= count2025.getDeathCount() && count2025.getDeathCount() <= 20);
+            assertTrue(15 <= count2025.getBirthCount() && count2025.getBirthCount() <= 16);
+
+            // Since "rate5545" is normalized, we must have exactly 23 events...
+            assertEquals(POP_5545, count5545.getEventCount());
+            assertTrue(10 <= count5545.getDeathCount() && count5545.getDeathCount() <= 11);
+            assertTrue(12 <= count5545.getBirthCount() && count5545.getBirthCount() <= 13);
+
+            coll2025.add(count2025);
+            coll5545.add(count5545);
         }
 
         GrowthCount sum2025 = GrowthCount.sum(coll2025);
         GrowthCount sum5545 = GrowthCount.sum(coll5545);
 
-        assertEquals(0.20, DoubleUtil.ratio(sum2025.getBirthCount(), TRIAL_COUNT * POP_2025), 0.001);
-        assertEquals(0.25, DoubleUtil.ratio(sum2025.getDeathCount(), TRIAL_COUNT * POP_2025), 0.001);
+        assertEquals(0.20, DoubleUtil.ratio(sum2025.getBirthCount(), TRIAL_COUNT * POP_2025), 0.01);
+        assertEquals(0.25, DoubleUtil.ratio(sum2025.getDeathCount(), TRIAL_COUNT * POP_2025), 0.01);
 
-        assertEquals(0.55, DoubleUtil.ratio(sum5545.getBirthCount(), TRIAL_COUNT * POP_5545), 0.001);
-        assertEquals(0.45, DoubleUtil.ratio(sum5545.getDeathCount(), TRIAL_COUNT * POP_5545), 0.001);
+        assertEquals(0.55, DoubleUtil.ratio(sum5545.getBirthCount(), TRIAL_COUNT * POP_5545), 0.01);
+        assertEquals(0.45, DoubleUtil.ratio(sum5545.getDeathCount(), TRIAL_COUNT * POP_5545), 0.01);
 
-        // Since "rate5545" is normalized, we must have exactly 130000 events...
         assertEquals(POP_5545 * TRIAL_COUNT, sum5545.getEventCount());
+    }
+
+    @Test public void testComputeFractionalConstrained() {
+        int TRIAL_COUNT = 10000;
+
+        for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
+            GrowthCount count = rate7525.compute(105, -10);
+
+            assertTrue(26 <= count.getDeathCount() && count.getDeathCount() <= 27);
+            assertEquals(-10, count.getNetChange());
+
+            count = rate7525.compute(105, 0);
+
+            assertTrue(26 <= count.getDeathCount() && count.getDeathCount() <= 27);
+            assertEquals(0, count.getNetChange());
+
+            count = rate7525.compute(105, 20);
+
+            assertTrue(26 <= count.getDeathCount() && count.getDeathCount() <= 27);
+            assertEquals(20, count.getNetChange());
+        }
     }
 
     @Test public void testDoublingTime() {
@@ -214,11 +263,32 @@ public class GrowthRateTest extends NumericTestBase {
         GrowthCount sum2025 = GrowthCount.sum(coll2025);
         GrowthCount sum5545 = GrowthCount.sum(coll5545);
 
-        assertEquals(0.20, DoubleUtil.ratio(sum2025.getBirthCount(), TRIAL_COUNT * POP_2025), 0.002);
-        assertEquals(0.25, DoubleUtil.ratio(sum2025.getDeathCount(), TRIAL_COUNT * POP_2025), 0.002);
+        assertEquals(0.20, DoubleUtil.ratio(sum2025.getBirthCount(), TRIAL_COUNT * POP_2025), 0.005);
+        assertEquals(0.25, DoubleUtil.ratio(sum2025.getDeathCount(), TRIAL_COUNT * POP_2025), 0.005);
 
-        assertEquals(0.55, DoubleUtil.ratio(sum5545.getBirthCount(), TRIAL_COUNT * POP_5545), 0.002);
-        assertEquals(0.45, DoubleUtil.ratio(sum5545.getDeathCount(), TRIAL_COUNT * POP_5545), 0.002);
+        assertEquals(0.55, DoubleUtil.ratio(sum5545.getBirthCount(), TRIAL_COUNT * POP_5545), 0.005);
+        assertEquals(0.45, DoubleUtil.ratio(sum5545.getDeathCount(), TRIAL_COUNT * POP_5545), 0.005);
+    }
+
+    @Test public void testSampleConstrained() {
+        int TRIAL_COUNT = 10;
+
+        for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
+            GrowthCount count = rate7525.sample(10000, -500);
+
+            assertTrue(-505 <= count.getNetChange()  && count.getNetChange()  <= -500);
+            assertTrue(2400 <= count.getDeathCount() && count.getDeathCount() <= 2600);
+
+            count = rate7525.sample(10000, 0);
+
+            assertTrue(  -5 <= count.getNetChange()  && count.getNetChange()  <=    0);
+            assertTrue(2400 <= count.getDeathCount() && count.getDeathCount() <= 2600);
+
+            count = rate7525.sample(10000, 1000);
+
+            assertTrue( 995 <= count.getNetChange()  && count.getNetChange()  <= 1000);
+            assertTrue(2400 <= count.getDeathCount() && count.getDeathCount() <= 2600);
+        }
     }
 
     @Test(expected = IllegalArgumentException.class)
