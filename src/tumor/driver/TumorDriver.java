@@ -13,6 +13,7 @@ import jam.sim.DiscreteTimeSimulation;
 
 import tumor.carrier.Tumor;
 import tumor.growth.GrowthRate;
+import tumor.report.TrajectoryStatReport;
 
 /**
  * Provides features common to all tumor simulation applications.
@@ -22,8 +23,6 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     private final int  initialSize;
     private final int  maxStepCount;
     private final long maxTumorSize;
-
-    private final boolean writeCellCountTraj;
 
     private PrintWriter cellCountTrajWriter;
 
@@ -57,16 +56,16 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     public static final String MAX_TUMOR_SIZE_PROPERTY = "tumor.driver.maxTumorSize";
 
     /**
-     * Name of the system property that specifies whether or not to
-     * write the tumor size (number of cells) at each time step.
-     */
-    public static final String WRITE_CELL_COUNT_TRAJECTORY_PROPERTY = "tumor.driver.writeCellCountTrajectory";
-
-    /**
      * Name of the output file containing the tumor size (number of
      * cells) trajectories for each trial.
      */
     public static final String CELL_COUNT_TRAJ_FILE_NAME = "cell-count-traj.csv";
+
+    /**
+     * Name of the output file containing the tumor size (number of
+     * cells) statistics aggregated by time step.
+     */
+    public static final String CELL_COUNT_STAT_FILE_NAME = "cell-count-stat.csv";
 
     /**
      * Name of the system property that defines the (globally uniform)
@@ -97,8 +96,6 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
         this.initialSize  = resolveInitialSize();
         this.maxStepCount = resolveMaxStepCount();
         this.maxTumorSize = resolveMaxTumorSize();
-
-        this.writeCellCountTraj = resolveWriteCellCountTraj();
     }
 
     private static int resolveTrialCount() {
@@ -115,10 +112,6 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
 
     private static long resolveMaxTumorSize() {
         return JamProperties.getRequiredLong(MAX_TUMOR_SIZE_PROPERTY, LongRange.POSITIVE);
-    }
-
-    private static boolean resolveWriteCellCountTraj() {
-        return JamProperties.getRequiredBoolean(WRITE_CELL_COUNT_TRAJECTORY_PROPERTY);
     }
 
     /**
@@ -156,8 +149,7 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     }
 
     private void recordCellCount() {
-        if (writeCellCountTraj)
-            cellCountTrajWriter.println(formatCellCount());
+        cellCountTrajWriter.println(formatCellCount());
     }
 
     private String formatCellCount() {
@@ -205,8 +197,7 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     }
 
     @Override protected void initializeSimulation() {
-        if (writeCellCountTraj)
-            cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
+        cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
     }
 
     @Override protected boolean continueSimulation() {
@@ -215,6 +206,8 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
 
     @Override protected void finalizeSimulation() {
         IOUtil.close(cellCountTrajWriter);
+
+        TrajectoryStatReport.run(getReportDir(), CELL_COUNT_TRAJ_FILE_NAME, CELL_COUNT_STAT_FILE_NAME);
     }
 
     @Override protected void initializeTrial() {
