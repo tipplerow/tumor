@@ -2,7 +2,7 @@
 package tumor.driver.pcp;
 
 import java.io.PrintWriter;
-import java.util.Collection;
+import java.util.List;
 
 import tumor.driver.TumorDriver;
 import tumor.growth.GrowthRate;
@@ -36,7 +36,7 @@ public final class PerfectCellPointDriver extends TumorDriver {
         return PointTumor.primary(createFounders());
     }
 
-    private Collection<PerfectCell> createFounders() {
+    private List<PerfectCell> createFounders() {
         return PerfectCell.founders(getInitialSize(), resolveGrowthRate());
     }
 
