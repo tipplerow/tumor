@@ -1,6 +1,6 @@
 #!/bin/sh
 ########################################################################
-# Usage: point-perfect.sh FILE1 [FILE2 ...]
+# Usage: perfect-cell-point.sh FILE1 [FILE2 ...]
 ########################################################################
 
 if [ -z "${JAM_HOME}" ]
@@ -24,4 +24,4 @@ then
     exit 1
 fi
 
-$JAMRUN ${TUMOR_HOME} tumor.driver.pp.PointPerfect "$@"
+$JAMRUN ${TUMOR_HOME} tumor.driver.pcp.PerfectCellPointDriver "$@"
