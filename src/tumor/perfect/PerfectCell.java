@@ -1,6 +1,8 @@
 
-
 package tumor.perfect;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 import tumor.carrier.TumorCell;
 import tumor.growth.GrowthRate;
@@ -28,6 +30,25 @@ public final class PerfectCell extends TumorCell {
      */
     public static PerfectCell founder(GrowthRate growthRate) {
         return new PerfectCell(growthRate);
+    }
+
+    /**
+     * Creates perfect founder cells.
+     *
+     * @param cellCount the number of founders to create.
+     *
+     * @param growthRate the (identical) intrinsic growth rate of the
+     * cells.
+     *
+     * @return the perfect founder cells.
+     */
+    public static Collection<PerfectCell> founders(int cellCount, GrowthRate growthRate) {
+        Collection<PerfectCell> result = new ArrayList<PerfectCell>(cellCount);
+
+        while (result.size() < cellCount)
+            result.add(founder(growthRate));
+
+        return result;
     }
 
     @Override public MutationGenerator getMutationGenerator() {
