@@ -3,13 +3,14 @@
 # tumor containing perfectly replicating cells.
 ########################################################################
 
-PointPerfect.initSize  = 10
-PointPerfect.birthRate = 0.55
-PointPerfect.deathRate = 0.45
+tumor.driver.birthRate = 0.55
+tumor.driver.deathRate = 0.45
 
-PointPerfect.stepCount  = 80
-PointPerfect.trialCount = 20
+tumor.driver.trialCount   = 20
+tumor.driver.initialSize  = 10
+tumor.driver.maxStepCount = 80
+tumor.driver.maxTumorSize = 1E12 ## Essentially unlimited
 
-PointPerfect.writeTrajectory = true
+tumor.driver.writeCellCountTrajectory = true
 
 jam.math.JamRandom.seed = 20180311
