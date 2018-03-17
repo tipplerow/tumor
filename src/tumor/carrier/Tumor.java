@@ -51,6 +51,9 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      * component: the maximum number of new cells that the tumor can
      * support in the local environment surrounding the component.
      *
+     * <p>Note that the local capacity may be negative: the tumor may
+     * have lost the ability to support the current cell population.
+     *
      * @param component a component of this tumor.
      *
      * @return the local growth capacity.
