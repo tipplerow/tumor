@@ -2,6 +2,7 @@
 package tumor.driver;
 
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
@@ -25,6 +26,8 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     private final long maxTumorSize;
 
     private PrintWriter cellCountTrajWriter;
+
+    private static final DecimalFormat SIZE_FORMATTER = new DecimalFormat("#,##0");
 
     /**
      * The active tumor for the current simulation trial.
@@ -145,6 +148,8 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
      * to the cell-count trajectory file.
      */
     protected void recordStep() {
+        JamLogger.info("TRIAL: %4d, STEP: %5d; SIZE: %12s",
+                       getTrialIndex(), getTimeStep(), SIZE_FORMATTER.format(tumor.countCells()));
         recordCellCount();
     }
 
@@ -211,10 +216,6 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     }
 
     @Override protected void initializeTrial() {
-        JamLogger.info("=============");
-        JamLogger.info("TRIAL: %6d", getTrialIndex());
-        JamLogger.info("=============");
-        
         tumor = createTumor();
         recordStep();
     }
