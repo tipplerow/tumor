@@ -1,0 +1,14 @@
+########################################################################
+# Sample property file to simulate the growth of a tumor containing
+# perfectly replicating cells on a (3D) cubic lattice.
+########################################################################
+
+tumor.driver.birthRate = 0.55
+tumor.driver.deathRate = 0.45
+
+tumor.driver.trialCount   =  10
+tumor.driver.initialSize  =  25
+tumor.driver.maxStepCount =  50
+tumor.driver.maxTumorSize = 1E7
+
+jam.math.JamRandom.seed = 20180311

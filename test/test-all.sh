@@ -5,6 +5,9 @@
 
 TEST_DIR=$(cd `dirname $0`; pwd)
 
+cd ${TEST_DIR}/perfect-cell-lattice
+./test-perfect-cell-lattice.sh
+
 cd ${TEST_DIR}/perfect-cell-point
 ./test-perfect-cell-point.sh
 
