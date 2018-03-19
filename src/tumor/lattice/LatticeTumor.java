@@ -173,22 +173,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     public abstract long getSiteCapacity(Coord coord);
 
     /**
-     * Determines the location (lattice coordinate) where a new tumor
-     * component will be placed.
-     *
-     * @param parentCoord the coordinate of the parent component.
-     *
-     * @param newComponent the new component to be placed.
-     *
-     * @return the lattice coordinate to occupied by the new component.
-     *
-     * @throws IllegalStateException if the lattice does not contain
-     * sufficient space around the parent coordinate to place the new
-     * component.
-     */
-    public abstract Coord placeComponent(Coord parentCoord, E newComponent);
-
-    /**
      * Adds a component to this tumor.
      *
      * <p>This default method simply adds the component to the lattice
@@ -306,6 +290,30 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Finds all neighboring lattice sites that can accomodate a new
+     * component.
+     *
+     * @param center the coordinate of the central site to examine.
+     *
+     * @param component the new component to be added in the
+     * neighborhood surrounding the given site.
+     *
+     * @return a list containing the coordinates of all neighboring
+     * sites that can accomodate the new component without exceeding
+     * their capacity (an empty list if there are no available sites).
+     */
+    public List<Coord> findAvailable(Coord center, E component) {
+        List<Coord> neighbors = neighborhood.getNeighbors(center);
+        List<Coord> available = new ArrayList<Coord>(neighbors.size());
+
+        for (Coord neighbor : neighbors)
+            if (isAvailable(neighbor, component))
+                available.add(neighbor);
+
+        return available;
+    }
+
+    /**
      * Returns the nearest-neighbor type.
      *
      * @return the nearest-neighbor type.
@@ -346,6 +354,21 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Identifies lattice sites that can accomodate a new component.
+     *
+     * @param coord the coordinate of the site to examine.
+     *
+     * @param component the new component to be added at the given
+     * site.
+     *
+     * @return {@code true} iff the new component can be placed at
+     * the specified site without exceeding its capacity.
+     */
+    public boolean isAvailable(Coord coord, E component) {
+        return countSiteCells(coord) + component.countCells() <= getSiteCapacity(coord);
+    }
+
+    /**
      * Returns the location of a component in this tumor.
      *
      * @param component the component of interest.
@@ -362,6 +385,38 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             throw new IllegalArgumentException("Component is not present in the tumor.");
 
         return coord;
+    }
+
+    /**
+     * Determines the location (lattice coordinate) where a new tumor
+     * component will be placed.
+     *
+     * <p>This default implementation places the new component at the
+     * parent location <em>if it is available</em> (has sufficient
+     * space to accomodate the number of cells in the new component).
+     * Otherwise, this method identifies all available sites in the
+     * neighborhood surrounding the parent and chooses one at random.
+     *
+     * @param parentCoord the coordinate of the parent component.
+     *
+     * @param newComponent the new component to be placed.
+     *
+     * @return the lattice coordinate to occupied by the new component.
+     *
+     * @throws IllegalStateException if the lattice does not contain
+     * sufficient space around the parent coordinate to place the new
+     * component.
+     */
+    public Coord placeComponent(Coord parentCoord, E newComponent) {
+        if (isAvailable(parentCoord, newComponent))
+            return parentCoord;
+
+        List<Coord> availCoord = findAvailable(parentCoord, newComponent);
+
+        if (availCoord.isEmpty())
+            throw new IllegalStateException("Nowhere to place the new tumor component.");
+
+        return ListUtil.select(availCoord, JamRandom.global());
     }
 
     /**

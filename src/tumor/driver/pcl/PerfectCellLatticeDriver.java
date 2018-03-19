@@ -1,11 +1,9 @@
 
 package tumor.driver.pcl;
 
-import java.io.PrintWriter;
 import java.util.List;
 
 import tumor.driver.TumorDriver;
-import tumor.growth.GrowthRate;
 import tumor.lattice.CellularLatticeTumor;
 import tumor.perfect.PerfectCell;
 

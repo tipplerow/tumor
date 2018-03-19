@@ -45,7 +45,7 @@ public class CellularLatticeTumor<E extends TumorCell> extends LatticeTumor<E> {
      *
      * @param <E> the concrete subtype for the tumor components.
      *
-     * @param founder the founding tumor component.
+     * @param founder the founding tumor cell.
      *
      * @param maxCellCount the maximum number of cells expected in the
      * tumor.
@@ -62,7 +62,7 @@ public class CellularLatticeTumor<E extends TumorCell> extends LatticeTumor<E> {
      *
      * @param <E> the concrete subtype for the tumor components.
      *
-     * @param founders the founding tumor components.
+     * @param founders the founding tumor cells.
      *
      * @param maxCellCount the maximum number of cells expected in the
      * tumor.
@@ -77,36 +77,18 @@ public class CellularLatticeTumor<E extends TumorCell> extends LatticeTumor<E> {
         return tumor;
     }
 
-    /**
-     * Determines the location (lattice coordinate) where a new tumor
-     * component will be placed.
-     *
-     * <p>This default implementation places the child at the parent
-     * location if it is available (if the parent has died and no
-     * dauther cell has yet taken its place).  Otherwise, this method
-     * identifies all empty sites in the neighborhood surrounding the
-     * parent coordinate and chooses one site random.
-     *
-     * @param parentCoord the coordinate of the parent component.
-     *
-     * @param newComponent the new component to be placed.
-     *
-     * @return the lattice coordinate to occupied by the new component.
-     *
-     * @throws IllegalStateException if the lattice does not contain
-     * sufficient space around the parent coordinate to place the new
-     * component.
-     */
-    @Override public Coord placeComponent(Coord parentCoord, E newComponent) {
-        if (lattice.isAvailable(parentCoord))
-            return parentCoord;
-        
-        List<Coord> availCoord = lattice.findAvailable(parentCoord, neighborhood);
+    @Override public List<Coord> findAvailable(Coord center, E component) {
+        //
+        // Only one tumor cell per site...
+        //
+        return lattice.findAvailable(center, neighborhood);
+    }
 
-        if (availCoord.isEmpty())
-            throw new IllegalStateException("Nowhere to place the new tumor component.");
-
-        return ListUtil.select(availCoord, JamRandom.global());
+    @Override public boolean isAvailable(Coord coord, E component) {
+        //
+        // Only one tumor cell per site...
+        //
+        return lattice.isAvailable(coord);
     }
 
     @Override protected void addComponent(E component, Coord location) {

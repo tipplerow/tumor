@@ -83,6 +83,13 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     public static final String DEATH_RATE_PROPERTY = "tumor.driver.deathRate";
 
     /**
+     * Name of the system property that defines the maximum number of
+     * cells per lattice site (required for direct simulations of cell
+     * lineages).
+     */
+    public static final String SITE_CAPACITY_PROPERTY = "tumor.driver.siteCapacity";
+
+    /**
      * Creates a new driver and reads system properties from a set of
      * property files.
      *
@@ -131,6 +138,16 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
         double deathRate = JamProperties.getRequiredDouble(DEATH_RATE_PROPERTY, DoubleRange.NON_NEGATIVE);
 
         return new GrowthRate(birthRate, deathRate);
+    }
+
+    /**
+     * Reads the maximum number of cells per lattice site (required
+     * for simulations of cell lineages) from system properties.
+     *
+     * @return the (globally uniform) lattice site capacity.
+     */
+    public static int resolveSiteCapacity() {
+        return JamProperties.getRequiredInt(SITE_CAPACITY_PROPERTY, IntRange.POSITIVE);
     }
 
     /**
