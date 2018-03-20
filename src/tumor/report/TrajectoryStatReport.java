@@ -132,17 +132,44 @@ public final class TrajectoryStatReport {
     }
 
     private void writeHeader(PrintWriter writer) {
-        writer.println("timeStep,Q1,median,mean,Q3");
+        writer.println("timeStep,sampleSize,Q1,median,mean,Q3,SD,stdErr");
     }
 
     private void writeLine(PrintWriter writer, int timeStep) {
         StatSummary summary = summaries.get(timeStep);
 
-        writer.println(String.format("%d,%f,%f,%f,%f",
+        writer.println(String.format("%d,%d,%f,%f,%f,%f,%f,%f",
                                      timeStep,
+                                     summary.getSize(),
                                      summary.getQuartile1(),
                                      summary.getMedian(),
                                      summary.getMean(),
-                                     summary.getQuartile3()));
+                                     summary.getQuartile3(),
+                                     summary.getSD(),
+                                     summary.getError()));
+    }
+
+    /**
+     * Generates a trajectory statistics report.
+     *
+     * @param args an array of length two with {@code args[0]}
+     * containing the name of the input file and {@code args[1]} 
+     * the name of the output file.
+     *
+     * @throws RuntimeException if any errors occur.
+     */
+    public static void main(String[] args) {
+        if (args.length != 2)
+            usage();
+
+        File inputFile = new File(args[0]);
+        File outputFile = new File(args[1]);
+
+        run(inputFile, outputFile);
+    }
+
+    private static void usage() {
+        System.err.println("Usage: tumor.report.TrajectoryStatReport INFILE OUTFILE");
+        System.exit(1);
     }
 }
