@@ -104,35 +104,37 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * likely to be suitable for the maximum number of components if
      * the property is not set.
      *
-     * @param maxComponents the maximum number of components to be
-     * expected in the tumor.
+     * @param maxSites the number of lattice sites expected to be
+     * occupied when the tumor has reached its maximum size (cell
+     * count).
      *
      * @return the period length to be used for the component lattice.
      */
-    protected static int resolvePeriodLength(long maxComponents) {
-        return JamProperties.getOptionalInt(PERIOD_LENGTH_PROPERTY, defaultLatticePeriod(maxComponents));
+    protected static int resolvePeriodLength(long maxSites) {
+        return JamProperties.getOptionalInt(PERIOD_LENGTH_PROPERTY, defaultLatticePeriod(maxSites));
     }
 
     /**
      * Computes a lattice period that is safely large enough for
      * simulations of single tumors with a given maximum size.
      *
-     * @param maxComponents the maximum number of components to be
-     * expected in the tumor.
+     * @param maxSites the number of lattice sites expected to be
+     * occupied when the tumor has reached its maximum size (cell
+     * count).
      *
      * @return a lattice period sufficient for the simulation of
-     * tumors with the specified maximum size.
+     * tumors with the specified maximum occupancy.
      *
      * @throws IllegalArgumentException if the lattice period would
      * exceed the maximum integer value.
      */
-    public static int defaultLatticePeriod(long maxComponents) {
+    public static int defaultLatticePeriod(long maxSites) {
         //
         // Ten times the diameter of a perfectly spherical object
         // should be sufficient to contain the tumor without any
         // chance of conflict with periodic images.
         //
-        long radius = estimateRadius(maxComponents);
+        long radius = estimateRadius(maxSites);
         long period = 2 * 10 * radius;
 
         // Lattice periods are specified with an "int", not a "long".
@@ -147,18 +149,18 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
     /**
      * Computes the approximate radius of a spherical tumor with a
-     * given number of components.
+     * given number of occupied lattice sites.
      *
-     * @param componentCount the number of components in the tumor.
+     * @param siteCount the number of occupied lattice sites.
      *
      * @return the approximate radius of the tumor.
      */
-    public static long estimateRadius(long componentCount) {
+    public static long estimateRadius(long siteCount) {
         //
         // Return the radius of a sphere with volume equal to the
         // number of components...
         //
-        return Math.round(Math.cbrt(0.75 * ((double) componentCount) / Math.PI));
+        return Math.round(Math.cbrt(0.75 * ((double) siteCount) / Math.PI));
     }
 
     /**

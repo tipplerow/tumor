@@ -84,8 +84,7 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
 
     /**
      * Name of the system property that defines the maximum number of
-     * cells per lattice site (required for direct simulations of cell
-     * lineages).
+     * cells per lattice site.
      */
     public static final String SITE_CAPACITY_PROPERTY = "tumor.driver.siteCapacity";
 
@@ -141,10 +140,13 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     }
 
     /**
-     * Reads the maximum number of cells per lattice site (required
-     * for simulations of cell lineages) from system properties.
+     * Reads the maximum number of tumor cells per lattice site from
+     * system properties.
      *
-     * @return the (globally uniform) lattice site capacity.
+     * @return the maximum number of tumor cells per lattice site.
+     *
+     * @throws RuntimeException unless the required system property is
+     * properly defined.
      */
     public static int resolveSiteCapacity() {
         return JamProperties.getRequiredInt(SITE_CAPACITY_PROPERTY, IntRange.POSITIVE);
