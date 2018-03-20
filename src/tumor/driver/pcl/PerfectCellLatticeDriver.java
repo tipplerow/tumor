@@ -38,12 +38,6 @@ public final class PerfectCellLatticeDriver extends TumorDriver {
         return PerfectCell.founders(getInitialSize(), resolveGrowthRate());
     }
 
-    @Override protected void finalizeTrial() {
-        //
-        // Nothing to do...
-        //
-    }
-
     public static void main(String[] propertyFiles) {
         run(propertyFiles);
     }

@@ -247,4 +247,8 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
         tumor.advance();
         recordStep();
     }
+
+    @Override protected void finalizeTrial() {
+        cellCountTrajWriter.flush();
+    }
 }

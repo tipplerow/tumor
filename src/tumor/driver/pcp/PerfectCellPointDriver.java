@@ -40,12 +40,6 @@ public final class PerfectCellPointDriver extends TumorDriver {
         return PerfectCell.founders(getInitialSize(), resolveGrowthRate());
     }
 
-    @Override protected void finalizeTrial() {
-        //
-        // Nothing to do...
-        //
-    }
-
     public static void main(String[] propertyFiles) {
         run(propertyFiles);
     }
