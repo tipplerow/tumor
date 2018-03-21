@@ -3,41 +3,80 @@ package tumor.carrier;
 
 import java.util.Collection;
 
+import jam.lang.OrdinalIndex;
+
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
 import tumor.mutation.MutationList;
 
 /**
  * Represents the most fundamental (non-divisible) tumor components:
- * single tumor cells or lineages of identical cells. 
+ * single tumor cells or groups (demes or lineages) of identical cells.
  *
  * <p>Tumor components carry a unique set of mutations, have a single
  * well defined growth rate, and are always contained within a tumor.
  */
 public abstract class TumorComponent extends Carrier {
     // The intrinsic growth rate of this component...
-    private final GrowthRate growthRate;
+    private GrowthRate growthRate;
 
     // Only those mutations that originated in this component...
-    private final MutationList originalMut;
+    private MutationList originalMut;
 
-    /**
-     * Creates all tumor components.
-     *
-     * @param index the ordinal index of the component.
-     *
-     * @param parent the parent component; {@code null} for a founding
-     * component.
-     *
-     * @param growthRate the intrinsic growth rate of the component.
-     *
-     * @param originalMut the mutations originating in the component.
-     */
-    protected TumorComponent(long index, TumorComponent parent, GrowthRate growthRate, MutationList originalMut) {
-        super(index, parent);
+    private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
+
+    private TumorComponent(TumorComponent parent, GrowthRate growthRate, MutationList originalMut) {
+        super(ordinalIndex.next(), parent);
 
         this.growthRate  = growthRate;
         this.originalMut = originalMut;
+    }
+
+    /**
+     * Creates a founding tumor component.
+     *
+     * <p>Note that any mutations that triggered the transformation to
+     * malignancy will be carried by all descendants (and therefore
+     * may be tracked in the tumor itself), so they do not need to be
+     * explicitly specified in the founding component.
+     *
+     * @param growthRate the intrinsic growth rate of the founder.
+     */
+    protected TumorComponent(GrowthRate growthRate) {
+        this(null, growthRate, MutationList.EMPTY);
+    }
+
+    /**
+     * Creates a cloned component with no original mutations.
+     *
+     * @param parent the parent component.
+     */
+    protected TumorComponent(TumorComponent parent) {
+        this(parent, parent.growthRate, MutationList.EMPTY);
+    }
+
+    /**
+     * Creates a daughter component with new original mutations.
+     *
+     * @param parent the parent component.
+     *
+     * @param daughterMut the mutations originating in the daughter.
+     */
+    protected TumorComponent(TumorComponent parent, MutationList daughterMut) {
+        this(parent, parent.growthRate, parent.originalMut);
+        mutate(daughterMut);
+    }
+
+    /**
+     * Mutates this tumor component: adds new mutations to the genome
+     * of this component (the original mutation list) and adjusts the
+     * growth rate accordingly.
+     *
+     * @param newMutations the new mutations that have occurred.
+     */
+    protected final void mutate(MutationList newMutations) {
+        originalMut = originalMut.append(newMutations);
+        growthRate  = newMutations.apply(growthRate);
     }
 
     /**
@@ -92,5 +131,10 @@ public abstract class TumorComponent extends Carrier {
      */
     public final MutationList getOriginalMutations() {
         return originalMut;
+    }
+
+    @Override public String toString() {
+        return String.format("%s(%d; %d x %s)", getClass().getSimpleName(), getIndex(), 
+                             countCells(), getOriginalMutations().toString());
     }
 }

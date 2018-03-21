@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import jam.lang.OrdinalIndex;
-
 import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
@@ -22,12 +20,6 @@ public abstract class TumorCell extends TumorComponent {
     //
     private State state = State.ALIVE;
 
-    private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
-
-    private TumorCell(TumorCell parent, GrowthRate growthRate, MutationList originalMut) {
-        super(ordinalIndex.next(), parent, growthRate, originalMut);
-    }
-
     /**
      * Creates a founding tumor cell.
      *
@@ -39,18 +31,18 @@ public abstract class TumorCell extends TumorComponent {
      * @param growthRate the intrinsic growth rate of the founder.
      */
     protected TumorCell(GrowthRate growthRate) {
-        this(null, growthRate, MutationList.EMPTY);
+        super(growthRate);
     }
 
     /**
-     * Creates a daughter cell.
+     * Creates a daughter cell with new original mutations.
      *
      * @param parent the parent cell.
      *
      * @param daughterMut the mutations originating in the daughter.
      */
     protected TumorCell(TumorCell parent, MutationList daughterMut) {
-        this(parent, parent.computeDaughterGrowthRate(daughterMut), daughterMut);
+        super(parent, daughterMut);
     }
 
     /**
@@ -116,11 +108,11 @@ public abstract class TumorCell extends TumorComponent {
         return Collections.emptyList();
     }
     
-    @Override public long countCells() {
+    @Override public final long countCells() {
         return 1L;
     }
 
-    @Override public State getState() {
+    @Override public final State getState() {
         return state;
     }
 }

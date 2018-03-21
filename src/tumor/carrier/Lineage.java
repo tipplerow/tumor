@@ -5,9 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import jam.app.JamProperties;
-import jam.dist.BinomialDistribution;
-import jam.lang.OrdinalIndex;
 import jam.math.Probability;
 
 import tumor.growth.GrowthCount;
@@ -15,63 +12,10 @@ import tumor.growth.GrowthRate;
 import tumor.mutation.MutationList;
 
 /**
- * Represents a multi-cell lineage in which each cell is identical
- * (has accumulated the same mutations).
- *
- * <p><b>Explicit sampling limit.</b> When a lineage advances through
- * one discrete time step, the number of birth and death events can be
- * sampled explicitly (by iterating over all cells in the lineage and
- * choosing an event at random for each cell) or computed implicitly
- * using the limit of large cell counts (assuming that the number of
- * birth and death events is exactly equal to the product of the
- * lineage population and the birth and death rates, respectively).
- * Implicit calculation is much more efficient for large lineages.
- * The system property {@code tumor.carrier.lineageSamplingLimit}
- * defines the boundary between the two algorithms.
+ * Represents a well-mixed population of genetically identical cells
+ * where any new mutation spawns a new distinct daughter lineage.
  */
-public abstract class Lineage extends TumorComponent {
-    // The number of cells in this lineage...
-    private long cellCount;
-
-    private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
-
-    // Lineages larger than this will use implicit computation of
-    // birth and death rates...
-    private static final long EXPLICIT_SAMPLING_LIMIT = resolveSamplingLimit();
-
-    private static long resolveSamplingLimit() {
-        return JamProperties.getOptionalInt(EXPLICIT_SAMPLING_LIMIT_PROPERTY,
-                                            EXPLICIT_SAMPLING_LIMIT_DEFAULT);
-    }
-
-    private Lineage(Lineage parent, GrowthRate growthRate, MutationList originalMut, long cellCount) {
-        super(ordinalIndex.next(), parent, growthRate, originalMut);
-
-        validateInitialCellCount(cellCount);
-        this.cellCount = cellCount;
-    }
-
-    private static void validateInitialCellCount(long cellCount) {
-        if (cellCount <= 0)
-            throw new IllegalArgumentException("Initial cell count must be positive.");
-    }
-
-    /**
-     * Name of the system property that defines the maximum cell count
-     * for which explicit event sampling will be performed.
-     */
-    public static final String EXPLICIT_SAMPLING_LIMIT_PROPERTY = "tumor.carrier.lineageSamplingLimit";
-
-    /**
-     * Default value for the explicit event sampling limit.
-     */
-    public static final int EXPLICIT_SAMPLING_LIMIT_DEFAULT = 10;
-
-    /**
-     * Number of cells in a newly mutated daughter lineage.
-     */
-    public static final long DAUGHTER_CELL_COUNT = 1L;
-
+public abstract class Lineage extends CellGroup {
     /**
      * Creates a founding lineage.
      *
@@ -87,7 +31,7 @@ public abstract class Lineage extends TumorComponent {
      * lineage.
      */
     protected Lineage(GrowthRate growthRate, long cellCount) {
-        this(null, growthRate, MutationList.EMPTY, cellCount);
+        super(growthRate, cellCount);
     }
 
     /**
@@ -100,7 +44,7 @@ public abstract class Lineage extends TumorComponent {
      * lineage.
      */
     protected Lineage(Lineage parent, long cellCount) {
-        this(parent, parent.getGrowthRate(), MutationList.EMPTY, cellCount);
+        super(parent, cellCount);
     }
 
     /**
@@ -111,17 +55,13 @@ public abstract class Lineage extends TumorComponent {
      * @param daughterMut the mutations originating in the daughter.
      */
     protected Lineage(Lineage parent, MutationList daughterMut) {
-        this(parent, parent.computeDaughterGrowthRate(daughterMut), daughterMut, DAUGHTER_CELL_COUNT);
+        super(parent, daughterMut, DAUGHTER_CELL_COUNT);
     }
 
     /**
-     * Creates a (multi-celled) clone lineage with no new mutations.
-     *
-     * @param cellCount the number of cells in the cloned lineage.
-     *
-     * @return the cloned lineage.
+     * Number of cells in a newly mutated daughter lineage.
      */
-    public abstract Lineage newClone(long cellCount);
+    public static final long DAUGHTER_CELL_COUNT = 1L;
 
     /**
      * Creates a (single-celled) daughter lineage with new original
@@ -131,58 +71,7 @@ public abstract class Lineage extends TumorComponent {
      *
      * @return the daughter lineage.
      */
-    public abstract Lineage newDaughter(MutationList daughterMut);
-
-    /**
-     * Stochastically partitions the cells in this lineage between
-     * this and a new "fission product".
-     *
-     * <p>The size of the new lineage is a random variable drawn from
-     * the binomial distribution {@code B(n, 1 - p)}, where {@code n}
-     * is the original size of this lineage and {@code p} is the
-     * retention probability.
-     *
-     * <p>Note that this lineage shrinks by the number of cells moved
-     * to the fission product, therefore <em>this lineage may be empty
-     * following the division</em>.
-     *
-     * @param retentionProb the probability that this lineage will
-     * retain any given cell.
-     *
-     * @return the fission product, or {@code null} if this lineage
-     * retained all cells (not unlikely for a small lineage).
-     */
-    public Lineage divide(Probability retentionProb) {
-        long fissionCount =
-            computeFissionCount(retentionProb);
-
-        if (fissionCount < 1L)
-            return null;
-
-        cellCount -=
-            fissionCount;
-
-        return newClone(fissionCount);
-    }
-
-    private long computeFissionCount(Probability retentionProb) {
-        Probability transferProb = retentionProb.not();
-
-        if (cellCount < 10000) {
-            //
-            // Sample the number of cells transfered from the binomial
-            // distribution...
-            //
-            return BinomialDistribution.create((int) cellCount, transferProb).sample();
-        }
-        else {
-            //
-            // The number of cells is so large that the binomial
-            // distribution approaches a delta function...
-            //
-            return (long) (transferProb.doubleValue() * cellCount);
-        }
-    }
+    protected abstract Lineage newDaughter(MutationList daughterMut);
 
     /**
      * Advances this lineage through one discrete time step.
@@ -202,9 +91,7 @@ public abstract class Lineage extends TumorComponent {
         // Update the cell count for the number of birth and death
         // events...
         GrowthCount growthCount = resolveGrowthCount(tumor);
-
-        cellCount += growthCount.getBirthCount();
-        cellCount -= growthCount.getDeathCount();
+        cellCount += growthCount.getNetChange();
 
         // Each birth event creates two daughter cells... 
         long daughterCount = 2 * growthCount.getBirthCount();
@@ -237,26 +124,7 @@ public abstract class Lineage extends TumorComponent {
         return daughters;
     }
 
-    private GrowthCount resolveGrowthCount(Tumor tumor) {
-        long netCapacity = tumor.getLocalGrowthCapacity(this);
-        GrowthRate growthRate = tumor.getLocalGrowthRate(this);
-
-        if (cellCount <= EXPLICIT_SAMPLING_LIMIT)
-            return growthRate.sample(cellCount, netCapacity);
-        else
-            return growthRate.compute(cellCount, netCapacity);
-    }
-
-    @Override public State getState() {
-        return isEmpty() ? State.DEAD : State.ALIVE;
-    }
-
-    @Override public long countCells() {
-        return cellCount;
-    }
-
-    @Override public String toString() {
-        return String.format("%s(%d; %d x %s)", getClass().getSimpleName(), getIndex(), 
-                             countCells(), getOriginalMutations().toString());
+    @Override public Lineage divide(Probability retentionProb) {
+        return (Lineage) super.divide(retentionProb);
     }
 }
