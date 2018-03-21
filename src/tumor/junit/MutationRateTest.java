@@ -1,6 +1,7 @@
 
 package tumor.junit;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
 import jam.dist.PoissonDistribution;
@@ -18,7 +19,10 @@ public class MutationRateTest extends NumericTestBase {
         double mean = 0.1;
         MutationRate rate = MutationRate.poisson(mean);
         PoissonDistribution dist = PoissonDistribution.create(mean);
-        Multiset<Integer> counts = MultisetUtil.hash(rate.sample(100000));
+        Multiset<Integer> counts = HashMultiset.create();
+
+        for (int trial = 0; trial < 100000; ++trial)
+            counts.add(rate.sample());
 
         for (int count : counts.elementSet())
             assertEquals(dist.pdf(count), MultisetUtil.frequency(counts, count), 0.001);
@@ -27,7 +31,10 @@ public class MutationRateTest extends NumericTestBase {
     @Test public void testUniform() {
         double mean = 0.1;
         MutationRate rate = MutationRate.uniform(mean);
-        Multiset<Integer> counts = MultisetUtil.hash(rate.sample(100000));
+        Multiset<Integer> counts = HashMultiset.create();
+
+        for (int trial = 0; trial < 100000; ++trial)
+            counts.add(rate.sample());
 
         assertEquals(2, counts.elementSet().size());
 

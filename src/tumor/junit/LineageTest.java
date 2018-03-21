@@ -19,12 +19,13 @@ import static org.junit.Assert.*;
 
 public class LineageTest extends NumericTestBase {
     static {
-        System.setProperty(MutationGenerator.MUTATION_RATE_PROPERTY,   "0.001");
-        System.setProperty(MutationGenerator.SELECTION_COEFF_PROPERTY, "0.0");
+        System.setProperty(MutationGenerator.NEUTRAL_MUTATION_RATE_PROPERTY,   "0.001");
+        System.setProperty(MutationGenerator.SELECTIVE_MUTATION_RATE_PROPERTY, "0.0");
+        System.setProperty(MutationGenerator.SELECTION_COEFF_PROPERTY,         "0.0");
     }
 
     @Test public void testAdvance1() {
-        long       initCount  = 1000000L;
+        long       initCount  = 100000L;
         GrowthRate growthRate = GrowthRate.net(0.0);
         
         Lineage founder = SystemLineage.founder(growthRate, initCount);
@@ -40,9 +41,9 @@ public class LineageTest extends NumericTestBase {
         // The total number of children should be approximately equal
         // to the product of the founder size and the mutation rate...
         double actualMean   = DoubleUtil.ratio(children.size(), initCount);
-        double expectedMean = MutationGenerator.global().getMutationRate().getMean();
-            
-        assertEquals(expectedMean, actualMean, 0.01);
+        double expectedMean = 0.001;
+
+        assertEquals(expectedMean, actualMean, 0.0001);
     }
 
     @Test public void testPerfect() {

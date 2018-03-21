@@ -35,7 +35,15 @@ public abstract class MutationRate {
             super(0.0);
         }
 
+        @Override public boolean isZero() {
+            return true;
+        }
+
         @Override public int sample() {
+            return 0;
+        }
+
+        @Override public int sample(int daughterCount) {
             return 0;
         }
     }
@@ -125,14 +133,14 @@ public abstract class MutationRate {
      *
      * @param daughterCount the number of daughter cells.
      *
-     * @return an array of length {@code daughterCount} containing a
-     * randomly generated mutation count for each daughter cell.
+     * @return the total number of mutations arising across the
+     * population of daughter cells.
      */
-    public int[] sample(int daughterCount) {
-        int[] result = new int[daughterCount];
+    public int sample(int daughterCount) {
+        int result = 0;
 
         for (int index = 0; index < daughterCount; ++index)
-            result[index] = sample();
+            result += sample();
 
         return result;
     }
@@ -146,6 +154,15 @@ public abstract class MutationRate {
      */
     public final double getMean() {
         return mean;
+    }
+
+    /**
+     * Identifies zero mutation rates.
+     *
+     * @return {@code true} iff this mutation rate is zero.
+     */
+    public boolean isZero() {
+        return DoubleComparator.DEFAULT.isZero(mean);
     }
 
     @Override public boolean equals(Object that) {

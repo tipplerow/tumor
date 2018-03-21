@@ -5,9 +5,8 @@ package tumor.mutation;
  * Generates scalar mutations with a fixed mutation rate and selection
  * coefficient.
  */
-public final class ScalarMutationGenerator extends IndependentMutationGenerator {
+public final class ScalarMutationGenerator extends HomogeneousGenerator {
     private final double selectionCoeff;
-    private final MutationRate mutationRate;
 
     /**
      * Creates a scalar mutation generator with a fixed mutation
@@ -18,7 +17,7 @@ public final class ScalarMutationGenerator extends IndependentMutationGenerator 
      * @param selectionCoeff the fixed selection coefficient.
      */
     public ScalarMutationGenerator(MutationRate mutationRate, double selectionCoeff) {
-        this.mutationRate = mutationRate;
+        super(mutationRate);
         this.selectionCoeff = selectionCoeff;
     }
 
@@ -33,9 +32,5 @@ public final class ScalarMutationGenerator extends IndependentMutationGenerator 
     
     @Override public Mutation generateOne() {
         return new ScalarMutation(selectionCoeff);
-    }
-
-    @Override public MutationRate getMutationRate() {
-        return mutationRate;
     }
 }
