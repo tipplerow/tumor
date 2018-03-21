@@ -435,38 +435,75 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         // Iterate over the active (living) tumor components in a
         // randomized order...
         //
-        Collection<E> shuffled = shuffleComponents();
+        List<E> shuffled = shuffleComponents();
 
-        for (E parent : shuffled) {
-            //
-            // Save the location of the parent for placement of the
-            // children...
-            //
-            Coord parentCoord = locateComponent(parent);
-            
-            @SuppressWarnings("unchecked")
-                Collection<E> children =
-                (Collection<E>) parent.advance(this);
-
-            // Remove dead parents before placing the children, since
-            // one (or more) of the children may need to occupy the
-            // same location...
-            if (parent.isDead())
-                removeComponent(parent);
-            
-            for (E child : children)
-                addComponent(child, placeComponent(parentCoord, child));
-        }
+        migrate(shuffled);
+        advance(shuffled);
 
         // This base class never divides...
         return Collections.emptyList();
     }
 
-    private List<E> shuffleComponents() {
+    /**
+     * Shuffles the active (living) components of this tumor into an
+     * unbiased randomized order.
+     *
+     * @return a new list containing the active (living) components of
+     * this tumor in an unbiased randomized order.
+     */
+    protected List<E> shuffleComponents() {
         List<E> shuffled = new ArrayList<E>(viewComponents());
         ListUtil.shuffle(shuffled, JamRandom.global());
         
         return shuffled;
+    }
+
+    /**
+     * Implement a model of migration within the tumor: allow tumor
+     * components to move from one site to another.
+     *
+     * @param components the active (living) tumor components arranged
+     * in a randomized order.
+     */
+    protected void migrate(List<E> components) {
+    }
+
+    /**
+     * Advances each component in this tumor by one discrete time
+     * step.
+     *
+     * @param components the active (living) tumor components arranged
+     * in a randomized order.
+     */
+    protected void advance(List<E> components) {
+        for (E component : components)
+            advance(component);
+    }
+
+    /**
+     * Advances a single component in this tumor by one discrete time
+     * step.
+     *
+     * @param parent the parent component to advance.
+     */
+    protected void advance(E parent) {
+        //
+        // Save the location of the parent for placement of the
+        // children...
+        //
+        Coord parentCoord = locateComponent(parent);
+
+        @SuppressWarnings("unchecked")
+            Collection<E> children =
+            (Collection<E>) parent.advance(this);
+
+        // Remove dead parents before placing the children, since one
+        // or more of the children may need to occupy that location...
+        if (parent.isDead())
+            removeComponent(parent);
+
+        for (E child : children)
+            addComponent(child, placeComponent(parentCoord, child));
     }
 
     /**
