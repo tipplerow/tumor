@@ -6,7 +6,6 @@ import java.text.DecimalFormat;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
-import jam.io.IOUtil;
 import jam.math.DoubleRange;
 import jam.math.IntRange;
 import jam.math.LongRange;
@@ -229,7 +228,7 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     }
 
     @Override protected void finalizeSimulation() {
-        IOUtil.close(cellCountTrajWriter);
+        closeWriters();
 
         TrajectoryStatReport.run(getReportDir(), CELL_COUNT_TRAJ_FILE_NAME, CELL_COUNT_STAT_FILE_NAME);
     }
