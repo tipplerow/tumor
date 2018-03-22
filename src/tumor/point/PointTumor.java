@@ -1,11 +1,8 @@
 
 package tumor.point;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -44,7 +41,7 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
      * @return the new primary tumor.
      */
     public static <E extends TumorComponent> PointTumor<E> primary(E founder) {
-        return primary(Arrays.asList(founder));
+        return primary(List.of(founder));
     }
 
     /**
