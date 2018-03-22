@@ -8,6 +8,7 @@ import jam.math.Probability;
 
 import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
+import tumor.mutation.MutationGenerator;
 import tumor.mutation.MutationList;
 
 /**
@@ -85,9 +86,10 @@ public abstract class Deme extends CellGroup {
 
         // Each birth event creates two opportunities for mutations to
         // occur, so generate them...
-        MutationList newMutations = generateMutations(tumor, growthCount);
-        mutate(newMutations);
+        MutationGenerator mutGenerator = tumor.getLocalMutationGenerator(this);
+        MutationList      newMutations = mutGenerator.generate(growthCount.getDaughterCount());
 
+        mutate(newMutations);
         return Collections.emptyList();
     }
 
