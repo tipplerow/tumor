@@ -16,19 +16,19 @@ public abstract class MutationGenerator {
      * Name of the system property that defines the (Poisson) arrival
      * rate of neutral mutations in the global mutation generator.
      */
-    public static final String NEUTRAL_MUTATION_RATE_PROPERTY = "tumor.mutation.neutralMutationRate";
+    public static final String NEUTRAL_MUTATION_RATE_PROPERTY = "MutationGenerator.neutralMutationRate";
 
     /**
      * Name of the system property that defines the (Poisson) arrival
      * rate of selective mutations in the global mutation generator.
      */
-    public static final String SELECTIVE_MUTATION_RATE_PROPERTY = "tumor.mutation.selectiveMutationRate";
+    public static final String SELECTIVE_MUTATION_RATE_PROPERTY = "MutationGenerator.selectiveMutationRate";
 
     /**
      * Name of the system property that defines the fixed selection
      * coefficient for the global mutation generator.
      */
-    public static final String SELECTION_COEFF_PROPERTY = "tumor.mutation.selectionCoeff";
+    public static final String SELECTION_COEFF_PROPERTY = "MutationGenerator.selectionCoeff";
 
     /**
      * Stochastically generates the mutations that originate in a

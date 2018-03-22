@@ -19,6 +19,11 @@ public class GrowthRateTest extends NumericTestBase {
     private static final GrowthRate rate5545 = new GrowthRate(0.55, 0.45);
     private static final GrowthRate rate7525 = new GrowthRate(0.75, 0.25);
 
+    static {
+        System.setProperty(GrowthRate.BIRTH_RATE_PROPERTY, "0.51");
+        System.setProperty(GrowthRate.DEATH_RATE_PROPERTY, "0.49");
+    }
+
     @Test public void testComputeExact() {
         int TRIAL_COUNT = 100;
 
@@ -135,6 +140,11 @@ public class GrowthRateTest extends NumericTestBase {
         assertDouble(0.55, rate5545.getBirthRate().doubleValue());
         assertDouble(0.45, rate5545.getDeathRate().doubleValue());
         assertDouble(1.00, rate5545.getEventRate().doubleValue());
+    }
+
+    @Test public void testGlobal() {
+        assertDouble(0.51, GrowthRate.global().getBirthRate().doubleValue());
+        assertDouble(0.49, GrowthRate.global().getDeathRate().doubleValue());
     }
 
     @Test public void testGrowthFactor() {

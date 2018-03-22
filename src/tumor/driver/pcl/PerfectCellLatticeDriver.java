@@ -4,6 +4,7 @@ package tumor.driver.pcl;
 import java.util.List;
 
 import tumor.driver.TumorDriver;
+import tumor.growth.GrowthRate;
 import tumor.lattice.CellularLatticeTumor;
 import tumor.perfect.PerfectCell;
 
@@ -35,7 +36,7 @@ public final class PerfectCellLatticeDriver extends TumorDriver {
     }
 
     private List<PerfectCell> createFounders() {
-        return PerfectCell.founders(getInitialSize(), resolveGrowthRate());
+        return PerfectCell.founders(getInitialSize(), GrowthRate.global());
     }
 
     public static void main(String[] propertyFiles) {

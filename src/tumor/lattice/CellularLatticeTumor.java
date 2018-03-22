@@ -1,13 +1,10 @@
 
 package tumor.lattice;
 
-import java.util.Collection;
 import java.util.List;
 
 import jam.lattice.Coord;
 import jam.lattice.Lattice;
-import jam.math.JamRandom;
-import jam.util.ListUtil;
 
 import tumor.carrier.TumorCell;
 

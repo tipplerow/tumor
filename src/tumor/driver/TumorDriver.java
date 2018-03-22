@@ -37,25 +37,25 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
      * Name of the system property that defines the number of trials
      * to execute.
      */
-    public static final String TRIAL_COUNT_PROPERTY = "tumor.driver.trialCount";
+    public static final String TRIAL_COUNT_PROPERTY = "TumorDriver.trialCount";
 
     /**
      * Name of the system property that defines the initial number of
      * cells in each tumor.
      */
-    public static final String INITIAL_SIZE_PROPERTY = "tumor.driver.initialSize";
+    public static final String INITIAL_SIZE_PROPERTY = "TumorDriver.initialSize";
     
     /**
      * Name of the system property that defines the maximum number of
      * time steps to execute on each growth trial.
      */
-    public static final String MAX_STEP_COUNT_PROPERTY = "tumor.driver.maxStepCount";
+    public static final String MAX_STEP_COUNT_PROPERTY = "TumorDriver.maxStepCount";
 
     /**
      * Name of the system property that defines the maximum tumor size
      * (number of cells) to allow in each trial.
      */
-    public static final String MAX_TUMOR_SIZE_PROPERTY = "tumor.driver.maxTumorSize";
+    public static final String MAX_TUMOR_SIZE_PROPERTY = "TumorDriver.maxTumorSize";
 
     /**
      * Name of the output file containing the tumor size (number of
@@ -70,22 +70,10 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     public static final String CELL_COUNT_STAT_FILE_NAME = "cell-count-stat.csv";
 
     /**
-     * Name of the system property that defines the (globally uniform)
-     * intrinsic tumor cell birth rate.
-     */
-    public static final String BIRTH_RATE_PROPERTY = "tumor.driver.birthRate";
-
-    /**
-     * Name of the system property that defines the (globally uniform)
-     * intrinsic tumor cell death rate.
-     */
-    public static final String DEATH_RATE_PROPERTY = "tumor.driver.deathRate";
-
-    /**
      * Name of the system property that defines the maximum number of
      * cells per lattice site.
      */
-    public static final String SITE_CAPACITY_PROPERTY = "tumor.driver.siteCapacity";
+    public static final String SITE_CAPACITY_PROPERTY = "TumorDriver.siteCapacity";
 
     /**
      * Creates a new driver and reads system properties from a set of
@@ -120,22 +108,6 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
 
     private static long resolveMaxTumorSize() {
         return JamProperties.getRequiredLong(MAX_TUMOR_SIZE_PROPERTY, LongRange.POSITIVE);
-    }
-
-    /**
-     * Reads the globally uniform intrinsic growth rate from system
-     * properties specifying the birth and death rates.
-     *
-     * @return the globally uniform intrinsic growth rate.
-     *
-     * @throws RuntimeException unless the required system properties
-     * are properly defined.
-     */
-    public static GrowthRate resolveGrowthRate() {
-        double birthRate = JamProperties.getRequiredDouble(BIRTH_RATE_PROPERTY, DoubleRange.NON_NEGATIVE);
-        double deathRate = JamProperties.getRequiredDouble(DEATH_RATE_PROPERTY, DoubleRange.NON_NEGATIVE);
-
-        return new GrowthRate(birthRate, deathRate);
     }
 
     /**

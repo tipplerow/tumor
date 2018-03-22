@@ -79,7 +79,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * Name of the system property that defines the nearest neighbors
      * on the lattice.
      */
-    public static final String NEIGHBORHOOD_PROPERTY = "tumor.lattice.neighborhood";
+    public static final String NEIGHBORHOOD_PROPERTY = "LatticeTumor.neighborhood";
 
     /**
      * Default value for the nearest-neighbor type.
@@ -94,7 +94,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * Name of the system property that defines the edge length of the
      * (periodic cubic) lattice.
      */
-    public static final String PERIOD_LENGTH_PROPERTY = "tumor.lattice.periodLength";
+    public static final String PERIOD_LENGTH_PROPERTY = "LatticeTumor.periodLength";
 
     /**
      * Returns the period length to be used for the component lattice.

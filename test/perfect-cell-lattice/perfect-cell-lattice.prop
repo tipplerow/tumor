@@ -3,14 +3,14 @@
 # perfectly replicating cells on a (3D) cubic lattice.
 ########################################################################
 
-tumor.driver.siteCapacity = 1
+TumorDriver.siteCapacity = 1
 
-tumor.driver.birthRate = 0.55
-tumor.driver.deathRate = 0.45
+GrowthRate.birthRate = 0.55
+GrowthRate.deathRate = 0.45
 
-tumor.driver.trialCount   =  10
-tumor.driver.initialSize  =  25
-tumor.driver.maxStepCount =  50
-tumor.driver.maxTumorSize = 1E7
+TumorDriver.trialCount   =  10
+TumorDriver.initialSize  =  25
+TumorDriver.maxStepCount =  50
+TumorDriver.maxTumorSize = 1E7
 
 jam.math.JamRandom.seed = 20180311

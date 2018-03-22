@@ -1,7 +1,9 @@
 
 package tumor.growth;
 
+import jam.app.JamProperties;
 import jam.math.DoubleComparator;
+import jam.math.DoubleRange;
 import jam.math.DoubleUtil;
 import jam.math.JamRandom;
 import jam.math.Probability;
@@ -17,13 +19,20 @@ import jam.math.Probability;
  * <p><b>Growth capacity.</b> Must tumors have limited resources for
  * growth.  When computing or sampling growth counts for a population,
  * we therefore specify a <em>capacity</em>: the maximum net growth in
- * the population.  When the net growth count exceeds the capacity, the
- * birth rate falls to zero until cell death events bring the net growth
- * count back below the capacity.
+ * the population.  When the net growth count exceeds the capacity,
+ * the birth rate falls to zero until cell death events bring the net
+ * growth count back below the capacity.
+ *
+ * <p><b>Global rate.</b> System properties provide a convenient way
+ * to define the initial growth rate for a simulation: properties
+ * {@code GrowthRate.birthRate} and {@code GrowthRate.deathRate}
+ * define the {@link GrowthRate#global()} rate object.
  */
 public final class GrowthRate {
     private final Probability birthRate;
     private final Probability deathRate;
+
+    private static GrowthRate global = null;
 
     // Cumulative probability distribution for the set of possible
     // events...
@@ -33,6 +42,18 @@ public final class GrowthRate {
     private static final int BIRTH_EVENT = 0;
     private static final int DEATH_EVENT = 1;
     private static final int NO_EVENT    = 2;
+
+    /**
+     * Name of the system property that defines the (globally uniform)
+     * intrinsic tumor cell birth rate.
+     */
+    public static final String BIRTH_RATE_PROPERTY = "GrowthRate.birthRate";
+
+    /**
+     * Name of the system property that defines the (globally uniform)
+     * intrinsic tumor cell death rate.
+     */
+    public static final String DEATH_RATE_PROPERTY = "GrowthRate.deathRate";
 
     /**
      * A growth rate with zero net growth rate and unit event rate:
@@ -84,6 +105,29 @@ public final class GrowthRate {
         CDF[NO_EVENT]    = 1.0;
 
         return CDF;
+    }
+
+    /**
+     * Returns the globally uniform intrinsic growth rate defined by
+     * system properties as described in the class comments.
+     *
+     * @return the globally uniform intrinsic growth rate.
+     *
+     * @throws RuntimeException unless the required system properties
+     * are properly defined.
+     */
+    public static GrowthRate global() {
+        if (global == null)
+            global = resolveGlobal();
+
+        return global;
+    }
+
+    private static GrowthRate resolveGlobal() {
+        double birthRate = JamProperties.getRequiredDouble(BIRTH_RATE_PROPERTY, DoubleRange.NON_NEGATIVE);
+        double deathRate = JamProperties.getRequiredDouble(DEATH_RATE_PROPERTY, DoubleRange.NON_NEGATIVE);
+
+        return new GrowthRate(birthRate, deathRate);
     }
 
     /**
