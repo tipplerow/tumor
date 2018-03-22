@@ -11,4 +11,7 @@ cd ${TEST_DIR}/perfect-cell-lattice
 cd ${TEST_DIR}/perfect-cell-point
 ./test-perfect-cell-point.sh
 
+cd ${TEST_DIR}/perfect-deme-point
+./test-perfect-deme-point.sh
+
 exit 0
