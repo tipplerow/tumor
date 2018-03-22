@@ -9,6 +9,7 @@ import jam.lattice.Lattice;
 import tumor.capacity.CapacityModel;
 import tumor.capacity.CapacityType;
 import tumor.carrier.TumorCell;
+import tumor.carrier.TumorComponent;
 
 /**
  * Represents a three-dimensional tumor of individual cells on a
@@ -76,7 +77,21 @@ public class CellularLatticeTumor<E extends TumorCell> extends LatticeTumor<E> {
         return tumor;
     }
 
-    @Override public final long countSiteCells(Coord coord) {
-        return lattice.countOccupants(coord);
+    @Override public boolean isAvailable(Coord coord, E component) {
+        return countSiteCells(coord) + component.countCells() <= getSiteCapacity(coord);
+    }
+
+    @Override public long getLocalGrowthCapacity(TumorComponent component) {
+        //
+        // Daughter cells produced by a parent may be placed anywhere
+        // in the neighborhood...
+        //
+        @SuppressWarnings("unchecked")
+            Coord coord = locateComponent((E) component);
+
+        long capacity = getNeighborhoodCapacity(coord);
+        long occupancy = countNeighborhoodCells(coord);
+
+        return capacity - occupancy;
     }
 }

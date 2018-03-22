@@ -256,6 +256,19 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Identifies lattice sites that can accomodate a new component.
+     *
+     * @param coord the coordinate of the site to examine.
+     *
+     * @param component the new component to be added at the given
+     * site.
+     *
+     * @return {@code true} iff the new component can be placed at
+     * the specified site without exceeding its capacity.
+     */
+    public abstract boolean isAvailable(Coord coord, E component);
+
+    /**
      * Returns the total number of tumor cells present at a given
      * lattice site <em>and all of its neighboring sites</em>.
      *
@@ -361,21 +374,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public long getSiteCapacity(Coord coord) {
         return capacityModel.getSiteCapacity(coord);
-    }
-
-    /**
-     * Identifies lattice sites that can accomodate a new component.
-     *
-     * @param coord the coordinate of the site to examine.
-     *
-     * @param component the new component to be added at the given
-     * site.
-     *
-     * @return {@code true} iff the new component can be placed at
-     * the specified site without exceeding its capacity.
-     */
-    public boolean isAvailable(Coord coord, E component) {
-        return countSiteCells(coord) + component.countCells() <= getSiteCapacity(coord);
     }
 
     /**
