@@ -94,7 +94,7 @@ public abstract class Lineage extends CellGroup {
         cellCount += growthCount.getNetChange();
 
         // Each birth event creates two daughter cells... 
-        long daughterCount = 2 * growthCount.getBirthCount();
+        long daughterCount = growthCount.getDaughterCount();
         assert daughterCount <= cellCount;
 
         // Store each mutated daughter cell as a new single-cell
