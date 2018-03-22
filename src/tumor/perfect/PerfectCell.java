@@ -56,6 +56,7 @@ public final class PerfectCell extends TumorCell {
     }
 
     @Override public PerfectCell newDaughter(MutationList daughterMut) {
+        assert daughterMut.isEmpty();
         return new PerfectCell(this, daughterMut);
     }
 }

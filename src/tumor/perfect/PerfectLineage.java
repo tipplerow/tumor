@@ -46,6 +46,9 @@ public final class PerfectLineage extends Lineage {
     }
 
     @Override public PerfectLineage newDaughter(MutationList daughterMut) {
-        return new PerfectLineage(this, daughterMut);
+        //
+        // Perfect lineages should never produce offspring...
+        //
+        throw new UnsupportedOperationException("Perfect lineages should never produce offspring...");
     }
 }
