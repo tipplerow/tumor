@@ -15,6 +15,7 @@ import jam.lattice.Neighborhood;
 import jam.math.JamRandom;
 import jam.util.ListUtil;
 
+import tumor.capacity.CapacityModel;
 import tumor.carrier.Carrier;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
@@ -39,7 +40,12 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     /**
      * The nearest neighbors on the lattice.
      */
-    protected final Neighborhood neighborhood;
+    protected final Neighborhood neighborhood = resolveNeighborhood();
+
+    /**
+     * The site capacity model.
+     */
+    protected final CapacityModel capacityModel = CapacityModel.global();
 
     /**
      * Creates a new (empty) tumor.
@@ -62,7 +68,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
         validateLattice(lattice);
         this.lattice = lattice;
-        this.neighborhood = resolveNeighborhood();
     }
 
     private static void validateLattice(Lattice<?> lattice) {
@@ -86,33 +91,11 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public static final Neighborhood DEFAULT_NEIGHBORHOOD = Neighborhood.MOORE;
 
-    private static Neighborhood resolveNeighborhood() {
-        return JamProperties.getOptionalEnum(NEIGHBORHOOD_PROPERTY, DEFAULT_NEIGHBORHOOD);
-    }
-
     /**
      * Name of the system property that defines the edge length of the
      * (periodic cubic) lattice.
      */
     public static final String PERIOD_LENGTH_PROPERTY = "LatticeTumor.periodLength";
-
-    /**
-     * Returns the period length to be used for the component lattice.
-     *
-     * <p>This method first looks for the system property named by the
-     * {@code PERIOD_LENGTH_PROPERTY} variable and defaults to a value
-     * likely to be suitable for the maximum number of components if
-     * the property is not set.
-     *
-     * @param maxSites the number of lattice sites expected to be
-     * occupied when the tumor has reached its maximum size (cell
-     * count).
-     *
-     * @return the period length to be used for the component lattice.
-     */
-    protected static int resolvePeriodLength(long maxSites) {
-        return JamProperties.getOptionalInt(PERIOD_LENGTH_PROPERTY, defaultLatticePeriod(maxSites));
-    }
 
     /**
      * Computes a lattice period that is safely large enough for
@@ -164,15 +147,27 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
-     * Returns the maximum number of tumor cells that may occupy a
-     * given lattice site.
+     * Reads the enumerated nearest-neighbor type from the system
+     * property named {@code NEIGHBORHOOD_PROPERTY}.
      *
-     * @param coord the site to examine.
-     *
-     * @return the maximum number of tumor cells that may occupy the
-     * specified lattice site.
+     * @return the enumerated nearest-neighbor type.
      */
-    public abstract long getSiteCapacity(Coord coord);
+    private static Neighborhood resolveNeighborhood() {
+        return JamProperties.getRequiredEnum(NEIGHBORHOOD_PROPERTY, Neighborhood.class);
+    }
+
+    /**
+     * Reads the period length to be used for the component lattice
+     * from the system property named {@code PERIOD_LENGTH_PROPERTY}.
+     *
+     * @return the period length to be used for the component lattice.
+     *
+     * @throws RuntimeException unless the required system property is
+     * defined.
+     */
+    public static int resolvePeriodLength() {
+        return JamProperties.getRequiredInt(PERIOD_LENGTH_PROPERTY);
+    }
 
     /**
      * Adds a component to this tumor.
@@ -353,6 +348,19 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             result += getSiteCapacity(neighbor);
 
         return result;
+    }
+
+    /**
+     * Returns the maximum number of tumor cells that may occupy a
+     * given lattice site.
+     *
+     * @param coord the site to examine.
+     *
+     * @return the maximum number of tumor cells that may occupy the
+     * specified lattice site.
+     */
+    public long getSiteCapacity(Coord coord) {
+        return capacityModel.getSiteCapacity(coord);
     }
 
     /**

@@ -70,12 +70,6 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     public static final String CELL_COUNT_STAT_FILE_NAME = "cell-count-stat.csv";
 
     /**
-     * Name of the system property that defines the maximum number of
-     * cells per lattice site.
-     */
-    public static final String SITE_CAPACITY_PROPERTY = "TumorDriver.siteCapacity";
-
-    /**
      * Creates a new driver and reads system properties from a set of
      * property files.
      *
@@ -108,19 +102,6 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
 
     private static long resolveMaxTumorSize() {
         return JamProperties.getRequiredLong(MAX_TUMOR_SIZE_PROPERTY, LongRange.POSITIVE);
-    }
-
-    /**
-     * Reads the maximum number of tumor cells per lattice site from
-     * system properties.
-     *
-     * @return the maximum number of tumor cells per lattice site.
-     *
-     * @throws RuntimeException unless the required system property is
-     * properly defined.
-     */
-    public static int resolveSiteCapacity() {
-        return JamProperties.getRequiredInt(SITE_CAPACITY_PROPERTY, IntRange.POSITIVE);
     }
 
     /**

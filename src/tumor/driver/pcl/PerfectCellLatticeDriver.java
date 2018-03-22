@@ -32,7 +32,7 @@ public final class PerfectCellLatticeDriver extends TumorDriver {
     }
 
     @Override protected CellularLatticeTumor<PerfectCell> createTumor() {
-        return CellularLatticeTumor.primary(createFounders(), resolveSiteCapacity(), getMaxTumorSize());
+        return CellularLatticeTumor.primary(createFounders());
     }
 
     private List<PerfectCell> createFounders() {
