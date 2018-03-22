@@ -39,11 +39,11 @@ public abstract class MutationRate {
             return true;
         }
 
-        @Override public int sample() {
+        @Override public int sampleMutationCount() {
             return 0;
         }
 
-        @Override public int sample(int daughterCount) {
+        @Override public int sampleMutationCount(long daughterCount) {
             return 0;
         }
     }
@@ -72,7 +72,7 @@ public abstract class MutationRate {
             this.dist = PoissonDistribution.create(mean);
         }
 
-        @Override public int sample() {
+        @Override public int sampleMutationCount() {
             return dist.sample();
         }
     }
@@ -101,7 +101,7 @@ public abstract class MutationRate {
                 throw new IllegalArgumentException("Mutation rate cannot be negative.");
         }
 
-        @Override public int sample() {
+        @Override public int sampleMutationCount() {
             return JamRandom.global().accept(getMean()) ? 1 : 0;
         }
     }
@@ -112,22 +112,23 @@ public abstract class MutationRate {
      *
      * @return a randomly generated mutation count.
      */
-    public abstract int sample();
+    public abstract int sampleMutationCount();
 
     /**
      * Stochastically samples the number of mutations arising in a
      * population of daughter cells.
      *
-     * @param daughterCount the number of daughter cells.
+     * @param daughterCount the number of new daughter cells in the
+     * population.
      *
      * @return the total number of mutations arising across the
      * population of daughter cells.
      */
-    public int sample(int daughterCount) {
+    public int sampleMutationCount(long daughterCount) {
         int result = 0;
 
-        for (int index = 0; index < daughterCount; ++index)
-            result += sample();
+        for (long index = 0; index < daughterCount; ++index)
+            result += sampleMutationCount();
 
         return result;
     }

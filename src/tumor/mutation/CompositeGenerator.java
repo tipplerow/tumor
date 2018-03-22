@@ -60,11 +60,15 @@ public final class CompositeGenerator extends MutationGenerator {
         return Collections.unmodifiableList(generators);
     }
 
-    @Override public MutationList generate(int birthCount) {
+    @Override public MutationList generate() {
+        return generate(1);
+    }
+
+    @Override public MutationList generate(long daughterCount) {
         List<Mutation> mutations = new ArrayList<Mutation>();
 
         for (MutationGenerator generator : generators)
-            mutations.addAll(generator.generate(birthCount));
+            mutations.addAll(generator.generate(daughterCount));
 
         return MutationList.create(mutations);
     }

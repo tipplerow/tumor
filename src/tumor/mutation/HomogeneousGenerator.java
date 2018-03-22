@@ -33,8 +33,12 @@ public abstract class HomogeneousGenerator extends MutationGenerator {
         return mutationRate;
     }
 
-    @Override public MutationList generate(int daughterCount) {
-        int mutationCount = mutationRate.sample(daughterCount);
+    @Override public MutationList generate() {
+        return generate(1);
+    }
+
+    @Override public MutationList generate(long daughterCount) {
+        int mutationCount = mutationRate.sampleMutationCount(daughterCount);
         Mutation[] mutations = new Mutation[mutationCount];
 
         for (int index = 0; index < mutationCount; ++index)

@@ -22,7 +22,7 @@ public class MutationRateTest extends NumericTestBase {
         Multiset<Integer> counts = HashMultiset.create();
 
         for (int trial = 0; trial < 100000; ++trial)
-            counts.add(rate.sample());
+            counts.add(rate.sampleMutationCount());
 
         for (int count : counts.elementSet())
             assertEquals(dist.pdf(count), MultisetUtil.frequency(counts, count), 0.001);
@@ -34,7 +34,7 @@ public class MutationRateTest extends NumericTestBase {
         Multiset<Integer> counts = HashMultiset.create();
 
         for (int trial = 0; trial < 100000; ++trial)
-            counts.add(rate.sample());
+            counts.add(rate.sampleMutationCount());
 
         assertEquals(2, counts.elementSet().size());
 
@@ -44,7 +44,7 @@ public class MutationRateTest extends NumericTestBase {
 
     @Test public void testZero() {
         for (int index = 0; index < 100000; ++index)
-            assertEquals(0, MutationRate.ZERO.sample());
+            assertEquals(0, MutationRate.ZERO.sampleMutationCount());
     }
 
     public static void main(String[] args) {
