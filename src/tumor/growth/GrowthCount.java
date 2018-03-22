@@ -39,7 +39,7 @@ public final class GrowthCount {
     public static void validate(long birthCount, long deathCount) {
         if (birthCount < 0L)
             throw new IllegalArgumentException("Birth count must be non-negative.");
-        
+
         if (deathCount < 0L)
             throw new IllegalArgumentException("Death count must be non-negative.");
     }
@@ -71,6 +71,17 @@ public final class GrowthCount {
      */
     public long getBirthCount() {
         return birthCount;
+    }
+
+    /**
+     * Returns the number of daughter cells produced by cell division
+     * (twice the number of birth events).
+     *
+     * @return the number of daughter cells produced by cell division
+     * (twice the number of birth events).
+     */
+    public long getDaughterCount() {
+        return 2 * birthCount;
     }
 
     /**

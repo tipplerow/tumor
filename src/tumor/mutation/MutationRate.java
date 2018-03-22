@@ -107,19 +107,6 @@ public abstract class MutationRate {
     }
 
     /**
-     * Computes the number of new daughter cells created by a fixed
-     * number of cell divisions (birth events).
-     *
-     * @param birthCount the number of cell divisions (birth events).
-     *
-     * @return the number of daughter cells created by the specified
-     * number of cell divisions (birth events).
-     */
-    public static int computeDaughterCount(int birthCount) {
-        return 2 * birthCount;
-    }
-
-    /**
      * Stochastically samples the number of mutations arising in a
      * single daughter cell.
      *
