@@ -1,20 +1,17 @@
 
-package tumor.driver.pcl;
+package tumor.driver.pdl;
 
-import java.util.List;
-
-import tumor.carrier.TumorCell;
 import tumor.driver.TumorDriver;
 import tumor.growth.GrowthRate;
-import tumor.lattice.CellularLatticeTumor;
-import tumor.perfect.PerfectCell;
+import tumor.lattice.DemeLatticeTumor;
+import tumor.perfect.PerfectDeme;
 
 /**
  * Simulates the growth of a tumor containing perfectly replicating
  * cells that occupy a cubic (3D) lattice.
  */
-public final class PerfectCellLatticeDriver extends TumorDriver {
-    private PerfectCellLatticeDriver(String[] propertyFiles) {
+public final class PerfectDemeLatticeDriver extends TumorDriver {
+    private PerfectDemeLatticeDriver(String[] propertyFiles) {
         super(propertyFiles);
     }
 
@@ -28,16 +25,16 @@ public final class PerfectCellLatticeDriver extends TumorDriver {
      * file is specified.
      */
     public static void run(String[] propertyFiles) {
-        PerfectCellLatticeDriver driver = new PerfectCellLatticeDriver(propertyFiles);
+        PerfectDemeLatticeDriver driver = new PerfectDemeLatticeDriver(propertyFiles);
         driver.runSimulation();
     }
 
-    @Override protected CellularLatticeTumor createTumor() {
-        return CellularLatticeTumor.primary(createFounders());
+    @Override protected DemeLatticeTumor createTumor() {
+        return DemeLatticeTumor.primary(createFounder());
     }
 
-    private List<PerfectCell> createFounders() {
-        return PerfectCell.founders(getInitialSize(), GrowthRate.global());
+    private PerfectDeme createFounder() {
+        return PerfectDeme.founder(GrowthRate.global(), getInitialSize());
     }
 
     public static void main(String[] propertyFiles) {

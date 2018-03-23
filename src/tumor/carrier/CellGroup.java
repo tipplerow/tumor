@@ -54,6 +54,11 @@ public abstract class CellGroup extends TumorComponent {
     public static final int EXPLICIT_SAMPLING_LIMIT_DEFAULT = 10;
 
     /**
+     * Minimum group size allowed to undergo division.
+     */
+    public static final long MINIMUM_DIVISION_SIZE = 2;
+
+    /**
      * Creates a founding cell group.
      *
      * <p>Note that any mutations that triggered the transformation to
@@ -141,7 +146,7 @@ public abstract class CellGroup extends TumorComponent {
      * more cells.
      */
     protected CellGroup divide(Probability retentionProb) {
-        if (cellCount < 2)
+        if (cellCount < MINIMUM_DIVISION_SIZE)
             throw new IllegalStateException("Two or more cells are required for group division.");
 
         long retentionCount = computeRetentionCount(retentionProb);

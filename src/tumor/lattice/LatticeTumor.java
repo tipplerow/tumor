@@ -170,6 +170,14 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Advances a single component in this tumor by one discrete time
+     * step and adds any offspring to this tumor.
+     *
+     * @param component the component to advance.
+     */
+    protected abstract void advance(E component);
+
+    /**
      * Adds a component to this tumor.
      *
      * <p>This default method simply adds the component to the lattice
@@ -185,60 +193,10 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * its cell capacity after adding the component.
      */
     protected void addComponent(E component, Coord location) {
-        //
-        // This method call will throw an exception if the number of
-        // components at the site exceeds the lattice site capacity.
-        //
-        lattice.occupy(component, location);
-        
-        // Here we must also verify that the CELL capacity (which will
-        // differ for lineage tumors) is also below its limit...
-        if (countSiteCells(location) > getSiteCapacity(location))
-            throw new IllegalStateException("Exceeded local cell capacity.");
-    }
-
-    /**
-     * Seeds this tumor with a founding component located at the
-     * origin.
-     *
-     * <p>Concrete base class constructors should call this method to
-     * initialize this tumor.
-     *
-     * @param founder the founding component.
-     *
-     * @throws IllegalStateException unless the lattice is empty.
-     */
-    protected void seed(E founder) {
-        seed(List.of(founder));
-    }
-
-    /**
-     * Seeds this tumor with founding components surrounding the
-     * origin.
-     *
-     * <p>Concrete base class constructors should call this method to
-     * initialize this tumor.
-     *
-     * @param founders the founding components.
-     *
-     * @throws IllegalStateException unless the lattice is empty.
-     */
-    protected void seed(List<E> founders) {
-        if (!lattice.isEmpty())
-            throw new IllegalStateException("Cannot seed an occupied lattice.");
-
-        addComponent(founders.get(0), FOUNDER_COORD);
-
-        for (int index = 1; index < founders.size(); ++index) {
-            //
-            // Use the previous founder as the reference location to
-            // place the next founder...
-            //
-            Coord parentCoord  = locateComponent(founders.get(index - 1));
-            E     newComponent = founders.get(index);
-            
-            addComponent(newComponent, placeComponent(parentCoord, newComponent));
-        }
+        if (isAvailable(location, component))
+            lattice.occupy(component, location);
+        else
+            throw new IllegalStateException("Exceeded local site capacity.");
     }
 
     /**
@@ -260,11 +218,10 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      *
      * @param coord the coordinate of the site to examine.
      *
-     * @param component the new component to be added at the given
-     * site.
+     * @param component the component to be added at the given site.
      *
-     * @return {@code true} iff the new component can be placed at
-     * the specified site without exceeding its capacity.
+     * @return {@code true} iff the component can be placed at the
+     * specified site without exceeding the capacity of that site.
      */
     public abstract boolean isAvailable(Coord coord, E component);
 
@@ -297,30 +254,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public long countSiteCells(Coord coord) {
         return Carrier.countCells(lattice.viewOccupants(coord));
-    }
-
-    /**
-     * Finds all neighboring lattice sites that can accomodate a new
-     * component.
-     *
-     * @param center the coordinate of the central site to examine.
-     *
-     * @param component the new component to be added in the
-     * neighborhood surrounding the given site.
-     *
-     * @return a list containing the coordinates of all neighboring
-     * sites that can accomodate the new component without exceeding
-     * their capacity (an empty list if there are no available sites).
-     */
-    public List<Coord> findAvailable(Coord center, E component) {
-        List<Coord> neighbors = neighborhood.getNeighbors(center);
-        List<Coord> available = new ArrayList<Coord>(neighbors.size());
-
-        for (Coord neighbor : neighbors)
-            if (isAvailable(neighbor, component))
-                available.add(neighbor);
-
-        return available;
     }
 
     /**
@@ -377,6 +310,22 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Returns the maximum number of tumor cells that may occupy the
+     * lattice site occupied by a specified component.
+     *
+     * @param component the component located at the site of interest.
+     *
+     * @return the maximum number of tumor cells that may occupy the
+     * lattice site occupied by the specified component.
+     *
+     * @throws IllegalArgumentException unless the component is a
+     * member of this tumor.
+     */
+    public long getSiteCapacity(E component) {
+        return getSiteCapacity(locateComponent(component));
+    }
+
+    /**
      * Returns the location of a component in this tumor.
      *
      * @param component the component of interest.
@@ -396,38 +345,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
-     * Determines the location (lattice coordinate) where a new tumor
-     * component will be placed.
-     *
-     * <p>This default implementation places the new component at the
-     * parent location <em>if it is available</em> (has sufficient
-     * space to accomodate the number of cells in the new component).
-     * Otherwise, this method identifies all available sites in the
-     * neighborhood surrounding the parent and chooses one at random.
-     *
-     * @param parentCoord the coordinate of the parent component.
-     *
-     * @param newComponent the new component to be placed.
-     *
-     * @return the lattice coordinate to occupied by the new component.
-     *
-     * @throws IllegalStateException if the lattice does not contain
-     * sufficient space around the parent coordinate to place the new
-     * component.
-     */
-    public Coord placeComponent(Coord parentCoord, E newComponent) {
-        if (isAvailable(parentCoord, newComponent))
-            return parentCoord;
-
-        List<Coord> availCoord = findAvailable(parentCoord, newComponent);
-
-        if (availCoord.isEmpty())
-            throw new IllegalStateException("Nowhere to place the new tumor component.");
-
-        return ListUtil.select(availCoord, JamRandom.global());
-    }
-
-    /**
      * Returns a read-only view of the underlying lattice.
      *
      * @return a read-only view of the underlying lattice.
@@ -438,13 +355,13 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
     @Override public Collection<Tumor<E>> advance() {
         //
-        // Iterate over the active (living) tumor components in a
+        // Advance the active (living) tumor components in a
         // randomized order...
         //
         List<E> shuffled = shuffleComponents();
 
-        migrate(shuffled);
-        advance(shuffled);
+        for (E component : shuffled)
+            advance(component);
 
         // This base class never divides...
         return Collections.emptyList();
@@ -462,54 +379,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         ListUtil.shuffle(shuffled, JamRandom.global());
         
         return shuffled;
-    }
-
-    /**
-     * Implement a model of migration within the tumor: allow tumor
-     * components to move from one site to another.
-     *
-     * @param components the active (living) tumor components arranged
-     * in a randomized order.
-     */
-    protected void migrate(List<E> components) {
-    }
-
-    /**
-     * Advances each component in this tumor by one discrete time
-     * step.
-     *
-     * @param components the active (living) tumor components arranged
-     * in a randomized order.
-     */
-    protected void advance(List<E> components) {
-        for (E component : components)
-            advance(component);
-    }
-
-    /**
-     * Advances a single component in this tumor by one discrete time
-     * step.
-     *
-     * @param parent the parent component to advance.
-     */
-    protected void advance(E parent) {
-        //
-        // Save the location of the parent for placement of the
-        // children...
-        //
-        Coord parentCoord = locateComponent(parent);
-
-        @SuppressWarnings("unchecked")
-            Collection<E> children =
-            (Collection<E>) parent.advance(this);
-
-        // Remove dead parents before placing the children, since one
-        // or more of the children may need to occupy that location...
-        if (parent.isDead())
-            removeComponent(parent);
-
-        for (E child : children)
-            addComponent(child, placeComponent(parentCoord, child));
     }
 
     /**
