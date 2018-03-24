@@ -15,6 +15,8 @@ ThresholdDivision.threshold = 0.5
 LatticeTumor.neighborhood = MOORE
 LatticeTumor.periodLength = 10000
 
+LocalGrowthModel.modelType = INTRINSIC
+
 TumorDriver.trialCount   =   10
 TumorDriver.initialSize  =  100
 TumorDriver.maxStepCount = 1000
