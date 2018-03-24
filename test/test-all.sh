@@ -6,12 +6,15 @@
 TEST_DIR=$(cd `dirname $0`; pwd)
 
 cd ${TEST_DIR}/perfect-cell-lattice
-./test-perfect-cell-lattice.sh
+./test-perfect-cell-lattice.sh || exit $?
 
 cd ${TEST_DIR}/perfect-cell-point
-./test-perfect-cell-point.sh
+./test-perfect-cell-point.sh || exit $?
+
+cd ${TEST_DIR}/perfect-deme-lattice
+./test-perfect-deme-lattice.sh || exit $?
 
 cd ${TEST_DIR}/perfect-deme-point
-./test-perfect-deme-point.sh
+./test-perfect-deme-point.sh || exit $?
 
 exit 0
