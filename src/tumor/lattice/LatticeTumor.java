@@ -20,6 +20,7 @@ import tumor.carrier.Carrier;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.growth.GrowthRate;
+import tumor.growth.LocalGrowthModel;
 import tumor.mutation.MutationGenerator;
 
 /**
@@ -46,6 +47,11 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The site capacity model.
      */
     protected final CapacityModel capacityModel = CapacityModel.global();
+
+    /**
+     * The local growth rate model.
+     */
+    protected final LocalGrowthModel localGrowthModel = LocalGrowthModel.global();
 
     /**
      * Creates a new (empty) tumor.
@@ -419,7 +425,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * @return the intrinsic growth rate for the component.
      */
     @Override public GrowthRate getLocalGrowthRate(TumorComponent component) {
-        return component.getGrowthRate();
+        return localGrowthModel.getLocalGrowthRate(this, component);
     }
             
     /**
