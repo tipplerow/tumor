@@ -6,13 +6,11 @@ import java.text.DecimalFormat;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
-import jam.math.DoubleRange;
 import jam.math.IntRange;
 import jam.math.LongRange;
 import jam.sim.DiscreteTimeSimulation;
 
 import tumor.carrier.Tumor;
-import tumor.growth.GrowthRate;
 import tumor.report.TrajectoryStatReport;
 
 /**
@@ -25,8 +23,6 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     private final long maxTumorSize;
 
     private PrintWriter cellCountTrajWriter;
-
-    private static final DecimalFormat SIZE_FORMATTER = new DecimalFormat("#,##0");
 
     /**
      * The active tumor for the current simulation trial.
@@ -68,6 +64,12 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
      * cells) statistics aggregated by time step.
      */
     public static final String CELL_COUNT_STAT_FILE_NAME = "cell-count-stat.csv";
+
+    /**
+     * Formats integer quantities with commas for easier reading of
+     * logs.
+     */
+    public static final DecimalFormat SIZE_FORMATTER = new DecimalFormat("#,##0");
 
     /**
      * Creates a new driver and reads system properties from a set of
@@ -119,9 +121,16 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
      * to the cell-count trajectory file.
      */
     protected void recordStep() {
+        consoleLogStep();
+        recordCellCount();
+    }
+
+    /**
+     * Logs a message to the console after every step.
+     */
+    protected void consoleLogStep() {
         JamLogger.info("TRIAL: %4d, STEP: %5d; SIZE: %12s",
                        getTrialIndex(), getTimeStep(), SIZE_FORMATTER.format(tumor.countCells()));
-        recordCellCount();
     }
 
     private void recordCellCount() {

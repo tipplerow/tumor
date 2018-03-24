@@ -1,7 +1,7 @@
 
 package tumor.driver.pdl;
 
-import tumor.driver.TumorDriver;
+import tumor.driver.DemeTumorDriver;
 import tumor.growth.GrowthRate;
 import tumor.lattice.DemeLatticeTumor;
 import tumor.perfect.PerfectDeme;
@@ -10,7 +10,7 @@ import tumor.perfect.PerfectDeme;
  * Simulates the growth of a tumor containing perfectly replicating
  * cells that occupy a cubic (3D) lattice.
  */
-public final class PerfectDemeLatticeDriver extends TumorDriver {
+public final class PerfectDemeLatticeDriver extends DemeTumorDriver {
     private PerfectDemeLatticeDriver(String[] propertyFiles) {
         super(propertyFiles);
     }

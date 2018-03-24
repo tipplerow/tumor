@@ -50,6 +50,15 @@ public final class DemeLatticeTumor extends LatticeTumor<Deme> {
     }
 
     /**
+     * Returns the number of demes in this tumor.
+     *
+     * @return the number of demes in this tumor.
+     */
+    public int countDemes() {
+        return lattice.countOccupants();
+    }
+
+    /**
      * Finds all neighboring lattice sites that can accomodate a new
      * deme.  We allow at most one deme per site, so the result is a
      * list of empty neighbors.
