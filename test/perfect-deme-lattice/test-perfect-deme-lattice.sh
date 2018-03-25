@@ -8,4 +8,5 @@ ${JAM_HOME}/bin/jam-test.sh \
            cell-count-stat.csv \
            cell-count-traj.csv \
            deme-count-stat.csv \
-           deme-count-traj.csv
+           deme-count-traj.csv \
+           final-deme-coord.csv

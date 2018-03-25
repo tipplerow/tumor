@@ -129,7 +129,7 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
      * Logs a message to the console after every step.
      */
     protected void consoleLogStep() {
-        JamLogger.info("TRIAL: %4d, STEP: %5d; SIZE: %12s",
+        JamLogger.info("TRIAL: %4d, STEP: %5d; SIZE: %15s",
                        getTrialIndex(), getTimeStep(), SIZE_FORMATTER.format(tumor.countCells()));
     }
 
@@ -183,6 +183,7 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
 
     @Override protected void initializeSimulation() {
         cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
+        cellCountTrajWriter.println("trialIndex,timeStep,cellCount");
     }
 
     @Override protected boolean continueSimulation() {
