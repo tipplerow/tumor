@@ -3,7 +3,6 @@ package tumor.divide;
 
 import jam.app.JamProperties;
 import jam.lang.JamException;
-import jam.lattice.Coord;
 import jam.math.Probability;
 
 import tumor.carrier.Deme;
