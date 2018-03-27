@@ -4,7 +4,7 @@ package tumor.driver.pcl;
 import java.util.List;
 
 import tumor.carrier.TumorCell;
-import tumor.driver.TumorDriver;
+import tumor.driver.LatticeTumorDriver;
 import tumor.growth.GrowthRate;
 import tumor.lattice.CellularLatticeTumor;
 import tumor.perfect.PerfectCell;
@@ -13,7 +13,7 @@ import tumor.perfect.PerfectCell;
  * Simulates the growth of a tumor containing perfectly replicating
  * cells that occupy a cubic (3D) lattice.
  */
-public final class PerfectCellLatticeDriver extends TumorDriver {
+public final class PerfectCellLatticeDriver extends LatticeTumorDriver {
     private PerfectCellLatticeDriver(String[] propertyFiles) {
         super(propertyFiles);
     }
