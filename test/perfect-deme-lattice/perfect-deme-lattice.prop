@@ -17,6 +17,8 @@ LatticeTumor.periodLength = 10000
 
 LocalGrowthModel.modelType = INTRINSIC
 
+MigrationModel.modelType = PINNED
+
 TumorDriver.trialCount   =    3
 TumorDriver.initialSize  =  100
 TumorDriver.maxStepCount = 1000

@@ -21,6 +21,8 @@ import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.growth.GrowthRate;
 import tumor.growth.LocalGrowthModel;
+import tumor.migrate.MigrationModel;
+import tumor.migrate.MigrationType;
 import tumor.mutation.MutationGenerator;
 
 /**
@@ -52,6 +54,11 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The local growth rate model.
      */
     protected final LocalGrowthModel localGrowthModel = LocalGrowthModel.global();
+
+    /**
+     * The local growth rate model.
+     */
+    protected final MigrationModel migrationModel = MigrationModel.global();
 
     /**
      * Creates a new (empty) tumor.
@@ -385,6 +392,54 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         ListUtil.shuffle(shuffled, JamRandom.global());
         
         return shuffled;
+    }
+
+    /**
+     * Allows tumor components to migrate from one lattice site to
+     * another according to the global migration model.
+     */
+    protected void migrate() {
+        if (migrationModel.getType() == MigrationType.PINNED)
+            return;
+
+        // Migrate the active (living) tumor components in a
+        // randomized order...
+        List<E> shuffled = shuffleComponents();
+
+        for (E component : shuffled)
+            migrate(component);
+    }
+
+    /**
+     * Allows a tumor component to migrate from one lattice site to
+     * another according to the global migration model.
+     *
+     * @param component the tumor component eligible for migration.
+     */
+    protected void migrate(E component) {
+        Coord newCoord = migrationModel.migrate(this, component);
+
+        if (newCoord != null)
+            moveComponent(component, newCoord);
+    }
+
+    /**
+     * Moves a tumor component from one site to another.
+     *
+     * @param component the tumor component to move.
+     *
+     * @param newCoord the new coordinate for the component.
+     *
+     * @throws IllegalStateException unless the lattice can accomodate
+     * the component at the new location.
+     */
+    protected void moveComponent(E component, Coord newCoord) {
+        lattice.vacate(component);
+
+        if (isAvailable(newCoord, component))
+            lattice.occupy(component, newCoord);
+        else
+            throw new IllegalStateException("Exceeded local site capacity.");
     }
 
     /**

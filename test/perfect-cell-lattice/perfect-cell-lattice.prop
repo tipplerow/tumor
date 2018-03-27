@@ -8,6 +8,7 @@ GrowthRate.deathRate = 0.45
 
 CapacityModel.modelType = SINGLE
 LocalGrowthModel.modelType = INTRINSIC
+MigrationModel.modelType = PINNED
 
 LatticeTumor.neighborhood = MOORE
 LatticeTumor.periodLength = 10000
