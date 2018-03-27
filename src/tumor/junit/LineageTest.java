@@ -46,6 +46,23 @@ public class LineageTest extends NumericTestBase {
         assertEquals(expectedMean, actualMean, 0.0001);
     }
 
+    @Test public void testDivide1() {
+        long       initSize   = 1000;
+        long       cloneSize1 = 300;
+        long       cloneSize2 = 150;
+        GrowthRate growthRate = GrowthRate.net(0.1);
+        Lineage    founder    = PerfectLineage.founder(growthRate, initSize);
+        Lineage    clone1     = founder.divide(cloneSize1);
+
+        assertEquals(700, founder.countCells());
+        assertEquals(300, clone1.countCells());
+
+        Lineage clone2 = founder.divide(cloneSize2);
+
+        assertEquals(550, founder.countCells());
+        assertEquals(150, clone2.countCells());
+    }
+
     @Test public void testPerfect() {
         int        stepCount  = 100;
         long       initCount  = 1000L;

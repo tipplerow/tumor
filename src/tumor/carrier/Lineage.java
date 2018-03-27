@@ -124,6 +124,10 @@ public abstract class Lineage extends CellGroup {
         return daughters;
     }
 
+    @Override public Lineage divide(long cloneCellCount) {
+        return (Lineage) super.divide(cloneCellCount);
+    }
+
     @Override public Lineage divide(Probability retentionProb) {
         return (Lineage) super.divide(retentionProb);
     }

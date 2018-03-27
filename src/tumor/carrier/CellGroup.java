@@ -122,8 +122,46 @@ public abstract class CellGroup extends TumorComponent {
     protected abstract CellGroup newClone(long cellCount);
 
     /**
+     * Partitions the cells in this group between this group and a new
+     * clone.  The cells in the cloned group are identical to those in
+     * this group.
+     *
+     * <p>Subclasses should override this method and return a concrete
+     * subtype.
+     *
+     * @param cloneCellCount the number of cells to move from this
+     * group to the clone.
+     *
+     * @return the new cloned group containing exactly {@code cloneCellCount} 
+     * cells.
+     *
+     * @throws IllegalArgumentException unless the clone cell count is
+     * in the valid range {@code [1, N - 1]}, where {@code N} is the
+     * number of cells in this group before division.
+     *
+     * @throws IllegalStateException unless this group contains two or
+     * more cells.
+     */
+    protected CellGroup divide(long cloneCellCount) {
+        if (cellCount < MINIMUM_DIVISION_SIZE)
+            throw new IllegalStateException("Two or more cells are required for group division.");
+
+        if (cloneCellCount < 1)
+            throw new IllegalArgumentException("Clone cell count must be positive.");
+
+        if (cloneCellCount >= cellCount)
+            throw new IllegalArgumentException("Clone cell count must be less than the current group size.");
+
+        cellCount -= cloneCellCount;
+        assert cellCount > 0;
+
+        return newClone(cloneCellCount);
+    }
+
+    /**
      * Stochastically partitions the cells in this group between this
-     * group and a new "fission product".
+     * group and a new clone.  The cells in the cloned group will be
+     * identical to those in this group.
      *
      * <p>Before division, this group contains {@code n} cells and has
      * a probability {@code p} of retaining a cell.  Two or more cells
@@ -140,7 +178,7 @@ public abstract class CellGroup extends TumorComponent {
      * @param retentionProb the probability that this group will
      * retain any given cell.
      *
-     * @return the new cloned group (fission product).
+     * @return the new cloned group.
      *
      * @throws IllegalStateException unless this group contains two or
      * more cells.
