@@ -13,9 +13,9 @@ MigrationModel.modelType = PINNED
 LatticeTumor.neighborhood = MOORE
 LatticeTumor.periodLength = 10000
 
-TumorDriver.trialCount   =  10
-TumorDriver.initialSize  =  25
-TumorDriver.maxStepCount =  50
+TumorDriver.trialCount   =   3
+TumorDriver.initialSize  =  50
+TumorDriver.maxStepCount = 250
 TumorDriver.maxTumorSize = 1E7
 
 jam.math.JamRandom.seed = 20180311
