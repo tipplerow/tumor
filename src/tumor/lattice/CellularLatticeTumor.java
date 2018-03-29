@@ -136,6 +136,8 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
     @Override public boolean isAvailable(Coord coord, TumorCell cell) {
         return isAvailable(coord);
     }
+
+    @Override public long countCells() {
+        return lattice.countOccupants();
+    }
 }
-
-
