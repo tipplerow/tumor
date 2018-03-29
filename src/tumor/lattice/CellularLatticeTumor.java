@@ -76,37 +76,36 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
     private void seed(List<? extends TumorCell> founders) {
         addComponent(founders.get(0), FOUNDER_COORD);
 
-        for (int index = 1; index < founders.size(); ++index) {
-            //
-            // Use the previous founder as the reference location to
-            // place the next founder...
-            //
-            Coord     prevCoord   = locateComponent(founders.get(index - 1));
-            TumorCell nextFounder = founders.get(index);
-            
-            addComponent(nextFounder, placeCell(prevCoord, nextFounder));
-        }
+        for (int index = 1; index < founders.size(); ++index)
+            addComponent(founders.get(index), placeFounder(founders, index));
     }
 
-    /**
-     * Finds all neighboring lattice sites that can accomodate a new
-     * tumor cell.
-     *
-     * @param center the coordinate of the central site to examine.
-     *
-     * @return a list containing the coordinates of all neighboring
-     * sites that can accomodate the new component without exceeding
-     * their capacity (an empty list if there are no available sites).
-     */
-    public List<Coord> findAvailable(Coord center) {
-        List<Coord> neighbors = neighborhood.getNeighbors(center);
-        List<Coord> available = new ArrayList<Coord>(neighbors.size());
+    private Coord placeFounder(List<? extends TumorCell> founders, int index) {
+        //
+        // Use the previous founder as the reference location to place
+        // the next founder...
+        //
+        Coord     prevCoord   = locateComponent(founders.get(index - 1));
+        TumorCell nextFounder = founders.get(index);
 
-        for (Coord neighbor : neighbors)
-            if (isAvailable(neighbor))
-                available.add(neighbor);
+        if (isAvailable(prevCoord)) {
+            //
+            // Use the coordinate of the previous founder until that
+            // site reaches its capacity...
+            //
+            return prevCoord;
+        }
 
-        return available;
+        while (true) {
+            //
+            // Select random neighbors to the previous founder until
+            // we find one that is available...
+            //
+            Coord nextCoord = neighborhood.randomNeighbor(prevCoord, randomSource);
+
+            if (isAvailable(nextCoord))
+                return nextCoord;
+        }
     }
 
     /**
@@ -123,77 +122,20 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         // cell), so we can place it at the given location if the
         // site is below its capacity...
         //
-        return countSiteCells(coord) < getSiteCapacity(coord);
+        return countCells(coord) < getSiteCapacity(coord);
     }
 
-    /**
-     * Determines the location (lattice coordinate) where a new tumor
-     * cell will be placed.
-     *
-     * <p>This default implementation places the new cell at the
-     * parent location <em>if it is available</em> (has sufficient
-     * space to accomodate another cell).  Otherwise, this method
-     * identifies all available sites in the neighborhood around 
-     * the parent and chooses one at random.
-     *
-     * @param parentCoord the coordinate of the parent cell.
-     *
-     * @param newCell the new cell to be placed.
-     *
-     * @return the lattice coordinate to occupied by the new cell.
-     *
-     * @throws IllegalStateException if the lattice does not contain
-     * sufficient space around the parent coordinate to place the new
-     * cell.
-     */
-    public Coord placeCell(Coord parentCoord, TumorCell newCell) {
-        if (isAvailable(parentCoord))
-            return parentCoord;
-
-        List<Coord> availCoord = findAvailable(parentCoord);
-
-        if (availCoord.isEmpty())
-            throw new IllegalStateException("Nowhere to place the new tumor cell.");
-
-        return ListUtil.select(availCoord, JamRandom.global());
+    @Override protected TumorCell divideParent(TumorCell parent, long minCloneCellCount, long maxCloneCellCount) {
+        throw new UnsupportedOperationException("Cannot divide a tumor cell.");
     }
 
-    @Override protected void advance(TumorCell parent) {
-        //
-        // Save the location of the parent cell: the parent will die
-        // and one daughter will occupy that site (or both daughters
-        // if the site capacity permits)...
-        //
-        Coord parentCoord = locateComponent(parent);
-
-        // The parent cell may (1) die without dividing, (2) divide
-        // into two daughter cells and then die, or (3) do nothing...
-        List<TumorCell> daughters = parent.advance(this);
-
-        // Remove a dead parent cell before placing its daughter
-        // cells, since one or both daughters may need to occupy
-        // that location...
-        if (parent.isDead())
-            removeComponent(parent);
-
-        for (TumorCell daughter : daughters)
-            addComponent(daughter, placeCell(parentCoord, daughter));
+    @Override public long countCells(Coord coord) {
+        return lattice.countOccupants(coord);
     }
 
     @Override public boolean isAvailable(Coord coord, TumorCell cell) {
         return isAvailable(coord);
     }
-
-    @Override public long getLocalGrowthCapacity(TumorComponent component) {
-        //
-        // Daughter cells may be place anywhere in the neighborhood...
-        //
-        @SuppressWarnings("unchecked")
-            Coord coord = locateComponent((TumorCell) component);
-
-        long capacity = getNeighborhoodCapacity(coord);
-        long occupancy = countNeighborhoodCells(coord);
-
-        return capacity - occupancy;
-    }
 }
+
+

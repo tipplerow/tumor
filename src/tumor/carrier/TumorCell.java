@@ -57,26 +57,27 @@ public abstract class TumorCell extends TumorComponent {
     /**
      * Advances this tumor cell through one discrete time step.
      *
-     * @param tumor the tumor in which this cell resides.
+     * @param tumorEnv the local tumor environment where this cell
+     * resides.
      *
      * @return a list containing any new tumor cells created by cell
      * division; the list will be empty if this parent cell does not
      * divide in the time step.
      */
-    @Override public List<TumorCell> advance(Tumor tumor) {
+    @Override public List<TumorCell> advance(TumorEnv tumorEnv) {
         // Dead cells do not divide...
         if (isDead())
             return Collections.emptyList();
 
         // Stochastically sample the event to occur on this step...
-        long        netCapacity = tumor.getLocalGrowthCapacity(this);
-        GrowthRate  growthRate  = tumor.getLocalGrowthRate(this);
+        long        netCapacity = tumorEnv.getGrowthCapacity();
+        GrowthRate  growthRate  = tumorEnv.getGrowthRate();
         GrowthCount growthCount = growthRate.sample(1L, netCapacity);
 
         assert growthCount.getEventCount() <= 1;
 
         if (growthCount.getBirthCount() == 1)
-            return birthEvent(tumor);
+            return birthEvent(tumorEnv);
         
         if (growthCount.getDeathCount() == 1)
             return deathEvent();
@@ -85,16 +86,16 @@ public abstract class TumorCell extends TumorComponent {
         return Collections.emptyList();
     }
 
-    private List<TumorCell> birthEvent(Tumor tumor) {
+    private List<TumorCell> birthEvent(TumorEnv tumorEnv) {
         //
         // This cell dies and is replaced by two daughters...
         //
         state = State.DEAD;
-        return Arrays.asList(newDaughter(tumor), newDaughter(tumor));
+        return Arrays.asList(newDaughter(tumorEnv), newDaughter(tumorEnv));
     }
 
-    private TumorCell newDaughter(Tumor tumor) {
-        MutationGenerator mutGenerator = tumor.getLocalMutationGenerator(this);
+    private TumorCell newDaughter(TumorEnv tumorEnv) {
+        MutationGenerator mutGenerator = tumorEnv.getMutationGenerator();
         MutationList      daughterMut  = mutGenerator.generate();
         
         return newDaughter(daughterMut);

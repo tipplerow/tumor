@@ -1,14 +1,15 @@
 
 package tumor.point;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
-import tumor.carrier.Population;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
+import tumor.carrier.TumorEnv;
 
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
@@ -23,11 +24,16 @@ import tumor.mutation.MutationGenerator;
  * @param <E> the concrete type for the tumor components.
  */
 public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
-    private final Population<E> components;
+    private final Set<E> components = new HashSet<E>();
     
+    private PointTumor(E founder) {
+        super();
+        this.components.add(founder);
+    }
+
     private PointTumor(Collection<E> founders) {
         super();
-        this.components = new Population<E>(founders);
+        this.components.addAll(founders);
     }
 
     /**
@@ -41,7 +47,7 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
      * @return the new primary tumor.
      */
     public static <E extends TumorComponent> PointTumor<E> primary(E founder) {
-        return primary(List.of(founder));
+        return new PointTumor<E>(founder);
     }
 
     /**
@@ -58,20 +64,31 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
         return new PointTumor<E>(founders);
     }
 
-    @Override public long getLocalGrowthCapacity(TumorComponent component) {
-        return Long.MAX_VALUE;
-    }
-
-    @Override public GrowthRate getLocalGrowthRate(TumorComponent component) {
-        return component.getGrowthRate();
-    }
-    
-    @Override public MutationGenerator getLocalMutationGenerator(TumorComponent component) {
-        return component.getMutationGenerator();
-    }
-    
     @Override public Collection<Tumor<E>> advance() {
-        components.advance(this);
+        //
+        // Collect the parent components that die and the offspring
+        // that are created so that the living component collection
+        // may be updated after the iteration over parents.
+        //
+        Collection<E> deadParents = new ArrayList<E>();
+        Collection<E> allChildren = new ArrayList<E>();
+        
+        for (E parent : components) {
+            TumorEnv tumorEnv = TumorEnv.unconstrained(parent);
+            
+            @SuppressWarnings("unchecked")
+                Collection<E> children = (Collection<E>) parent.advance(tumorEnv);
+            
+            allChildren.addAll(children);
+
+            if (parent.isDead())
+                deadParents.add(parent);
+        }
+
+        components.addAll(allChildren);
+        components.removeAll(deadParents);
+
+        // Point tumors never divide...
         return Collections.emptyList();
     }
 

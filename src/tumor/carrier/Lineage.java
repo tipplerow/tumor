@@ -76,12 +76,13 @@ public abstract class Lineage extends CellGroup {
     /**
      * Advances this lineage through one discrete time step.
      *
-     * @param tumor the tumor in which this lineage resides.
+     * @param tumorEnv the local tumor environment where this lineage
+     * resides.
      *
      * @return a list containing any new lineages created by mutation;
      * the list will be empty if no mutations originate in the cycle.
      */
-    @Override public List<Lineage> advance(Tumor tumor) {
+    @Override public List<Lineage> advance(TumorEnv tumorEnv) {
         //
         // Dead lineages do not advance further...
         //
@@ -90,7 +91,7 @@ public abstract class Lineage extends CellGroup {
 
         // Update the cell count for the number of birth and death
         // events...
-        GrowthCount growthCount = resolveGrowthCount(tumor);
+        GrowthCount growthCount = resolveGrowthCount(tumorEnv);
         cellCount += growthCount.getNetChange();
 
         // Each birth event creates two daughter cells... 
@@ -106,7 +107,7 @@ public abstract class Lineage extends CellGroup {
             // Stochastically generate the mutations originating in
             // this daughter cell...
             //
-            MutationList daughterMut = tumor.getLocalMutationGenerator(this).generate();
+            MutationList daughterMut = tumorEnv.getMutationGenerator().generate();
 
             if (!daughterMut.isEmpty()) {
                 //
@@ -128,7 +129,11 @@ public abstract class Lineage extends CellGroup {
         return (Lineage) super.divide(cloneCellCount);
     }
 
-    @Override public Lineage divide(Probability retentionProb) {
-        return (Lineage) super.divide(retentionProb);
+    @Override public Lineage divide(Probability transferProb) {
+        return (Lineage) super.divide(transferProb);
+    }
+
+    @Override public Lineage divide(Probability transferProb, long minCloneCellCount, long maxCloneCellCount) {
+        return (Lineage) super.divide(transferProb, minCloneCellCount, maxCloneCellCount);
     }
 }

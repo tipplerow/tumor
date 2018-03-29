@@ -47,51 +47,6 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     public abstract Collection<Tumor<E>> advance();
 
     /**
-     * Returns the local growth <em>capacity</em> for a given tumor
-     * component: the maximum number of new cells that the tumor can
-     * support in the local environment surrounding the component.
-     *
-     * <p>Note that the local capacity may be negative: the tumor may
-     * have lost the ability to support the current cell population.
-     *
-     * @param component a component of this tumor.
-     *
-     * @return the local growth capacity.
-     *
-     * @throws IllegalArgumentException unless the component is a
-     * member of this tumor.
-     */
-    public abstract long getLocalGrowthCapacity(TumorComponent component);
-
-    /**
-     * Returns the local growth rate for a tumor component: a function
-     * of the intrinsic growth rate and factors operating in the local
-     * environment.
-     *
-     * @param component a component of this tumor.
-     *
-     * @return the local growth rate.
-     *
-     * @throws IllegalArgumentException unless the component is a
-     * member of this tumor.
-     */
-    public abstract GrowthRate getLocalGrowthRate(TumorComponent component);
-
-    /**
-     * Returns the local mutation generator for a tumor component: a
-     * function of the intrinsic mutation generator and the factors
-     * operating in the local environment.
-     *
-     * @param component a component of this tumor.
-     *
-     * @return the local mutation generator.
-     *
-     * @throws IllegalArgumentException unless the component is a
-     * member of this tumor.
-     */
-    public abstract MutationGenerator getLocalMutationGenerator(TumorComponent component);
-
-    /**
      * Returns a read-only view of the active (living) components in
      * this tumor.
      *

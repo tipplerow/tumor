@@ -89,11 +89,12 @@ public abstract class TumorComponent extends Carrier {
      * <p>Subclasses are encouraged to change the return type to the
      * most concrete type possible.
      *
-     * @param tumor the tumor in which this component resides.
+     * @param tumorEnv the local tumor environment where this tumor
+     * component resides.
      *
      * @return any new components created during the time step.
      */
-    public abstract Collection<? extends TumorComponent> advance(Tumor tumor);
+    public abstract Collection<? extends TumorComponent> advance(TumorEnv tumorEnv);
 
     /**
      * Returns the source of somatic mutations for this component.

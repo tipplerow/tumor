@@ -70,30 +70,39 @@ public abstract class Deme extends CellGroup {
     /**
      * Advances this deme through one discrete time step.
      *
-     * @param tumor the tumor in which this deme resides.
+     * @param tumorEnv the local tumor environment where this deme
+     * resides.
      *
      * @return an empty collection: demes only divide when the tumor
      * implementation calls the {@code divide()} method, never during
      * the advancement step.
      */
-    @Override public Collection<Deme> advance(Tumor tumor) {
+    @Override public Collection<Deme> advance(TumorEnv tumorEnv) {
         //
         // Update the cell count for the number of birth and death
         // events...
         //
-        GrowthCount growthCount = resolveGrowthCount(tumor);
+        GrowthCount growthCount = resolveGrowthCount(tumorEnv);
         cellCount += growthCount.getNetChange();
 
         // Each birth event creates two opportunities for mutations to
         // occur, so generate them...
-        MutationGenerator mutGenerator = tumor.getLocalMutationGenerator(this);
+        MutationGenerator mutGenerator = tumorEnv.getMutationGenerator();
         MutationList      newMutations = mutGenerator.generate(growthCount.getDaughterCount());
 
         mutate(newMutations);
         return Collections.emptyList();
     }
 
-    @Override public Deme divide(Probability retentionProb) {
-        return (Deme) super.divide(retentionProb);
+    @Override public Deme divide(long cloneCellCount) {
+        return (Deme) super.divide(cloneCellCount);
+    }
+
+    @Override public Deme divide(Probability transferProb) {
+        return (Deme) super.divide(transferProb);
+    }
+
+    @Override public Deme divide(Probability transferProb, long minCloneCellCount, long maxCloneCellCount) {
+        return (Deme) super.divide(transferProb, minCloneCellCount, maxCloneCellCount);
     }
 }

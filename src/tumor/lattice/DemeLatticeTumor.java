@@ -5,11 +5,9 @@ import java.util.List;
 
 import jam.lattice.Coord;
 import jam.lattice.Lattice;
+import jam.math.Probability;
 
 import tumor.carrier.Deme;
-import tumor.carrier.TumorComponent;
-import tumor.divide.DivisionModel;
-import tumor.divide.DivisionResult;
 
 /**
  * Represents a three-dimensional tumor of demes on a lattice.
@@ -18,11 +16,6 @@ import tumor.divide.DivisionResult;
  * limited to a single deme.
  */
 public final class DemeLatticeTumor extends LatticeTumor<Deme> {
-    //
-    // The deme division model....
-    //
-    private final DivisionModel divisionModel = DivisionModel.global();
-
     private DemeLatticeTumor(DemeLatticeTumor parent) {
         super(parent, createLattice());
     }
@@ -30,6 +23,11 @@ public final class DemeLatticeTumor extends LatticeTumor<Deme> {
     private static Lattice<Deme> createLattice() {
         return Lattice.sparseSO(resolvePeriodLength());
     }
+
+    /**
+     * The fixed transfer probability for deme division.
+     */
+    public static final Probability TRANSFER_PROBABILITY = Probability.ONE_HALF;
 
     /**
      * Creates a primary tumor with a single founding deme located at
@@ -58,40 +56,8 @@ public final class DemeLatticeTumor extends LatticeTumor<Deme> {
         return lattice.countOccupants();
     }
 
-    /**
-     * Finds all neighboring lattice sites that can accomodate a new
-     * deme.  We allow at most one deme per site, so the result is a
-     * list of empty neighbors.
-     *
-     * @param center the coordinate of the central site to examine.
-     *
-     * @return a list containing the coordinates of all neighboring
-     * sites that can accomodate a new deme (all empty neighbors).
-     */
-    public List<Coord> findAvailable(Coord center) {
-        return lattice.findAvailable(center, neighborhood);
-    }
-
-    @Override protected void advance(Deme parentDeme) {
-        //
-        // Divide if indicated by the division model...
-        //
-        DivisionResult result = divisionModel.divide(this, parentDeme);
-
-        if (result != null) {
-            //
-            // Place the clone on the lattice and allow it to
-            // advance...
-            //
-            Deme  cloneDeme  = result.getClone();
-            Coord cloneCoord = result.getCoord();
-
-            addComponent(cloneDeme, cloneCoord);
-            cloneDeme.advance(this);
-        }
-
-        // Now advance the parent...
-        parentDeme.advance(this);
+    @Override protected Deme divideParent(Deme parent, long minCloneCellCount, long maxCloneCellCount) {
+        return parent.divide(TRANSFER_PROBABILITY, minCloneCellCount, maxCloneCellCount);
     }
 
     @Override public boolean isAvailable(Coord coord, Deme component) {
@@ -99,16 +65,5 @@ public final class DemeLatticeTumor extends LatticeTumor<Deme> {
         // Only one deme per site...
         //
         return lattice.isAvailable(coord);
-    }
-
-    @Override public long getLocalGrowthCapacity(TumorComponent deme) {
-        //
-        // Demes must grow IN PLACE at their current site: division
-        // and migration to a neighboring cell occurs separately...
-        //
-        @SuppressWarnings("unchecked")
-            Coord coord = locateComponent((Deme) deme);
-        
-        return getSiteCapacity(coord) - deme.countCells();
     }
 }

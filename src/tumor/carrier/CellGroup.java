@@ -163,61 +163,92 @@ public abstract class CellGroup extends TumorComponent {
      * group and a new clone.  The cells in the cloned group will be
      * identical to those in this group.
      *
-     * <p>Before division, this group contains {@code n} cells and has
-     * a probability {@code p} of retaining a cell.  Two or more cells
-     * are required for division: {@code n >= 2}.  Following division,
-     * this group will have size {@code m = min(n - 1, max(1, b))},
-     * where {@code b} is a random variable drawn from the binomial
-     * distribution {@code B(n, p)}.  The minimum and maximum values
-     * are applied so that this group and the new group always have at
-     * least one cell.
+     * <p>Before division, this group contains {@code N} cells and has
+     * probability {@code p} of transferring a cell to the new clone.
+     * Two or more cells are required for division: {@code N >= 2}.
+     * During division, {@code M = max(1, min(N - 1, b))} cells will
+     * be transferred to the new clone, where {@code b} is a random
+     * value drawn from the binomial distribution {@code B(N, p)}.
+     * After division, this group will contain {@code N - M} cells.
+     * The minimum and maximum values ensure that this group and the
+     * new cloned group always have at least one cell.
      *
      * <p>Subclasses should override this method and return a concrete
      * subtype.
      *
-     * @param retentionProb the probability that this group will
-     * retain any given cell.
+     * @param transferProb the probability that a cell will be moved
+     * from this group to the new clone.
      *
      * @return the new cloned group.
      *
      * @throws IllegalStateException unless this group contains two or
      * more cells.
      */
-    protected CellGroup divide(Probability retentionProb) {
-        if (cellCount < MINIMUM_DIVISION_SIZE)
-            throw new IllegalStateException("Two or more cells are required for group division.");
-
-        long retentionCount = computeRetentionCount(retentionProb);
-        long fissionCount   = cellCount - retentionCount;
-
-        assert retentionCount > 0;
-        assert fissionCount   > 0;
-
-        cellCount = retentionCount;
-        return newClone(fissionCount);
+    protected CellGroup divide(Probability transferProb) {
+        return divide(transferProb, 1, countCells() - 1);
     }
 
-    private long computeRetentionCount(Probability retentionProb) {
-        long retentionCount;
+    /**
+     * Stochastically partitions the cells in this group between this
+     * group and a new clone.  The cells in the cloned group will be
+     * identical to those in this group.
+     *
+     * <p>Before division, this group contains {@code N} cells and has
+     * probability {@code p} of transferring a cell to the new clone.
+     * Two or more cells are required for division: {@code N >= 2}.
+     * During division, {@code M = max(L, min(U, b))} cells will be
+     * transferred to the new clone, where {@code L} and {@code U} are
+     * the minimum and maximum clone cell counts and {@code b} is a
+     * random draw from the binomial distribution {@code B(N, p)}.
+     * After division, this group will contain {@code N - M} cells.
+     *
+     * <p>Subclasses should override this method and return a concrete
+     * subtype.
+     *
+     * @param transferProb the probability that a cell will be moved
+     * from this group to the new clone.
+     *
+     * @param minCloneCellCount the minimum number of cells to move to
+     * the new clone.
+     *
+     * @param maxCloneCellCount the maximum number of cells to move to
+     * the new clone.
+     *
+     * @return the new cloned group.
+     *
+     * @throws IllegalArgumentException unless the minimum clone cell
+     * count is less than or equal to the maximum clone cell count and
+     * both are in the valid range {@code [1, N - 1]}, where {@code N}
+     * is the number of cells in this group before division.
+     *
+     * @throws IllegalStateException unless this group contains two or
+     * more cells.
+     */
+    protected CellGroup divide(Probability transferProb, long minCloneCellCount, long maxCloneCellCount) {
+        return divide(computeCloneCellCount(transferProb, minCloneCellCount, maxCloneCellCount));
+    }
+
+    private long computeCloneCellCount(Probability transferProb, long minCloneCellCount, long maxCloneCellCount) {
+        long cloneCellCount;
         
         if (cellCount < 10000) {
             //
             // Sample from the binomial distribution...
             //
-            retentionCount = BinomialDistribution.create((int) cellCount, retentionProb).sample();
+            cloneCellCount = BinomialDistribution.create((int) cellCount, transferProb).sample();
         }
         else {
             //
             // The number of cells is so large that the binomial
             // distribution approaches a delta function...
             //
-            retentionCount = Math.round(retentionProb.doubleValue() * cellCount);
+            cloneCellCount = Math.round(transferProb.doubleValue() * cellCount);
         }
 
-        retentionCount = Math.max(retentionCount, 1);
-        retentionCount = Math.min(retentionCount, cellCount - 1);
+        cloneCellCount = Math.max(cloneCellCount, minCloneCellCount);
+        cloneCellCount = Math.min(cloneCellCount, maxCloneCellCount);
 
-        return retentionCount;
+        return cloneCellCount;
     }
 
     /**
@@ -227,13 +258,14 @@ public abstract class CellGroup extends TumorComponent {
      * <p>This method uses the algorithm (either explicit sampling or
      * exact calculation) that is appropriate for the current size.
      *
-     * @param tumor the tumor in which this cell group resides.
+     * @param tumorEnv the local tumor environment where this cell
+     * group resides.
      *
      * @return the number of birth and death events.
      */
-    public GrowthCount resolveGrowthCount(Tumor tumor) {
-        long netCapacity = tumor.getLocalGrowthCapacity(this);
-        GrowthRate growthRate = tumor.getLocalGrowthRate(this);
+    public GrowthCount resolveGrowthCount(TumorEnv tumorEnv) {
+        long netCapacity = tumorEnv.getGrowthCapacity();
+        GrowthRate growthRate = tumorEnv.getGrowthRate();
 
         if (cellCount <= EXPLICIT_SAMPLING_LIMIT)
             return growthRate.sample(cellCount, netCapacity);

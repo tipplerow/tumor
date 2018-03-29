@@ -19,6 +19,7 @@ import tumor.capacity.CapacityModel;
 import tumor.carrier.Carrier;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
+import tumor.carrier.TumorEnv;
 import tumor.growth.GrowthRate;
 import tumor.growth.LocalGrowthModel;
 import tumor.migrate.MigrationModel;
@@ -56,9 +57,14 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     protected final LocalGrowthModel localGrowthModel = LocalGrowthModel.global();
 
     /**
-     * The local growth rate model.
+     * The component migration model.
      */
     protected final MigrationModel migrationModel = MigrationModel.global();
+
+    /**
+     * The random number generator.
+     */
+    protected final JamRandom randomSource = JamRandom.global();
 
     /**
      * Creates a new (empty) tumor.
@@ -98,11 +104,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * on the lattice.
      */
     public static final String NEIGHBORHOOD_PROPERTY = "LatticeTumor.neighborhood";
-
-    /**
-     * Default value for the nearest-neighbor type.
-     */
-    public static final Neighborhood DEFAULT_NEIGHBORHOOD = Neighborhood.MOORE;
 
     /**
      * Name of the system property that defines the edge length of the
@@ -183,12 +184,23 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
-     * Advances a single component in this tumor by one discrete time
-     * step and adds any offspring to this tumor.
+     * Divides a multi-cellular parent component by creating a clone
+     * of the parent.
      *
-     * @param component the component to advance.
+     * @param parent the multi-cellular parent component.
+     *
+     * @param minCloneCellCount the minimum number of cells to move to
+     * the new clone.
+     *
+     * @param maxCloneCellCount the maximum number of cells to move to
+     * the new clone.
+     *
+     * @return the new clone.
+     *
+     * @throws UnsupportedOperationException if the tumor components
+     * are indivisible (individual tumor cells).
      */
-    protected abstract void advance(E component);
+    protected abstract E divideParent(E parent, long minCloneCellCount, long maxCloneCellCount);
 
     /**
      * Adds a component to this tumor.
@@ -208,6 +220,25 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     protected void addComponent(E component, Coord location) {
         if (isAvailable(location, component))
             lattice.occupy(component, location);
+        else
+            throw new IllegalStateException("Exceeded local site capacity.");
+    }
+
+    /**
+     * Moves a tumor component from one site to another.
+     *
+     * @param component the tumor component to move.
+     *
+     * @param newCoord the new coordinate for the component.
+     *
+     * @throws IllegalStateException unless the lattice can accomodate
+     * the component at the new location.
+     */
+    protected void moveComponent(E component, Coord newCoord) {
+        lattice.vacate(component);
+
+        if (isAvailable(newCoord, component))
+            lattice.occupy(component, newCoord);
         else
             throw new IllegalStateException("Exceeded local site capacity.");
     }
@@ -236,24 +267,37 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * @return {@code true} iff the component can be placed at the
      * specified site without exceeding the capacity of that site.
      */
-    public abstract boolean isAvailable(Coord coord, E component);
+    public boolean isAvailable(Coord coord, E component) {
+        return component.countCells() <= computeExcessCapacity(coord);
+    }
 
     /**
-     * Returns the total number of tumor cells present at a given
-     * lattice site <em>and all of its neighboring sites</em>.
+     * Computes the number of <em>additional</em> tumor cells that a
+     * lattice site can accomodate: the difference between its total
+     * capacity and the number of cells currently occupying that site.
      *
-     * @param coord the coordinate to examine.
+     * @param coord the site to examine.
      *
-     * @return the total number of tumor cells present at the
-     * specified lattice site and all of its neighboring sites.
+     * @return the excess capacity of the specified lattice site.
      */
-    public long countNeighborhoodCells(Coord coord) {
-        long result = countSiteCells(coord);
+    public long computeExcessCapacity(Coord coord) {
+        return getSiteCapacity(coord) - countCells(coord);
+    }
 
-        for (Coord neighbor : getNeighbors(coord))
-            result += countSiteCells(neighbor);
-        
-        return result;
+    /**
+     * Computes the local growth capacity: the excess capacity at the
+     * site of a componenet and an expansion site that has been chosen
+     * to accomodate any offspring.
+     *
+     * @param componentCoord the coordinate of a tumor component.
+     *
+     * @param expansionCoord the coordinate of the expansion site.
+     *
+     * @return the local growth capacity for the specified lattice
+     * sites.
+     */
+    public long computeGrowthCapacity(Coord componentCoord, Coord expansionCoord) {
+        return computeExcessCapacity(componentCoord) + computeExcessCapacity(expansionCoord);
     }
 
     /**
@@ -265,8 +309,34 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * @return the total number of tumor cells present at the
      * specified lattice site.
      */
-    public long countSiteCells(Coord coord) {
+    public long countCells(Coord coord) {
         return Carrier.countCells(lattice.viewOccupants(coord));
+    }
+
+    /**
+     * Returns the local growth rate for a tumor component.
+     *
+     * @param component a component of this tumor.
+     *
+     * @return the intrinsic growth rate for the component.
+     */
+    public GrowthRate getLocalGrowthRate(TumorComponent component) {
+        return localGrowthModel.getLocalGrowthRate(this, component);
+    }
+
+    /**
+     * Returns the local mutation generator for a tumor component.
+     *
+     * <p>This default implementation simply returns the intrinsic
+     * mutation generator for the component (applies no adjustment
+     * for the local environment).
+     *
+     * @param component a component of this tumor.
+     *
+     * @return the intrinsic mutation generator for the component.
+     */
+    public MutationGenerator getLocalMutationGenerator(TumorComponent component) {
+        return component.getMutationGenerator();
     }
 
     /**
@@ -280,33 +350,15 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
     /**
      * Returns the coordinates of the nearest neighbors to a given
-     * site.
+     * central site.
      *
-     * @param coord the site to examine.
+     * @param center the site in the center of the neighborhood.
      *
      * @return the coordinates of the nearest neighbors to the
-     * specified site.
+     * central site.
      */
-    public List<Coord> getNeighbors(Coord coord) {
-        return neighborhood.getNeighbors(coord);
-    }
-
-    /**
-     * Returns the maximum number of tumor cells that may occupy a
-     * given lattice site <em>and all of its neighboring sites</em>.
-     *
-     * @param coord the site to examine.
-     *
-     * @return the maximum number of tumor cells that may occupy the
-     * specified lattice site and all of its neighboring sites.
-     */
-    public long getNeighborhoodCapacity(Coord coord) {
-        long result = getSiteCapacity(coord);
-
-        for (Coord neighbor : getNeighbors(coord))
-            result += getSiteCapacity(neighbor);
-
-        return result;
+    public List<Coord> getNeighbors(Coord center) {
+        return neighborhood.getNeighbors(center);
     }
 
     /**
@@ -358,6 +410,19 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Selects one neighboring lattice site at random (with equal
+     * probability for all neighbors).
+     *
+     * @param center the coordinate at the center of the neighborhood.
+     *
+     * @return one site neighboring the central coordinate chosen at
+     * random (with equal probability for all neighbors).
+     */
+    public Coord selectNeighbor(Coord center) {
+        return neighborhood.randomNeighbor(center, randomSource);
+    }
+
+    /**
      * Returns a read-only view of the underlying lattice.
      *
      * @return a read-only view of the underlying lattice.
@@ -371,27 +436,100 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         // Advance the active (living) tumor components in a
         // randomized order...
         //
-        List<E> shuffled = shuffleComponents();
+        List<E> randomized = randomizeComponents();
 
-        for (E component : shuffled)
+        for (E component : randomized)
             advance(component);
+
+        // Migrate after advancement...
+        migrate();
 
         // This base class never divides...
         return Collections.emptyList();
     }
 
     /**
-     * Shuffles the active (living) components of this tumor into an
+     * Assembles the active (living) components of this tumor in an
      * unbiased randomized order.
      *
      * @return a new list containing the active (living) components of
      * this tumor in an unbiased randomized order.
      */
-    protected List<E> shuffleComponents() {
-        List<E> shuffled = new ArrayList<E>(viewComponents());
-        ListUtil.shuffle(shuffled, JamRandom.global());
+    protected List<E> randomizeComponents() {
+        List<E> randomized = new ArrayList<E>(viewComponents());
+        ListUtil.shuffle(randomized, randomSource);
         
-        return shuffled;
+        return randomized;
+    }
+
+    /**
+     * Advances a single parent component in this tumor by one
+     * discrete time step and adds any offspring to this tumor.
+     *
+     * @param parent the parent component to advance.
+     */
+    protected void advance(E parent) {
+        //
+        // Locate the parent...
+        //
+        Coord parentCoord = locateComponent(parent);
+
+        // Select an expansion site (which may be required to
+        // accomodate offspring) at random...
+        Coord expansionCoord = selectNeighbor(parentCoord);
+
+        // Compute the local growth capacity: the excess capacity at
+        // the parent site and the expansion site...
+        long growthCapacity = computeGrowthCapacity(parentCoord, expansionCoord);
+
+        // Construct the appropriate local environment...
+        TumorEnv localEnv =
+            new TumorEnv(growthCapacity,
+                         getLocalGrowthRate(parent),
+                         getLocalMutationGenerator(parent));
+
+        // Advance the parent component within the local environment...
+        @SuppressWarnings("unchecked")
+            Collection<E> daughters = (Collection<E>) parent.advance(localEnv);
+
+        if (parent.isDead()) {
+            //
+            // Remove the dead parent...
+            //
+            removeComponent(parent);
+        }
+        else if (parent.countCells() > 1) {
+            //
+            // Divide the multi-cellular parent (deme or lineage) if it
+            // has grown beyond the capacity of its current location...
+            //
+            long excessOccupancy =
+                Math.max(0, countCells(parentCoord) - getSiteCapacity(parentCoord));
+
+            if (excessOccupancy > 0) {
+                //
+                // The new clone must take a number of cells at least as
+                // large as the excess occupancy of the parent site, but
+                // no larger than the excess capacity of the expansion
+                // site...
+                //
+                long minCloneCellCount = excessOccupancy;
+                long maxCloneCellCount =
+                    Math.min(computeExcessCapacity(expansionCoord), parent.countCells() - 1);
+                
+                E parentClone = divideParent(parent, minCloneCellCount, maxCloneCellCount);
+                addComponent(parentClone, expansionCoord);
+            }
+        }
+
+        // Place the offspring at the parent site until it is filled,
+        // then the expansion site...
+        for (E daughter : daughters) {
+            if (isAvailable(parentCoord, daughter))
+                addComponent(daughter, parentCoord);
+            else
+                addComponent(daughter, expansionCoord);
+        }
     }
 
     /**
@@ -404,9 +542,9 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
         // Migrate the active (living) tumor components in a
         // randomized order...
-        List<E> shuffled = shuffleComponents();
+        List<E> randomized = randomizeComponents();
 
-        for (E component : shuffled)
+        for (E component : randomized)
             migrate(component);
     }
 
@@ -423,81 +561,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             moveComponent(component, newCoord);
     }
 
-    /**
-     * Moves a tumor component from one site to another.
-     *
-     * @param component the tumor component to move.
-     *
-     * @param newCoord the new coordinate for the component.
-     *
-     * @throws IllegalStateException unless the lattice can accomodate
-     * the component at the new location.
-     */
-    protected void moveComponent(E component, Coord newCoord) {
-        lattice.vacate(component);
-
-        if (isAvailable(newCoord, component))
-            lattice.occupy(component, newCoord);
-        else
-            throw new IllegalStateException("Exceeded local site capacity.");
-    }
-
-    /**
-     * Returns the local growth <em>capacity</em> for a given tumor
-     * component: the maximum number of new cells that the tumor can
-     * support in the local environment surrounding the component.
-     *
-     * <p>This default implementation returns the difference between
-     * the total capacity and the total occupancy in the neighborhood
-     * around the component.
-     *
-     * @param component a component of this tumor.
-     *
-     * @return the local growth capacity.
-     *
-     * @throws IllegalArgumentException unless the component is a
-     * member of this tumor.
-     */
-    @Override public long getLocalGrowthCapacity(TumorComponent component) {
-        @SuppressWarnings("unchecked")
-            Coord coord = locateComponent((E) component);
-        
-        long capacity = getNeighborhoodCapacity(coord);
-        long occupancy = countNeighborhoodCells(coord);
-
-        return capacity - occupancy;
-    }
-            
-    /**
-     * Returns the local growth rate for a tumor component.
-     *
-     * <p>This default implementation simply returns the intrinsic
-     * growth rate for the component (applies no adjustment for the
-     * local environment).
-     *
-     * @param component a component of this tumor.
-     *
-     * @return the intrinsic growth rate for the component.
-     */
-    @Override public GrowthRate getLocalGrowthRate(TumorComponent component) {
-        return localGrowthModel.getLocalGrowthRate(this, component);
-    }
-            
-    /**
-     * Returns the local mutation generator for a tumor component.
-     *
-     * <p>This default implementation simply returns the intrinsic
-     * mutation generator for the component (applies no adjustment
-     * for the local environment).
-     *
-     * @param component a component of this tumor.
-     *
-     * @return the intrinsic mutation generator for the component.
-     */
-    @Override public MutationGenerator getLocalMutationGenerator(TumorComponent component) {
-        return component.getMutationGenerator();
-    }
-    
     @Override public Set<E> viewComponents() {
         return lattice.viewOccupants();
     }

@@ -1,17 +1,24 @@
 
 package tumor.junit;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 
 import jam.junit.NumericTestBase;
 import jam.math.DoubleUtil;
+import jam.math.Probability;
+import jam.math.StatUtil;
+import jam.util.MultisetUtil;
+import jam.vector.JamVector;
 
 import tumor.carrier.Lineage;
-import tumor.carrier.Tumor;
+import tumor.carrier.TumorEnv;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
 import tumor.perfect.PerfectLineage;
-import tumor.point.PointTumor;
 import tumor.system.SystemLineage;
 
 import org.junit.*;
@@ -28,10 +35,10 @@ public class LineageTest extends NumericTestBase {
         long       initCount  = 100000L;
         GrowthRate growthRate = GrowthRate.net(0.0);
         
-        Lineage founder = SystemLineage.founder(growthRate, initCount);
-        Tumor   tumor   = PointTumor.primary(founder);
+        Lineage  founder  = SystemLineage.founder(growthRate, initCount);
+        TumorEnv tumorEnv = TumorEnv.unconstrained(founder);
 
-        List<Lineage> children = founder.advance(tumor);
+        List<Lineage> children = founder.advance(tumorEnv);
 
         // With such a low mutation arrival rate, all children should
         // carry only one mutation...
@@ -43,10 +50,10 @@ public class LineageTest extends NumericTestBase {
         double actualMean   = DoubleUtil.ratio(children.size(), initCount);
         double expectedMean = 0.001;
 
-        assertEquals(expectedMean, actualMean, 0.0001);
+        assertEquals(expectedMean, actualMean, 0.0002);
     }
 
-    @Test public void testDivide1() {
+    @Test public void testDivideFixed() {
         long       initSize   = 1000;
         long       cloneSize1 = 300;
         long       cloneSize2 = 150;
@@ -63,19 +70,66 @@ public class LineageTest extends NumericTestBase {
         assertEquals(150, clone2.countCells());
     }
 
+    @Test public void testDivideRandom() {
+        int         trialCount   = 10000;
+        long        initSize     = 1000;
+        Probability transferProb = Probability.valueOf(0.75);
+
+        JamVector cloneCounts  = new JamVector(trialCount);
+        JamVector parentCounts = new JamVector(trialCount);
+
+        for (int trialIndex = 0; trialIndex < trialCount; ++trialIndex) {
+            Lineage parent = PerfectLineage.founder(GrowthRate.NO_GROWTH, initSize);
+            Lineage clone  = parent.divide(transferProb);
+
+            cloneCounts.set(trialIndex, clone.countCells());
+            parentCounts.set(trialIndex, parent.countCells());
+        }
+
+        assertEquals(750.0, StatUtil.mean(cloneCounts),  0.01);
+        assertEquals(250.0, StatUtil.mean(parentCounts), 0.01);
+    }
+
+    @Test public void testDivideRandomBounded() {
+        int         trialCount   = 100000;
+        long        initSize     = 10;
+        Probability transferProb = Probability.valueOf(0.6);
+
+        Multiset<Integer> cloneCounts  = HashMultiset.create();
+        Multiset<Integer> parentCounts = HashMultiset.create();
+
+        for (int trialIndex = 0; trialIndex < trialCount; ++trialIndex) {
+            Lineage parent = PerfectLineage.founder(GrowthRate.NO_GROWTH, initSize);
+            Lineage clone  = parent.divide(transferProb, 5, 8);
+
+            cloneCounts.add((int) clone.countCells());
+            parentCounts.add((int) parent.countCells());
+        }
+
+        assertEquals(0.367, MultisetUtil.frequency(cloneCounts, 5), 0.005);
+        assertEquals(0.251, MultisetUtil.frequency(cloneCounts, 6), 0.005);
+        assertEquals(0.215, MultisetUtil.frequency(cloneCounts, 7), 0.005);
+        assertEquals(0.167, MultisetUtil.frequency(cloneCounts, 8), 0.005);
+
+        assertEquals(0.167, MultisetUtil.frequency(parentCounts, 2), 0.005);
+        assertEquals(0.215, MultisetUtil.frequency(parentCounts, 3), 0.005);
+        assertEquals(0.251, MultisetUtil.frequency(parentCounts, 4), 0.005);
+        assertEquals(0.367, MultisetUtil.frequency(parentCounts, 5), 0.005);
+    }
+
     @Test public void testPerfect() {
         int        stepCount  = 100;
         long       initCount  = 1000L;
         GrowthRate growthRate = GrowthRate.net(0.1);
         Lineage    lineage    = PerfectLineage.founder(growthRate, initCount);
-        Tumor      tumor      = PointTumor.primary(lineage);
+        TumorEnv   tumorEnv   = TumorEnv.unconstrained(lineage);
 
         for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {
             //
             // A perfect lineage never mutates and therefore should
             // never create daughter lineages...
             //
-            assertTrue(lineage.advance(tumor).isEmpty());
+            assertTrue(lineage.advance(tumorEnv).isEmpty());
 
             double actualFactor   = DoubleUtil.ratio(lineage.countCells(), initCount);
             double expectedFactor = growthRate.getGrowthFactor(stepIndex);
