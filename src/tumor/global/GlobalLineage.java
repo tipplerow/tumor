@@ -1,5 +1,5 @@
 
-package tumor.system;
+package tumor.global;
 
 import tumor.carrier.Lineage;
 import tumor.growth.GrowthRate;
@@ -11,9 +11,9 @@ import tumor.mutation.MutationList;
  * mutations from the global mutation generator returned by the 
  * method {@link tumor.mutation.MutationGenerator#global()}.
  */
-public final class SystemLineage extends Lineage {
+public final class GlobalLineage extends Lineage {
     /**
-     * Creates a founding system lineage.
+     * Creates a founding global lineage.
      *
      * @param growthRate the intrinsic growth rate of the (identical)
      * cells in the founding lineage.
@@ -21,13 +21,13 @@ public final class SystemLineage extends Lineage {
      * @param cellCount the number of (identical) cells in the founding 
      * lineage.
      *
-     * @return the founding system lineage.
+     * @return the founding global lineage.
      */
-    public static SystemLineage founder(GrowthRate growthRate, long cellCount) {
-        return new SystemLineage(growthRate, cellCount);
+    public static GlobalLineage founder(GrowthRate growthRate, long cellCount) {
+        return new GlobalLineage(growthRate, cellCount);
     }
 
-    private SystemLineage(GrowthRate growthRate, long cellCount) {
+    private GlobalLineage(GrowthRate growthRate, long cellCount) {
         super(growthRate, cellCount);
     }
 
@@ -35,19 +35,19 @@ public final class SystemLineage extends Lineage {
         return MutationGenerator.global();
     }
 
-    @Override public SystemLineage newClone(long cellCount) {
-        return new SystemLineage(this, cellCount);
+    @Override public GlobalLineage newClone(long cellCount) {
+        return new GlobalLineage(this, cellCount);
     }
 
-    private SystemLineage(SystemLineage parent, long cellCount) {
+    private GlobalLineage(GlobalLineage parent, long cellCount) {
         super(parent, cellCount);
     }
     
-    @Override public SystemLineage newDaughter(MutationList daughterMut) {
-        return new SystemLineage(this, daughterMut);
+    @Override public GlobalLineage newDaughter(MutationList daughterMut) {
+        return new GlobalLineage(this, daughterMut);
     }
     
-    private SystemLineage(SystemLineage parent, MutationList daughterMut) {
+    private GlobalLineage(GlobalLineage parent, MutationList daughterMut) {
         super(parent, daughterMut);
     }
 }

@@ -60,7 +60,7 @@ public abstract class LineageTumorDriver extends LatticeTumorDriver {
     }
 
     @Override protected void consoleLogStep() {
-        JamLogger.info("TRIAL: %4d, STEP: %5d; LINEAGES: %10s; CELLS: %15s",
+        JamLogger.info("TRIAL: %4d, STEP: %5d; LINEAGES: %12s; CELLS: %15s",
                        getTrialIndex(), getTimeStep(),
                        SIZE_FORMATTER.format(getTumor().countLineages()),
                        SIZE_FORMATTER.format(getTumor().countCells()));

@@ -1,5 +1,5 @@
 
-package tumor.system;
+package tumor.global;
 
 import tumor.carrier.TumorCell;
 import tumor.growth.GrowthRate;
@@ -10,7 +10,7 @@ import tumor.mutation.MutationList;
  * Represents tumor cells that acquire mutations from the global
  * mutation generator [{@link tumor.mutation.MutationGenerator#global()}].
  */
-public final class SystemCell extends TumorCell {
+public final class GlobalCell extends TumorCell {
     /**
      * Creates a founder cell.
      *
@@ -18,11 +18,11 @@ public final class SystemCell extends TumorCell {
      *
      * @return the founder cell.
      */
-    public static SystemCell founder(GrowthRate growthRate) {
-        return new SystemCell(growthRate);
+    public static GlobalCell founder(GrowthRate growthRate) {
+        return new GlobalCell(growthRate);
     }
 
-    private SystemCell(GrowthRate growthRate) {
+    private GlobalCell(GrowthRate growthRate) {
         super(growthRate);
     }
 
@@ -30,11 +30,11 @@ public final class SystemCell extends TumorCell {
         return MutationGenerator.global();
     }
 
-    @Override public SystemCell newDaughter(MutationList daughterMut) {
-        return new SystemCell(this, daughterMut);
+    @Override public GlobalCell newDaughter(MutationList daughterMut) {
+        return new GlobalCell(this, daughterMut);
     }
     
-    private SystemCell(SystemCell parent, MutationList daughterMut) {
+    private GlobalCell(GlobalCell parent, MutationList daughterMut) {
         super(parent, daughterMut);
     }
 }

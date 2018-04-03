@@ -16,10 +16,10 @@ import jam.vector.JamVector;
 
 import tumor.carrier.Lineage;
 import tumor.carrier.TumorEnv;
+import tumor.global.GlobalLineage;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
 import tumor.perfect.PerfectLineage;
-import tumor.system.SystemLineage;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -35,7 +35,7 @@ public class LineageTest extends NumericTestBase {
         long       initCount  = 100000L;
         GrowthRate growthRate = GrowthRate.net(0.0);
         
-        Lineage  founder  = SystemLineage.founder(growthRate, initCount);
+        Lineage  founder  = GlobalLineage.founder(growthRate, initCount);
         TumorEnv tumorEnv = TumorEnv.unconstrained(founder);
 
         List<Lineage> children = founder.advance(tumorEnv);
