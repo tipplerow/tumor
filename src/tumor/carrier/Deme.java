@@ -16,9 +16,10 @@ import tumor.mutation.MutationList;
  * where any new mutation becomes fixed throughout the population
  * (without spawning a new deme).
  */
-public abstract class Deme extends CellGroup {
+public class Deme extends CellGroup {
     /**
-     * Creates a founding deme.
+     * Creates a founding deme with the global mutation generator as
+     * the source of somatic mutations.
      *
      * <p>Note that any mutations that triggered the transformation to
      * malignancy will be carried by all clones (and may be tracked in
@@ -36,8 +37,7 @@ public abstract class Deme extends CellGroup {
     }
 
     /**
-     * Creates a cloned deme (fission product) with no original
-     * mutations.
+     * Creates a cloned deme with no original mutations.
      *
      * @param parent the parent deme.
      *
@@ -49,22 +49,24 @@ public abstract class Deme extends CellGroup {
     }
 
     /**
-     * Stochastically generates the mutations that occur during one
-     * advancement step for a given number of cell birth events.
+     * Creates a founding deme with the global mutation generator as
+     * the source of somatic mutations.
      *
-     * <p>This default implementation iterates explicitly over the
-     * cell division events and samples the mutations independently;
-     * subclasses can likely provide a more efficient implementation.
+     * <p>Note that any mutations that triggered the transformation to
+     * malignancy will be carried by all clones (and may be tracked in
+     * the tumor itself), so they do not need to be specified in the
+     * founding deme.
      *
-     * @param tumor the tumor in which this deme resides.
+     * @param growthRate the intrinsic growth rate of the (identical)
+     * cells in the founding deme.
      *
-     * @param growthCount the number of birth and death events that
-     * have occured during the advancement step.
+     * @param cellCount the number of (identical) cells in the founding 
+     * deme.
      *
-     * @return the stochastically generated mutations.
+     * @return the founding deme.
      */
-    protected MutationList generateMutations(Tumor tumor, GrowthCount growthCount) {
-        return null;
+    public static Deme founder(GrowthRate growthRate, long cellCount) {
+        return new Deme(growthRate, cellCount);
     }
 
     /**
@@ -104,5 +106,9 @@ public abstract class Deme extends CellGroup {
 
     @Override public Deme divide(Probability transferProb, long minCloneCellCount, long maxCloneCellCount) {
         return (Deme) super.divide(transferProb, minCloneCellCount, maxCloneCellCount);
+    }
+
+    @Override public Deme newClone(long cellCount) {
+        return new Deme(this, cellCount);
     }
 }

@@ -15,9 +15,10 @@ import tumor.mutation.MutationList;
  * Represents a well-mixed population of genetically identical cells
  * where any new mutation spawns a new distinct daughter lineage.
  */
-public abstract class Lineage extends CellGroup {
+public class Lineage extends CellGroup {
     /**
-     * Creates a founding lineage.
+     * Creates a founding lineage with the global mutation generator
+     * as the source of somatic mutations.
      *
      * <p>Note that any mutations that triggered the transformation to
      * malignancy will be carried by all daughter cells (and therefore
@@ -35,8 +36,7 @@ public abstract class Lineage extends CellGroup {
     }
 
     /**
-     * Creates a cloned lineage (fission product) with no original
-     * mutations.
+     * Creates a cloned lineage with no original mutations.
      *
      * @param parent the parent lineage.
      *
@@ -64,6 +64,27 @@ public abstract class Lineage extends CellGroup {
     public static final long DAUGHTER_CELL_COUNT = 1L;
 
     /**
+     * Creates a founding lineage with the global mutation generator
+     * as the source of somatic mutations.
+     *
+     * <p>Note that any mutations that triggered the transformation to
+     * malignancy will be carried by all daughter cells (and therefore
+     * may be tracked in the tumor itself), so they do not need to be
+     * explicitly specified in the founding lineage.
+     *
+     * @param growthRate the intrinsic growth rate of the (identical)
+     * cells in the founding lineage.
+     *
+     * @param cellCount the number of (identical) cells in the founding 
+     * lineage.
+     *
+     * @return the founding lineage.
+     */
+    public static Lineage founder(GrowthRate growthRate, long cellCount) {
+        return new Lineage(growthRate, cellCount);
+    }
+
+    /**
      * Creates a (single-celled) daughter lineage with new original
      * mutations.
      *
@@ -71,7 +92,9 @@ public abstract class Lineage extends CellGroup {
      *
      * @return the daughter lineage.
      */
-    protected abstract Lineage newDaughter(MutationList daughterMut);
+    protected Lineage newDaughter(MutationList daughterMut) {
+        return new Lineage(this, daughterMut);
+    }
 
     /**
      * Advances this lineage through one discrete time step.
@@ -135,5 +158,9 @@ public abstract class Lineage extends CellGroup {
 
     @Override public Lineage divide(Probability transferProb, long minCloneCellCount, long maxCloneCellCount) {
         return (Lineage) super.divide(transferProb, minCloneCellCount, maxCloneCellCount);
+    }
+
+    @Override public Lineage newClone(long cellCount) {
+        return new Lineage(this, cellCount);
     }
 }

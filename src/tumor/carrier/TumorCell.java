@@ -1,6 +1,7 @@
 
 package tumor.carrier;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +14,7 @@ import tumor.mutation.MutationList;
 /**
  * Represents a single tumor cell.
  */
-public abstract class TumorCell extends TumorComponent {
+public class TumorCell extends TumorComponent {
     //
     // Tumor cells are alive when created; the state becomes DEAD
     // during the time-step advancement if a death event occurs.
@@ -21,7 +22,8 @@ public abstract class TumorCell extends TumorComponent {
     private State state = State.ALIVE;
 
     /**
-     * Creates a founding tumor cell.
+     * Creates a founding tumor cell with the global mutation generator
+     * as the source of somatic mutations.
      *
      * <p>Note that any mutations that triggered the transformation to
      * malignancy will be carried by all daughter cells (and therefore
@@ -46,13 +48,52 @@ public abstract class TumorCell extends TumorComponent {
     }
 
     /**
+     * Creates a founding tumor cell with the global mutation generator
+     * as the source of somatic mutations.
+     *
+     * <p>Note that any mutations that triggered the transformation to
+     * malignancy will be carried by all daughter cells (and therefore
+     * may be tracked in the tumor itself), so they do not need to be
+     * explicitly specified in the founder cell.
+     *
+     * @param growthRate the intrinsic growth rate of the founder.
+     *
+     * @return the founding tumor cell.
+     */
+    public static TumorCell founder(GrowthRate growthRate) {
+        return new TumorCell(growthRate);
+    }
+
+    /**
+     * Creates founding tumor cells having the global mutation generator
+     * as the source of somatic mutations.
+     *
+     * @param cellCount the number of founders to create.
+     *
+     * @param growthRate the (identical) intrinsic growth rate of the
+     * cells.
+     *
+     * @return the founding tumor cells.
+     */
+    public static List<TumorCell> founders(int cellCount, GrowthRate growthRate) {
+        List<TumorCell> result = new ArrayList<TumorCell>(cellCount);
+
+        while (result.size() < cellCount)
+            result.add(founder(growthRate));
+
+        return result;
+    }
+
+    /**
      * Creates a daughter cell with new original mutations.
      *
      * @param daughterMut the mutations originating in the daughter.
      *
      * @return the daughter cell.
      */
-    public abstract TumorCell newDaughter(MutationList daughterMut);
+    public TumorCell newDaughter(MutationList daughterMut) {
+        return new TumorCell(this, daughterMut);
+    }
 
     /**
      * Advances this tumor cell through one discrete time step.

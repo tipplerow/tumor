@@ -33,7 +33,8 @@ public abstract class TumorComponent extends Carrier {
     }
 
     /**
-     * Creates a founding tumor component.
+     * Creates a founding tumor component with the global mutation
+     * generator as the source of somatic mutations.
      *
      * <p>Note that any mutations that triggered the transformation to
      * malignancy will be carried by all descendants (and therefore
@@ -97,13 +98,6 @@ public abstract class TumorComponent extends Carrier {
     public abstract Collection<? extends TumorComponent> advance(TumorEnv tumorEnv);
 
     /**
-     * Returns the source of somatic mutations for this component.
-     *
-     * @return the source of somatic mutations for this component.
-     */
-    public abstract MutationGenerator getMutationGenerator();
-
-    /**
      * Computes the intrinsic growth rate of a daughter object,
      * derived from the intrinsic growth rate of this parent and
      * the new mutations originating in the daughter.
@@ -123,6 +117,18 @@ public abstract class TumorComponent extends Carrier {
      */
     public final GrowthRate getGrowthRate() {
         return growthRate;
+    }
+
+    /**
+     * Returns the source of somatic mutations for this component.
+     *
+     * <p>This default implementation returns the global mutation
+     * generator defined by system properties.
+     *
+     * @return the source of somatic mutations for this component.
+     */
+    public MutationGenerator getMutationGenerator() {
+        return MutationGenerator.global();
     }
 
     /**
