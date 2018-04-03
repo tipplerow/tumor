@@ -1,0 +1,18 @@
+########################################################################
+# Sample property file to simulate the growth of a point (well-mixed)
+# tumor containing a perfectly replicating deme.
+########################################################################
+
+GrowthRate.birthRate = 0.55
+GrowthRate.deathRate = 0.45
+
+CellGroup.explicitSamplingLimit = 10
+
+TumorDriver.trialCount   = 3
+TumorDriver.initialSize  = 1000
+TumorDriver.maxStepCount = 20
+TumorDriver.maxTumorSize = 1E12 ## Essentially unlimited
+
+TumorDriver.writeCellCountTrajectory = true
+
+jam.math.JamRandom.seed = 20180311
