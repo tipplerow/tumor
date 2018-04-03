@@ -1,8 +1,11 @@
 
 package tumor.mutation;
 
+import jam.app.JamProperties;
 import jam.dist.PoissonDistribution;
+import jam.lang.JamException;
 import jam.math.DoubleComparator;
+import jam.math.DoubleRange;
 import jam.math.JamRandom;
 
 /**
@@ -104,6 +107,47 @@ public abstract class MutationRate {
         @Override public int sampleMutationCount() {
             return JamRandom.global().accept(getMean()) ? 1 : 0;
         }
+    }
+
+    /**
+     * Resolves a global mutation rate defined by system properties.
+     *
+     * @param typeName the name of the system property that defines
+     * the mutation rate type.
+     *
+     * @param meanName the name of the system property that defines
+     * the mean arrival rate.
+     *
+     * @return the mutation rate defined by the specified system
+     * properties.
+     *
+     * @throws RuntimeException unless the required system properties
+     * are properly defined.
+     */
+    public static MutationRate resolveGlobal(String typeName, String meanName) {
+        MutationRateType rateType = resolveRateType(typeName);
+
+        switch (rateType) {
+        case POISSON:
+            return poisson(resolveMeanRate(meanName));
+
+        case UNIFORM:
+            return uniform(resolveMeanRate(meanName));
+
+        case ZERO:
+            return ZERO;
+
+        default:
+            throw JamException.runtime("Unknown mutation rate type: [%s].", rateType);
+        }
+    }
+
+    private static MutationRateType resolveRateType(String typeName) {
+        return JamProperties.getRequiredEnum(typeName, MutationRateType.class);
+    }
+
+    private static double resolveMeanRate(String meanName) {
+        return JamProperties.getRequiredDouble(meanName, DoubleRange.FRACTIONAL);
     }
 
     /**

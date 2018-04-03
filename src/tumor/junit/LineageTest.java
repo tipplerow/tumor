@@ -26,9 +26,9 @@ import static org.junit.Assert.*;
 
 public class LineageTest extends NumericTestBase {
     static {
-        System.setProperty(MutationGenerator.NEUTRAL_MUTATION_RATE_PROPERTY,   "0.001");
-        System.setProperty(MutationGenerator.SELECTIVE_MUTATION_RATE_PROPERTY, "0.0");
-        System.setProperty(MutationGenerator.SELECTION_COEFF_PROPERTY,         "0.0");
+        System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY,    "NEUTRAL");
+        System.setProperty(MutationGenerator.NEUTRAL_RATE_TYPE_PROPERTY, "POISSON");
+        System.setProperty(MutationGenerator.NEUTRAL_MEAN_RATE_PROPERTY, "0.001");
     }
 
     @Test public void testAdvance1() {

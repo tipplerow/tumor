@@ -6,6 +6,7 @@ import java.util.Collection;
 
 import jam.app.JamProperties;
 import jam.dist.PoissonDistribution;
+import jam.lang.JamException;
 import jam.math.DoubleRange;
 import jam.math.DoubleComparator;
 
@@ -16,16 +17,34 @@ public abstract class MutationGenerator {
     private static MutationGenerator global = null;
 
     /**
-     * Name of the system property that defines the (Poisson) arrival
-     * rate of neutral mutations in the global mutation generator.
+     * Name of the system property that defines the type for the
+     * global mutation generator.
      */
-    public static final String NEUTRAL_MUTATION_RATE_PROPERTY = "MutationGenerator.neutralMutationRate";
+    public static final String GENERATOR_TYPE_PROPERTY = "MutationGenerator.generatorType";
 
     /**
-     * Name of the system property that defines the (Poisson) arrival
-     * rate of selective mutations in the global mutation generator.
+     * Name of the system property that defines the type of arrival
+     * rate for neutral mutations in the global mutation generator.
      */
-    public static final String SELECTIVE_MUTATION_RATE_PROPERTY = "MutationGenerator.selectiveMutationRate";
+    public static final String NEUTRAL_RATE_TYPE_PROPERTY = "MutationGenerator.neutralRateType";
+
+    /**
+     * Name of the system property that defines the mean arrival rate
+     * for neutral mutations in the global mutation generator.
+     */
+    public static final String NEUTRAL_MEAN_RATE_PROPERTY = "MutationGenerator.neutralMeanRate";
+
+    /**
+     * Name of the system property that defines the type of arrival
+     * rate for selective mutations in the global mutation generator.
+     */
+    public static final String SELECTIVE_RATE_TYPE_PROPERTY = "MutationGenerator.selectiveRateType";
+
+    /**
+     * Name of the system property that defines the mean arrival rate
+     * for selective mutations in the global mutation generator.
+     */
+    public static final String SELECTIVE_MEAN_RATE_PROPERTY = "MutationGenerator.selectiveMeanRate";
 
     /**
      * Name of the system property that defines the fixed selection
@@ -91,14 +110,6 @@ public abstract class MutationGenerator {
      * Returns the global mutation generator (defined through system
      * properties).
      *
-     * <p>The global generator generates both neutral and selective
-     * mutations arriving via Poisson processes with rates defined by
-     * system properties named {@code NEUTRAL_MUTATION_RATE_PROPERTY}
-     * and {@code SELECTIVE_MUTATION_RATE_PROPERTY}, respectively.
-     * The selective mutations are scalar mutations with a fixed
-     * selection coefficient defined by the system property named
-     * {@code SELECTION_COEFF_PROPERTY}.
-     *
      * @return the global mutation generator.
      *
      * @throws RuntimeException unless the required system properties
@@ -112,26 +123,49 @@ public abstract class MutationGenerator {
     }
 
     private static MutationGenerator createGlobal() {
-        MutationRate neutralRate = resolveRate(NEUTRAL_MUTATION_RATE_PROPERTY);
-        MutationRate scalarRate  = resolveRate(SELECTIVE_MUTATION_RATE_PROPERTY);
-        double       scalarCoeff = resolveSelectionCoeff();
-        
-        MutationGenerator neutralGenerator =
-            neutralRate.isZero() ? empty() : new NeutralMutationGenerator(neutralRate);
+        MutationGeneratorType generatorType = resolveGeneratorType();
 
-        MutationGenerator scalarGenerator =
-            scalarRate.isZero() ? empty() : new ScalarMutationGenerator(scalarRate, scalarCoeff);
+        switch (generatorType) {
+        case EMPTY:
+            return empty();
 
-        return CompositeGenerator.create(neutralGenerator, scalarGenerator);
+        case NEUTRAL:
+            return globalNeutral();
+
+        case NEUTRAL_SELECTIVE_FIXED:
+            return globalNeutralSelectiveFixed();
+
+        case SELECTIVE_FIXED:
+            return globalSelectiveFixed();
+
+        default:
+            throw JamException.runtime("Unknown mutation generator type: [%s].", generatorType);
+        }
     }
 
-    private static MutationRate resolveRate(String propertyName) {
-        double meanRate = JamProperties.getRequiredDouble(propertyName, DoubleRange.FRACTIONAL);
+    private static MutationGeneratorType resolveGeneratorType() {
+        return JamProperties.getRequiredEnum(GENERATOR_TYPE_PROPERTY, MutationGeneratorType.class);
+    }
 
-        if (DoubleComparator.DEFAULT.isZero(meanRate))
-            return MutationRate.ZERO;
-        else
-            return MutationRate.poisson(meanRate);
+    private static MutationGenerator globalNeutral() {
+        MutationRate neutralRate =
+            MutationRate.resolveGlobal(NEUTRAL_RATE_TYPE_PROPERTY,
+                                       NEUTRAL_MEAN_RATE_PROPERTY);
+        
+        return new NeutralMutationGenerator(neutralRate);
+    }
+
+    private static MutationGenerator globalSelectiveFixed() {
+        double selectionCoeff = resolveSelectionCoeff();
+        MutationRate selectiveRate =
+            MutationRate.resolveGlobal(SELECTIVE_RATE_TYPE_PROPERTY,
+                                       SELECTIVE_MEAN_RATE_PROPERTY);
+ 
+        return new ScalarMutationGenerator(selectiveRate, selectionCoeff);
+    }
+
+    private static MutationGenerator globalNeutralSelectiveFixed() {
+        return CompositeGenerator.create(globalNeutral(), globalSelectiveFixed());
     }
 
     private static double resolveSelectionCoeff() {
