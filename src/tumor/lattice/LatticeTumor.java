@@ -2,7 +2,6 @@
 package tumor.lattice;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -16,7 +15,6 @@ import jam.math.JamRandom;
 import jam.util.ListUtil;
 
 import tumor.capacity.CapacityModel;
-import tumor.carrier.Carrier;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.carrier.TumorEnv;
@@ -45,6 +43,10 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The nearest neighbors on the lattice.
      */
     protected final Neighborhood neighborhood = resolveNeighborhood();
+
+    private static Neighborhood resolveNeighborhood() {
+        return JamProperties.getRequiredEnum(NEIGHBORHOOD_PROPERTY, Neighborhood.class);
+    }
 
     /**
      * The site capacity model.
@@ -161,16 +163,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
-     * Reads the enumerated nearest-neighbor type from the system
-     * property named {@code NEIGHBORHOOD_PROPERTY}.
-     *
-     * @return the enumerated nearest-neighbor type.
-     */
-    private static Neighborhood resolveNeighborhood() {
-        return JamProperties.getRequiredEnum(NEIGHBORHOOD_PROPERTY, Neighborhood.class);
-    }
-
-    /**
      * Reads the period length to be used for the component lattice
      * from the system property named {@code PERIOD_LENGTH_PROPERTY}.
      *
@@ -184,23 +176,37 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
-     * Divides a multi-cellular parent component by creating a clone
-     * of the parent.
+     * Advances a parent component by one discrete time step in a
+     * given local environment and returns any offspring produced.
      *
-     * @param parent the multi-cellular parent component.
+     * <p>Subclasses with multi-cellular components must also divide
+     * the component between the original lattice site and expansion
+     * site.
      *
-     * @param minCloneCellCount the minimum number of cells to move to
-     * the new clone.
+     * @param parent the parent component to be advanced.
      *
-     * @param maxCloneCellCount the maximum number of cells to move to
-     * the new clone.
+     * @param parentCoord the initial location of the parent component.
      *
-     * @return the new clone.
+     * @param expansionCoord the location of the lattice site that will
+     * accomondate the divided clone of a multi-cellular component that
+     * grows to exceed the capacity of the parent site.
      *
-     * @throws UnsupportedOperationException if the tumor components
-     * are indivisible (individual tumor cells).
+     * @param localEnv the local environment at the parent site.
+     *
+     * @return any offspring created during advancement.
      */
-    protected abstract E divideParent(E parent, long minCloneCellCount, long maxCloneCellCount);
+    protected abstract List<E> advance(E parent, Coord parentCoord, Coord expansionCoord, TumorEnv localEnv);
+
+    /**
+     * Returns the total number of tumor cells present at a given
+     * lattice site.
+     *
+     * @param coord the coordinate to examine.
+     *
+     * @return the total number of tumor cells present at the
+     * specified lattice site.
+     */
+    public abstract long countCells(Coord coord);
 
     /**
      * Adds a component to this tumor.
@@ -229,16 +235,18 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      *
      * @param component the tumor component to move.
      *
-     * @param newCoord the new coordinate for the component.
+     * @param fromCoord the old coordinate for the component.
+     *
+     * @param toCoord the new coordinate for the component.
      *
      * @throws IllegalStateException unless the lattice can accomodate
      * the component at the new location.
      */
-    protected void moveComponent(E component, Coord newCoord) {
+    protected void moveComponent(E component, Coord fromCoord, Coord toCoord) {
         lattice.vacate(component);
 
-        if (isAvailable(newCoord, component))
-            lattice.occupy(component, newCoord);
+        if (isAvailable(toCoord, component))
+            lattice.occupy(component, toCoord);
         else
             throw new IllegalStateException("Exceeded local site capacity.");
     }
@@ -252,8 +260,10 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * the migration of components and mutations through the tumor.
      *
      * @param component the component to remove.
+     *
+     * @param location the last site occupied by the component.
      */
-    protected void removeComponent(E component) {
+    protected void removeComponent(E component, Coord location) {
         lattice.vacate(component);
     }
 
@@ -285,6 +295,26 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Computes the (non-negative) number of cells present on a
+     * lattice site <em>in excess of</em> the site capacity: the
+     * difference between the number of cells occupying the site 
+     * and its total capacity (or zero if the site is below its
+     * capacity).
+     *
+     * <p>Note that a site may temporarily exceed its capacity
+     * immediately after the division of a parent component; the
+     * tumor implementation must then distribute the excess to an
+     * adjacent site (or sites).
+     *
+     * @param coord the site to examine.
+     *
+     * @return the excess occupancy of the specified lattice site.
+     */
+    public long computeExcessOccupancy(Coord coord) {
+        return Math.max(0, countCells(coord) - getSiteCapacity(coord));
+    }
+
+    /**
      * Computes the local growth capacity: the excess capacity at the
      * site of a componenet and an expansion site that has been chosen
      * to accomodate any offspring.
@@ -298,19 +328,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public long computeGrowthCapacity(Coord componentCoord, Coord expansionCoord) {
         return computeExcessCapacity(componentCoord) + computeExcessCapacity(expansionCoord);
-    }
-
-    /**
-     * Returns the total number of tumor cells present at a given
-     * lattice site.
-     *
-     * @param coord the coordinate to examine.
-     *
-     * @return the total number of tumor cells present at the
-     * specified lattice site.
-     */
-    public long countCells(Coord coord) {
-        return Carrier.countCells(lattice.viewOccupants(coord));
     }
 
     /**
@@ -431,15 +448,12 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         return lattice;
     }
 
-    @Override public Collection<Tumor<E>> advance() {
+    @Override public List<Tumor<E>> advance() {
         //
         // Advance the active (living) tumor components in a
         // randomized order...
         //
-        List<E> randomized = randomizeComponents();
-
-        for (E component : randomized)
-            advance(component);
+        advance(randomizeComponents());
 
         // Migrate after advancement...
         migrate();
@@ -448,30 +462,26 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         return Collections.emptyList();
     }
 
-    /**
-     * Assembles the active (living) components of this tumor in an
-     * unbiased randomized order.
-     *
-     * @return a new list containing the active (living) components of
-     * this tumor in an unbiased randomized order.
-     */
-    protected List<E> randomizeComponents() {
+    private List<E> randomizeComponents() {
         List<E> randomized = new ArrayList<E>(viewComponents());
         ListUtil.shuffle(randomized, randomSource);
         
         return randomized;
     }
 
-    /**
-     * Advances a single parent component in this tumor by one
-     * discrete time step and adds any offspring to this tumor.
-     *
-     * @param parent the parent component to advance.
-     */
-    protected void advance(E parent) {
+    private void advance(List<E> parents) {
+        for (E parent : parents)
+            advance(parent);
+    }
+
+    private void advance(E parent) {
         //
+        // Ensure that dead parents have been removed and are not advanced...
+        //
+        if (parent.isDead())
+            throw new IllegalStateException("Cannot advance a dead parent.");
+
         // Locate the parent...
-        //
         Coord parentCoord = locateComponent(parent);
 
         // Select an expansion site (which may be required to
@@ -488,42 +498,18 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
                          getLocalGrowthRate(parent),
                          getLocalMutationGenerator(parent));
 
-        // Advance the parent component within the local environment...
-        @SuppressWarnings("unchecked")
-            Collection<E> daughters = (Collection<E>) parent.advance(localEnv);
+        // Advance the parent component within the local environment.
+        // Subclasses with multi-cellular components will divide the
+        // parent if necessary (it grows beyond the capacity of its
+        // current site) and place the clone on the expansion site...
+        List<E> daughters = advance(parent, parentCoord, expansionCoord, localEnv);
 
-        if (parent.isDead()) {
-            //
-            // Remove the dead parent...
-            //
-            removeComponent(parent);
-        }
-        else if (parent.countCells() > 1) {
-            //
-            // Divide the multi-cellular parent (deme or lineage) if it
-            // has grown beyond the capacity of its current location...
-            //
-            long excessOccupancy =
-                Math.max(0, countCells(parentCoord) - getSiteCapacity(parentCoord));
+        // Remove dead parents...
+        if (parent.isDead())
+            removeComponent(parent, parentCoord);
 
-            if (excessOccupancy > 0) {
-                //
-                // The new clone must take a number of cells at least as
-                // large as the excess occupancy of the parent site, but
-                // no larger than the excess capacity of the expansion
-                // site...
-                //
-                long minCloneCellCount = excessOccupancy;
-                long maxCloneCellCount =
-                    Math.min(computeExcessCapacity(expansionCoord), parent.countCells() - 1);
-                
-                E parentClone = divideParent(parent, minCloneCellCount, maxCloneCellCount);
-                addComponent(parentClone, expansionCoord);
-            }
-        }
-
-        // Place the offspring at the parent site until it is filled,
-        // then the expansion site...
+        // Place the daughters at the parent site until it reaches
+        // capacity, then place them at the expansion site...
         for (E daughter : daughters) {
             if (isAvailable(parentCoord, daughter))
                 addComponent(daughter, parentCoord);
@@ -532,11 +518,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         }
     }
 
-    /**
-     * Allows tumor components to migrate from one lattice site to
-     * another according to the global migration model.
-     */
-    protected void migrate() {
+    private void migrate() {
         if (migrationModel.getType() == MigrationType.PINNED)
             return;
 
@@ -548,17 +530,12 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             migrate(component);
     }
 
-    /**
-     * Allows a tumor component to migrate from one lattice site to
-     * another according to the global migration model.
-     *
-     * @param component the tumor component eligible for migration.
-     */
-    protected void migrate(E component) {
-        Coord newCoord = migrationModel.migrate(this, component);
+    private void migrate(E component) {
+        Coord fromCoord = locateComponent(component);
+        Coord toCoord   = migrationModel.migrate(this, component);
 
-        if (newCoord != null)
-            moveComponent(component, newCoord);
+        if (toCoord != null)
+            moveComponent(component, fromCoord, toCoord);
     }
 
     @Override public Set<E> viewComponents() {

@@ -1,8 +1,8 @@
 
 package tumor.carrier;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import jam.math.Probability;
 
@@ -73,11 +73,11 @@ public abstract class Deme extends CellGroup {
      * @param tumorEnv the local tumor environment where this deme
      * resides.
      *
-     * @return an empty collection: demes only divide when the tumor
-     * implementation calls the {@code divide()} method, never during
-     * the advancement step.
+     * @return an empty list: demes only divide when the containing
+     * tumor implementation calls the {@code divide()} method, never
+     * during the advancement step.
      */
-    @Override public Collection<Deme> advance(TumorEnv tumorEnv) {
+    @Override public List<Deme> advance(TumorEnv tumorEnv) {
         //
         // Update the cell count for the number of birth and death
         // events...

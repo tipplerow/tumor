@@ -13,6 +13,7 @@ import tumor.capacity.CapacityModel;
 import tumor.capacity.CapacityType;
 import tumor.carrier.TumorCell;
 import tumor.carrier.TumorComponent;
+import tumor.carrier.TumorEnv;
 
 /**
  * Represents a three-dimensional tumor of individual cells on a
@@ -125,8 +126,8 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         return countCells(coord) < getSiteCapacity(coord);
     }
 
-    @Override protected TumorCell divideParent(TumorCell parent, long minCloneCellCount, long maxCloneCellCount) {
-        throw new UnsupportedOperationException("Cannot divide a tumor cell.");
+    @Override public long countCells() {
+        return lattice.countOccupants();
     }
 
     @Override public long countCells(Coord coord) {
@@ -137,7 +138,12 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         return isAvailable(coord);
     }
 
-    @Override public long countCells() {
-        return lattice.countOccupants();
+    @Override protected List<TumorCell> advance(TumorCell parent,
+                                                Coord     parentCoord,
+                                                Coord     expansionCoord,
+                                                TumorEnv  localEnv) {
+        // The single parent cell never moves to the expansion site,
+        // and the LatticeTumor superclass handles everything else...
+        return parent.advance(localEnv);
     }
 }
