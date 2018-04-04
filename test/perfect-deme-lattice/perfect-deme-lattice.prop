@@ -19,6 +19,8 @@ LocalGrowthModel.modelType = INTRINSIC
 
 MigrationModel.modelType = PINNED
 
+MutationGenerator.generatorType = EMPTY
+
 TumorDriver.trialCount   =    3
 TumorDriver.initialSize  =  100
 TumorDriver.maxStepCount = 1000

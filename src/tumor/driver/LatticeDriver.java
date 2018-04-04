@@ -14,7 +14,7 @@ import tumor.report.TrajectoryStatReport;
  * Provides features common to all simulations of tumors with
  * components occupying sites on a lattice.
  */
-public abstract class LatticeTumorDriver extends TumorDriver {
+public abstract class LatticeDriver<E extends TumorComponent> extends TumorDriver<E> {
     private PrintWriter finalCompCoordWriter;
 
     /**
@@ -33,19 +33,20 @@ public abstract class LatticeTumorDriver extends TumorDriver {
      * @throws IllegalArgumentException unless at least one property
      * file is specified.
      */
-    protected LatticeTumorDriver(String[] propertyFiles) {
+    protected LatticeDriver(String[] propertyFiles) {
         super(propertyFiles);
     }
 
     /**
-     * Creates a new tumor for a simulation trial.
+     * Creates a new lattice tumor for a simulation trial.
      *
      * @return the new tumor.
      */
-    protected abstract LatticeTumor createTumor();
+    @Override protected abstract LatticeTumor<E> createTumor();
 
-    protected LatticeTumor getTumor() {
-        return (LatticeTumor) tumor;
+    @SuppressWarnings("unchecked")
+    protected LatticeTumor<E> getTumor() {
+        return (LatticeTumor<E>) tumor;
     }
 
     @Override protected void initializeSimulation() {
@@ -61,19 +62,16 @@ public abstract class LatticeTumorDriver extends TumorDriver {
     }
 
     private void writeFinalCompCoord() {
-        @SuppressWarnings("unchecked")
-            Set<TumorComponent> components = getTumor().viewComponents();
+        Set<E> components = getTumor().viewComponents();
 
-        for (TumorComponent component : components)
+        for (E component : components)
             writeFinalCompCoord(component);
 
         finalCompCoordWriter.flush();
     }
 
-    private void writeFinalCompCoord(TumorComponent component) {
-        @SuppressWarnings("unchecked")
-            Coord coord = getTumor().locateComponent(component);
-        
+    private void writeFinalCompCoord(E component) {
+        Coord coord = getTumor().locateComponent(component);
         finalCompCoordWriter.println(formatFinalCompCoord(component, coord));
     }
 

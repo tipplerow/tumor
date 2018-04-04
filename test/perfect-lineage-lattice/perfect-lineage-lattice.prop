@@ -1,6 +1,6 @@
 ########################################################################
 # Sample property file to simulate the growth of a tumor containing
-# perfectly replicating demes on a (3D) cubic lattice.
+# perfectly replicating lineages on a (3D) cubic lattice.
 ########################################################################
 
 GrowthRate.birthRate = 0.55
@@ -9,15 +9,12 @@ GrowthRate.deathRate = 0.45
 CapacityModel.modelType = UNIFORM
 UniformCapacity.siteCapacity = 10000
 
-DivisionModel.modelType = THRESHOLD
-ThresholdDivision.threshold = 0.5
-
 LatticeTumor.neighborhood = MOORE
 LatticeTumor.periodLength = 10000
 
 LocalGrowthModel.modelType = INTRINSIC
-
 MigrationModel.modelType = PINNED
+MutationGenerator.generatorType = EMPTY
 
 TumorDriver.trialCount   =    3
 TumorDriver.initialSize  =  100

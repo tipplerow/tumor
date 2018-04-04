@@ -1,6 +1,6 @@
 #!/bin/sh
 ########################################################################
-# Usage: perfect-cell-lattice.sh FILE1 [FILE2 ...]
+# Usage: deme-point.sh FILE1 [FILE2 ...]
 ########################################################################
 
 if [ -z "${JAM_HOME}" ]
@@ -24,4 +24,4 @@ then
     exit 1
 fi
 
-$JAMRUN ${TUMOR_HOME} tumor.driver.pcl.PerfectCellLatticeDriver "$@"
+$JAMRUN ${TUMOR_HOME} tumor.driver.DemePointDriver "$@"

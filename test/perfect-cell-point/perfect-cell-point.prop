@@ -6,6 +6,8 @@
 GrowthRate.birthRate = 0.55
 GrowthRate.deathRate = 0.45
 
+MutationGenerator.generatorType = EMPTY
+
 TumorDriver.trialCount   = 20
 TumorDriver.initialSize  = 10
 TumorDriver.maxStepCount = 80

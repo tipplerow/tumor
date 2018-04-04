@@ -11,12 +11,13 @@ import jam.math.LongRange;
 import jam.sim.DiscreteTimeSimulation;
 
 import tumor.carrier.Tumor;
+import tumor.carrier.TumorComponent;
 import tumor.report.TrajectoryStatReport;
 
 /**
  * Provides features common to all tumor simulation applications.
  */
-public abstract class TumorDriver extends DiscreteTimeSimulation {
+public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTimeSimulation {
     private final int  trialCount;
     private final int  initialSize;
     private final int  maxStepCount;
@@ -27,7 +28,7 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
     /**
      * The active tumor for the current simulation trial.
      */
-    protected Tumor tumor;
+    protected Tumor<E> tumor;
 
     /**
      * Name of the system property that defines the number of trials
@@ -111,7 +112,7 @@ public abstract class TumorDriver extends DiscreteTimeSimulation {
      *
      * @return the new tumor.
      */
-    protected abstract Tumor createTumor();
+    protected abstract Tumor<E> createTumor();
 
     /**
      * Records the new state of the simulation system after a time

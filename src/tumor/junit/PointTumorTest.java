@@ -2,24 +2,26 @@
 package tumor.junit;
 
 import java.util.Collection;
-import java.util.LinkedList;
 
 import jam.junit.NumericTestBase;
 import jam.math.DoubleUtil;
 
 import tumor.carrier.Lineage;
 import tumor.carrier.Tumor;
+import tumor.carrier.TumorCell;
 import tumor.growth.GrowthRate;
-import tumor.perfect.PerfectCell;
-import tumor.perfect.PerfectLineage;
+import tumor.mutation.MutationGenerator;
 import tumor.point.PointTumor;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
 public class PointTumorTest extends NumericTestBase {
+    static {
+        System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY, "EMPTY");
+    }
 
-    @Test public void testPerfectCell() {
+    @Test public void testTumorCell() {
         int stepCount    = 25;
         int founderCount = 1000;
         int testCount    = 10;
@@ -28,12 +30,7 @@ public class PointTumorTest extends NumericTestBase {
         GrowthRate growthRate = GrowthRate.net(0.1);
         
         for (int testIndex = 0; testIndex < testCount; ++testIndex) {
-            Collection<PerfectCell> founders = new LinkedList<PerfectCell>();
-
-            while (founders.size() < founderCount)
-                founders.add(PerfectCell.founder(growthRate));
-
-            Tumor<PerfectCell> tumor = PointTumor.primary(founders);
+            Tumor<TumorCell> tumor = PointTumor.primary(TumorCell.founders(founderCount, growthRate));
 
             for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {
                 //
@@ -55,7 +52,7 @@ public class PointTumorTest extends NumericTestBase {
             assertEquals(1.0, factorRatios[stepIndex], 0.02);
     }
 
-    @Test public void testPerfectLineage() {
+    @Test public void testLineage() {
         int stepCount    = 25;
         int founderCount = 1000;
         int testCount    = 10;
@@ -64,7 +61,7 @@ public class PointTumorTest extends NumericTestBase {
         GrowthRate growthRate = GrowthRate.net(0.1);
         
         for (int testIndex = 0; testIndex < testCount; ++testIndex) {
-            Lineage founder = PerfectLineage.founder(growthRate, founderCount);
+            Lineage founder = Lineage.founder(growthRate, founderCount);
             Tumor<Lineage> tumor = PointTumor.primary(founder);
 
             for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {

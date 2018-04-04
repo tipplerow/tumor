@@ -1,9 +1,6 @@
 
 package tumor.junit;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
@@ -16,41 +13,15 @@ import jam.vector.JamVector;
 
 import tumor.carrier.Lineage;
 import tumor.carrier.TumorEnv;
-import tumor.global.GlobalLineage;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
-import tumor.perfect.PerfectLineage;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
 public class LineageTest extends NumericTestBase {
     static {
-        System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY,    "NEUTRAL");
-        System.setProperty(MutationGenerator.NEUTRAL_RATE_TYPE_PROPERTY, "POISSON");
-        System.setProperty(MutationGenerator.NEUTRAL_MEAN_RATE_PROPERTY, "0.001");
-    }
-
-    @Test public void testAdvance1() {
-        long       initCount  = 100000L;
-        GrowthRate growthRate = GrowthRate.net(0.0);
-        
-        Lineage  founder  = GlobalLineage.founder(growthRate, initCount);
-        TumorEnv tumorEnv = TumorEnv.unconstrained(founder);
-
-        List<Lineage> children = founder.advance(tumorEnv);
-
-        // With such a low mutation arrival rate, all children should
-        // carry only one mutation...
-        for (Lineage child : children)
-            assertEquals(1, child.getOriginalMutations().size());
-
-        // The total number of children should be approximately equal
-        // to the product of the founder size and the mutation rate...
-        double actualMean   = DoubleUtil.ratio(children.size(), initCount);
-        double expectedMean = 0.001;
-
-        assertEquals(expectedMean, actualMean, 0.0002);
+        System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY, "EMPTY");
     }
 
     @Test public void testDivideFixed() {
@@ -58,7 +29,7 @@ public class LineageTest extends NumericTestBase {
         long       cloneSize1 = 300;
         long       cloneSize2 = 150;
         GrowthRate growthRate = GrowthRate.net(0.1);
-        Lineage    founder    = PerfectLineage.founder(growthRate, initSize);
+        Lineage    founder    = Lineage.founder(growthRate, initSize);
         Lineage    clone1     = founder.divide(cloneSize1);
 
         assertEquals(700, founder.countCells());
@@ -79,7 +50,7 @@ public class LineageTest extends NumericTestBase {
         JamVector parentCounts = new JamVector(trialCount);
 
         for (int trialIndex = 0; trialIndex < trialCount; ++trialIndex) {
-            Lineage parent = PerfectLineage.founder(GrowthRate.NO_GROWTH, initSize);
+            Lineage parent = Lineage.founder(GrowthRate.NO_GROWTH, initSize);
             Lineage clone  = parent.divide(transferProb);
 
             cloneCounts.set(trialIndex, clone.countCells());
@@ -99,7 +70,7 @@ public class LineageTest extends NumericTestBase {
         Multiset<Integer> parentCounts = HashMultiset.create();
 
         for (int trialIndex = 0; trialIndex < trialCount; ++trialIndex) {
-            Lineage parent = PerfectLineage.founder(GrowthRate.NO_GROWTH, initSize);
+            Lineage parent = Lineage.founder(GrowthRate.NO_GROWTH, initSize);
             Lineage clone  = parent.divide(transferProb, 5, 8);
 
             cloneCounts.add((int) clone.countCells());
@@ -115,27 +86,6 @@ public class LineageTest extends NumericTestBase {
         assertEquals(0.215, MultisetUtil.frequency(parentCounts, 3), 0.005);
         assertEquals(0.251, MultisetUtil.frequency(parentCounts, 4), 0.005);
         assertEquals(0.367, MultisetUtil.frequency(parentCounts, 5), 0.005);
-    }
-
-    @Test public void testPerfect() {
-        int        stepCount  = 100;
-        long       initCount  = 1000L;
-        GrowthRate growthRate = GrowthRate.net(0.1);
-        Lineage    lineage    = PerfectLineage.founder(growthRate, initCount);
-        TumorEnv   tumorEnv   = TumorEnv.unconstrained(lineage);
-
-        for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {
-            //
-            // A perfect lineage never mutates and therefore should
-            // never create daughter lineages...
-            //
-            assertTrue(lineage.advance(tumorEnv).isEmpty());
-
-            double actualFactor   = DoubleUtil.ratio(lineage.countCells(), initCount);
-            double expectedFactor = growthRate.getGrowthFactor(stepIndex);
-
-            assertEquals(1.0, actualFactor / expectedFactor, 0.002);
-        }
     }
 
     public static void main(String[] args) {
