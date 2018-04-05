@@ -1,7 +1,6 @@
 
 package tumor.lattice;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import jam.lattice.Coord;
@@ -9,10 +8,7 @@ import jam.lattice.Lattice;
 import jam.math.JamRandom;
 import jam.util.ListUtil;
 
-import tumor.capacity.CapacityModel;
-import tumor.capacity.CapacityType;
 import tumor.carrier.TumorCell;
-import tumor.carrier.TumorComponent;
 import tumor.carrier.TumorEnv;
 
 /**
@@ -24,22 +20,8 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         super(parent, createLattice());
     }
 
-    private static  Lattice<TumorCell> createLattice() {
-        CapacityModel capacityModel = CapacityModel.global();
-        CapacityType  capacityType  = capacityModel.getType();
-
-        if (capacityType.equals(CapacityType.SINGLE)) {
-            //
-            // A single-occupancy lattice is more efficient...
-            //
-            return Lattice.sparseSO(resolvePeriodLength());
-        }
-        else {
-            //
-            // A multiple-occupancy lattice is required...
-            //
-            return Lattice.sparseMO(resolvePeriodLength());
-        }
+    private static Lattice<TumorCell> createLattice() {
+        return Lattice.sparseSO(resolvePeriodLength());
     }
 
     /**
@@ -89,41 +71,32 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         Coord     prevCoord   = locateComponent(founders.get(index - 1));
         TumorCell nextFounder = founders.get(index);
 
-        if (isAvailable(prevCoord)) {
-            //
-            // Use the coordinate of the previous founder until that
-            // site reaches its capacity...
-            //
-            return prevCoord;
-        }
-
         while (true) {
-            //
-            // Select random neighbors to the previous founder until
-            // we find one that is available...
-            //
             Coord nextCoord = neighborhood.randomNeighbor(prevCoord, randomSource);
 
-            if (isAvailable(nextCoord))
+            if (lattice.isAvailable(nextCoord))
                 return nextCoord;
         }
+        /*
+        // Shuffle the neighboring sites into a random order and place
+        // the next founder on the first available (empty) site...
+        List<Coord> neighbors = neighborhood.getNeighbors(prevCoord);
+        ListUtil.shuffle(neighbors, randomSource);
+
+        for (Coord neighbor : neighbors)
+            if (lattice.isAvailable(neighbor))
+                return neighbor;
+
+        throw new IllegalStateException("Could not place founder cell.");
+        */
     }
 
-    /**
-     * Identifies lattice sites that can accomodate a new tumor cell.
-     *
-     * @param coord the coordinate of the site to examine.
-     *
-     * @return {@code true} iff a tumor cell can be placed at the
-     * specified site without exceeding the capacity of that site.
-     */
-    public boolean isAvailable(Coord coord) {
+    @Override public long computeGrowthCapacity(Coord parentCoord, Coord neighborCoord) {
         //
-        // We know that a tumor cell has unit size (it is a single
-        // cell), so we can place it at the given location if the
-        // site is below its capacity...
+        // The parent site is always occupied, so just check the
+        // neighbor...
         //
-        return countCells(coord) < getSiteCapacity(coord);
+        return lattice.isAvailable(neighborCoord) ? 1 : 0;
     }
 
     @Override public long countCells() {
@@ -134,8 +107,12 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         return lattice.countOccupants(coord);
     }
 
+    @Override public long getSiteCapacity(Coord coord) {
+        return 1;
+    }
+
     @Override public boolean isAvailable(Coord coord, TumorCell cell) {
-        return isAvailable(coord);
+        return lattice.isAvailable(coord);
     }
 
     @Override protected List<TumorCell> advance(TumorCell parent,

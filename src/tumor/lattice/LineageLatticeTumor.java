@@ -63,15 +63,6 @@ public final class LineageLatticeTumor extends CellGroupLatticeTumor<Lineage> {
         addComponent(founder, FOUNDER_COORD);
     }
 
-    /**
-     * Returns the number of lineages in this tumor.
-     *
-     * @return the number of lineages in this tumor.
-     */
-    public int countLineages() {
-        return lattice.countOccupants();
-    }
-
     @Override public long countCells() {
         //
         // Enable assertions to check the consistency of the cached
@@ -88,6 +79,14 @@ public final class LineageLatticeTumor extends CellGroupLatticeTumor<Lineage> {
         //
         assert siteCellCounts.getLong(coord) == Carrier.countCells(lattice.viewOccupants(coord));
         return siteCellCounts.getLong(coord);
+    }
+
+    @Override public boolean isAvailable(Coord coord, Lineage lineage) {
+        //
+        // Any number of lineages may occupy a site as long as the
+        // total cell count does not exceed the site capacity...
+        //
+        return countCells(coord) + lineage.countCells() <= getSiteCapacity(coord);
     }
 
     @Override protected List<Lineage> advance(Lineage  parent,
@@ -109,6 +108,13 @@ public final class LineageLatticeTumor extends CellGroupLatticeTumor<Lineage> {
             divideParent(parent, parentCoord, expansionCoord);
 
         return daughters;
+    }
+
+    @Override protected long computeCloneCapacity(Coord cloneCoord) {
+        //
+        // Multiple lineages may occupy a site...
+        //
+        return getSiteCapacity(cloneCoord) - countCells(cloneCoord);
     }
 
     @Override protected void divideParent(Lineage parent, Coord parentCoord, Coord expansionCoord) {

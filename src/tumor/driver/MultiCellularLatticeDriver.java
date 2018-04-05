@@ -70,7 +70,7 @@ public abstract class MultiCellularLatticeDriver<E extends TumorComponent> exten
     @Override protected void consoleLogStep() {
         JamLogger.info("TRIAL: %4d, STEP: %5d; %s: %12s; CELLS: %15s",
                        getTrialIndex(), getTimeStep(),
-                       getComponentDescription().toUpperCase(),
+                       getComponentDescription().toUpperCase() + "S",
                        SIZE_FORMATTER.format(getTumor().countComponents()),
                        SIZE_FORMATTER.format(getTumor().countCells()));
     }

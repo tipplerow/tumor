@@ -7,6 +7,7 @@ import jam.lattice.Coord;
 import jam.lattice.Lattice;
 import jam.math.Probability;
 
+import tumor.capacity.CapacityModel;
 import tumor.carrier.CellGroup;
 import tumor.carrier.TumorEnv;
 
@@ -19,6 +20,11 @@ import tumor.carrier.TumorEnv;
  * groups and places the clones on the lattice.
  */
 public abstract class CellGroupLatticeTumor<E extends CellGroup> extends LatticeTumor<E> {
+    /**
+     * The site capacity model.
+     */
+    protected final CapacityModel capacityModel = CapacityModel.global();
+
     /**
      * Creates a new (empty) tumor.
      *
@@ -45,6 +51,28 @@ public abstract class CellGroupLatticeTumor<E extends CellGroup> extends Lattice
     public static final Probability TRANSFER_PROBABILITY = Probability.ONE_HALF;
 
     /**
+     * Computes the number of tumor cells that may be accomodated in a
+     * new clone to be placed at a specified expansion site.
+     *
+     * @param cloneCoord the site where the clone would be placed.
+     *
+     * @return the capacity of the clone.
+     */
+    protected abstract long computeCloneCapacity(Coord cloneCoord);
+
+    /**
+     * Computes the number of <em>additional</em> tumor cells that may
+     * be accomodated in a parent group at its current lattice site.
+     *
+     * @param parentCoord the site where the parent group is located.
+     *
+     * @return the additional capacity of the parent site.
+     */
+    protected long computeParentCapacity(Coord parentCoord) {
+        return getSiteCapacity(parentCoord) - countCells(parentCoord);
+    }
+
+    /**
      * Divides a parent component.
      *
      * @param parent the parent component to divide.
@@ -67,22 +95,37 @@ public abstract class CellGroupLatticeTumor<E extends CellGroup> extends Lattice
      *
      * @param parentCoord the location of the parent component.
      *
-     * @param expansionCoord the location where the clone will be
-     * placed.
+     * @param cloneCoord the location where the clone will be placed.
      */
-    protected void divideParent(E parent, Coord parentCoord, Coord expansionCoord) {
+    protected void divideParent(E parent, Coord parentCoord, Coord cloneCoord) {
         //
         // The new clone must take a number of cells at least as large
         // as the excess _occupancy_ of the parent site, but no larger
-        // than the excess _capacity_ of the expansion site.
+        // than the excess _capacity_ of the clone site.
         //
-        long minCloneCellCount = computeExcessOccupancy(parentCoord);
-        long maxCloneCellCount = Math.min(computeExcessCapacity(expansionCoord), parent.countCells() - 1);
-                
+        long minCloneCellCount = computeExcessParentOccupancy(parentCoord);
+        long maxCloneCellCount = Math.min(computeCloneCapacity(cloneCoord), parent.countCells() - 1);
+
         E parentClone =
             divideParent(parent, minCloneCellCount, maxCloneCellCount);
+        
+        addComponent(parentClone, cloneCoord);
+    }
 
-        addComponent(parentClone, expansionCoord);
+    private long computeExcessParentOccupancy(Coord coord) {
+        //
+        // Computes the (non-negative) number of tumor cells present
+        // at the location of a parent group IN EXCESS OF the site
+        // capacity: the difference between the total number of cells
+        // occupying the site and its total capacity (or zero if the
+        // site is below its capacity).
+        //
+        // A site may temporarily exceed its capacity immediately
+        // after the division of a parent component; the tumor
+        // implementation must then distribute the excess to an
+        // adjacent site (or sites).
+        //
+        return Math.max(0, countCells(coord) - getSiteCapacity(coord));
     }
 
     /**
@@ -96,6 +139,14 @@ public abstract class CellGroupLatticeTumor<E extends CellGroup> extends Lattice
      * @return {@code true} iff the parent component must divide.
      */
     protected boolean mustDivide(E parent, Coord parentCoord) {
-        return parent.countCells() > 1 && computeExcessOccupancy(parentCoord) > 0;
+        return parent.countCells() > 1 && computeExcessParentOccupancy(parentCoord) > 0;
+    }
+
+    @Override public long computeGrowthCapacity(Coord parentCoord, Coord cloneCoord) {
+        return computeParentCapacity(parentCoord) + computeCloneCapacity(cloneCoord);
+    }
+
+    @Override public long getSiteCapacity(Coord coord) {
+        return capacityModel.getSiteCapacity(coord);
     }
 }

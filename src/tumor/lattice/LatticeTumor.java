@@ -14,7 +14,6 @@ import jam.lattice.Neighborhood;
 import jam.math.JamRandom;
 import jam.util.ListUtil;
 
-import tumor.capacity.CapacityModel;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.carrier.TumorEnv;
@@ -47,11 +46,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     private static Neighborhood resolveNeighborhood() {
         return JamProperties.getRequiredEnum(NEIGHBORHOOD_PROPERTY, Neighborhood.class);
     }
-
-    /**
-     * The site capacity model.
-     */
-    protected final CapacityModel capacityModel = CapacityModel.global();
 
     /**
      * The local growth rate model.
@@ -176,6 +170,56 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Computes the local growth capacity: the total number of new
+     * tumor cells that may be accomodated at the site of a parent
+     * component (about to grow stochastically) and a neighboring
+     * expansion site where any offspring will be placed.
+     *
+     * @param parentCoord the coordinate of the parent component.
+     *
+     * @param neighborCoord the coordinate of the neighboring site
+     * where any offspring will be placed.
+     *
+     * @return the local growth capacity for the specified lattice
+     * sites.
+     */
+    public abstract long computeGrowthCapacity(Coord parentCoord, Coord neighborCoord);
+
+    /**
+     * Returns the total number of tumor cells present at a given
+     * lattice site.
+     *
+     * @param coord the coordinate to examine.
+     *
+     * @return the total number of tumor cells present at the
+     * specified lattice site.
+     */
+    public abstract long countCells(Coord coord);
+
+    /**
+     * Returns the maximum number of tumor cells that may occupy a
+     * given lattice site.
+     *
+     * @param coord the site to examine.
+     *
+     * @return the maximum number of tumor cells that may occupy the
+     * specified lattice site.
+     */
+    public abstract long getSiteCapacity(Coord coord);
+
+    /**
+     * Identifies lattice sites that can accomodate a new component.
+     *
+     * @param coord the coordinate of the site to examine.
+     *
+     * @param component the component to be added at the given site.
+     *
+     * @return {@code true} iff the component can be placed at the
+     * specified site without exceeding the capacity of that site.
+     */
+    public abstract boolean isAvailable(Coord coord, E component);
+
+    /**
      * Advances a parent component by one discrete time step in a
      * given local environment and returns any offspring produced.
      *
@@ -195,18 +239,10 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      *
      * @return any offspring created during advancement.
      */
-    protected abstract List<E> advance(E parent, Coord parentCoord, Coord expansionCoord, TumorEnv localEnv);
-
-    /**
-     * Returns the total number of tumor cells present at a given
-     * lattice site.
-     *
-     * @param coord the coordinate to examine.
-     *
-     * @return the total number of tumor cells present at the
-     * specified lattice site.
-     */
-    public abstract long countCells(Coord coord);
+    protected abstract List<E> advance(E parent,
+                                       Coord parentCoord,
+                                       Coord expansionCoord,
+                                       TumorEnv localEnv);
 
     /**
      * Adds a component to this tumor.
@@ -268,69 +304,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
-     * Identifies lattice sites that can accomodate a new component.
-     *
-     * @param coord the coordinate of the site to examine.
-     *
-     * @param component the component to be added at the given site.
-     *
-     * @return {@code true} iff the component can be placed at the
-     * specified site without exceeding the capacity of that site.
-     */
-    public boolean isAvailable(Coord coord, E component) {
-        return component.countCells() <= computeExcessCapacity(coord);
-    }
-
-    /**
-     * Computes the number of <em>additional</em> tumor cells that a
-     * lattice site can accomodate: the difference between its total
-     * capacity and the number of cells currently occupying that site.
-     *
-     * @param coord the site to examine.
-     *
-     * @return the excess capacity of the specified lattice site.
-     */
-    public long computeExcessCapacity(Coord coord) {
-        return getSiteCapacity(coord) - countCells(coord);
-    }
-
-    /**
-     * Computes the (non-negative) number of cells present on a
-     * lattice site <em>in excess of</em> the site capacity: the
-     * difference between the number of cells occupying the site 
-     * and its total capacity (or zero if the site is below its
-     * capacity).
-     *
-     * <p>Note that a site may temporarily exceed its capacity
-     * immediately after the division of a parent component; the
-     * tumor implementation must then distribute the excess to an
-     * adjacent site (or sites).
-     *
-     * @param coord the site to examine.
-     *
-     * @return the excess occupancy of the specified lattice site.
-     */
-    public long computeExcessOccupancy(Coord coord) {
-        return Math.max(0, countCells(coord) - getSiteCapacity(coord));
-    }
-
-    /**
-     * Computes the local growth capacity: the excess capacity at the
-     * site of a componenet and an expansion site that has been chosen
-     * to accomodate any offspring.
-     *
-     * @param componentCoord the coordinate of a tumor component.
-     *
-     * @param expansionCoord the coordinate of the expansion site.
-     *
-     * @return the local growth capacity for the specified lattice
-     * sites.
-     */
-    public long computeGrowthCapacity(Coord componentCoord, Coord expansionCoord) {
-        return computeExcessCapacity(componentCoord) + computeExcessCapacity(expansionCoord);
-    }
-
-    /**
      * Returns the local growth rate for a tumor component.
      *
      * @param component a component of this tumor.
@@ -376,19 +349,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public List<Coord> getNeighbors(Coord center) {
         return neighborhood.getNeighbors(center);
-    }
-
-    /**
-     * Returns the maximum number of tumor cells that may occupy a
-     * given lattice site.
-     *
-     * @param coord the site to examine.
-     *
-     * @return the maximum number of tumor cells that may occupy the
-     * specified lattice site.
-     */
-    public long getSiteCapacity(Coord coord) {
-        return capacityModel.getSiteCapacity(coord);
     }
 
     /**
@@ -488,8 +448,9 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         // accomodate offspring) at random...
         Coord expansionCoord = selectNeighbor(parentCoord);
 
-        // Compute the local growth capacity: the excess capacity at
-        // the parent site and the expansion site...
+        // Compute the local growth capacity: the total number of new
+        // tumor cells that can be accomodated the parent site and the
+        // neighbor site...
         long growthCapacity = computeGrowthCapacity(parentCoord, expansionCoord);
 
         // Construct the appropriate local environment...

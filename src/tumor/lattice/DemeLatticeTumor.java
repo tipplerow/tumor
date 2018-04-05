@@ -44,24 +44,15 @@ public final class DemeLatticeTumor extends CellGroupLatticeTumor<Deme> {
         addComponent(founder, FOUNDER_COORD);
     }
 
-    /**
-     * Returns the number of demes in this tumor.
-     *
-     * @return the number of demes in this tumor.
-     */
-    public int countDemes() {
-        return lattice.countOccupants();
+    @Override public long countCells(Coord coord) {
+        return Carrier.countCells(lattice.viewOccupants(coord));
     }
 
-    @Override public boolean isAvailable(Coord coord, Deme component) {
+    @Override public boolean isAvailable(Coord coord, Deme deme) {
         //
         // Only one deme per site...
         //
-        return lattice.isAvailable(coord);
-    }
-
-    @Override public long countCells(Coord coord) {
-        return Carrier.countCells(lattice.viewOccupants(coord));
+        return lattice.isAvailable(coord) && deme.countCells() <= getSiteCapacity(coord);
     }
 
     @Override protected List<Deme> advance(Deme parent, Coord parentCoord, Coord expansionCoord, TumorEnv localEnv) {
@@ -77,6 +68,17 @@ public final class DemeLatticeTumor extends CellGroupLatticeTumor<Deme> {
             divideParent(parent, parentCoord, expansionCoord);
 
         return daughters;
+    }
+
+    @Override protected long computeCloneCapacity(Coord cloneCoord) {
+        //
+        // Only one deme per site, so the clone capacity is zero if
+        // the site is already occupied...
+        //
+        if (lattice.isOccupied(cloneCoord))
+            return 0;
+        else
+            return getSiteCapacity(cloneCoord) - countCells(cloneCoord);
     }
 
     @Override protected Deme divideParent(Deme parent, long minCloneCellCount, long maxCloneCellCount) {
