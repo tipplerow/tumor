@@ -6,7 +6,6 @@
 GrowthRate.birthRate = 0.55
 GrowthRate.deathRate = 0.45
 
-CapacityModel.modelType = SINGLE
 LocalGrowthModel.modelType = INTRINSIC
 MigrationModel.modelType = PINNED
 MutationGenerator.generatorType = EMPTY

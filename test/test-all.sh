@@ -11,6 +11,12 @@ cd ${TEST_DIR}/perfect-cell-lattice
 cd ${TEST_DIR}/perfect-cell-point
 ./test-perfect-cell-point.sh || exit $?
 
+cd ${TEST_DIR}/perfect-deme-lattice
+./test-perfect-deme-lattice.sh || exit $?
+
+cd ${TEST_DIR}/perfect-deme-point
+./test-perfect-deme-point.sh || exit $?
+
 cd ${TEST_DIR}/perfect-lineage-lattice
 ./test-perfect-lineage-lattice.sh || exit $?
 
