@@ -15,8 +15,6 @@ import tumor.mutation.MutationList;
  * mutations: a tumor, a single tumor cell, or a cell lineage.
  */
 public abstract class Carrier extends Propagator {
-    private MutationList accumulatedMut = null;
-
     /**
      * Creates all carriers.
      *
@@ -65,16 +63,6 @@ public abstract class Carrier extends Propagator {
     }
 
     /**
-     * Assembles all mutations that have accumulated in this carrier
-     * (traced by to the original founding carrier).
-     *
-     * @return all mutations that have accumulated in this carrier.
-     */
-    public MutationList accumulateMutations() {
-        return accumulateMutations(traceLineage());
-    }
-
-    /**
      * Returns the number of individual (living) cells contained in
      * this carrier.
      *
@@ -84,29 +72,20 @@ public abstract class Carrier extends Propagator {
     public abstract long countCells();
 
     /**
+     * Returns all mutations that have accumulated in this carrier
+     * (traced back to the original founding carrier), assembled in
+     * chronological order.
+     *
+     * @return all mutations that have accumulated in this carrier.
+     */
+    public abstract MutationList getAccumulatedMutations();
+
+    /**
      * Returns the mutations that originated in this carrier.
      *
      * @return the mutations that originated in this carrier.
      */
     public abstract MutationList getOriginalMutations();
-
-    /**
-     * Assembles all muations that have accumulated in this carrier
-     * (traced back to the original founding carrier), then stores
-     * them in a private cache to be returned on the next call.
-     *
-     * <p>This method should be only be called after the carrier has
-     * stopped dividing (after the simulated tumor growth has ceased
-     * but before the analysis and report generation).
-     *
-     * @return all mutations that have accumulated in this carrier.
-     */
-    public final MutationList fixAccumulatedMutations() {
-        if (accumulatedMut == null)
-            accumulatedMut = accumulateMutations();
-
-        return accumulatedMut;
-    }
 
     /**
      * Identifies empty carriers.

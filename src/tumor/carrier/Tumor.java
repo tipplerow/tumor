@@ -68,6 +68,10 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
         return countCells(viewComponents());
     }
 
+    @Override public MutationList getAccumulatedMutations() {
+        return accumulateMutations(traceLineage());
+    }
+
     @Override public MutationList getOriginalMutations() {
         return accumulateMutations(viewComponents());
     }

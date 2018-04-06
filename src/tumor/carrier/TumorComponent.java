@@ -23,6 +23,10 @@ public abstract class TumorComponent extends Carrier {
     // Only those mutations that originated in this component...
     private MutationList originalMut;
 
+    // All mutations accumulated in this component, traced back to the
+    // founder, computed on-demand and cached...
+    private MutationList accumulatedMut = null;
+
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
     private TumorComponent(TumorComponent parent, GrowthRate growthRate, MutationList originalMut) {
@@ -138,6 +142,13 @@ public abstract class TumorComponent extends Carrier {
      */
     public final MutationList getOriginalMutations() {
         return originalMut;
+    }
+
+    @Override public MutationList getAccumulatedMutations() {
+        if (accumulatedMut == null)
+            accumulatedMut = accumulateMutations(traceLineage());
+
+        return accumulatedMut;
     }
 
     @Override public String toString() {
