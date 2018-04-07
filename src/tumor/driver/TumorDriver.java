@@ -3,6 +3,7 @@ package tumor.driver;
 
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
+import java.util.List;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
@@ -12,6 +13,9 @@ import jam.sim.DiscreteTimeSimulation;
 
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
+import tumor.mutation.Mutation;
+import tumor.mutation.MutationFrequency;
+import tumor.mutation.MutationFrequencyMap;
 import tumor.report.TrajectoryStatReport;
 
 /**
@@ -23,7 +27,10 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private final int  maxStepCount;
     private final long maxTumorSize;
 
+    private final boolean writeMutFreqDetail;
+
     private PrintWriter cellCountTrajWriter;
+    private PrintWriter mutFreqDetailWriter;
 
     /**
      * The active tumor for the current simulation trial.
@@ -55,6 +62,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final String MAX_TUMOR_SIZE_PROPERTY = "TumorDriver.maxTumorSize";
 
     /**
+     * Name of the system property that specifies whether or not to
+     * write the mutation frequency detail report (defaults to true).
+     */
+    public static final String WRITE_MUT_FREQ_DETAIL_PROPERTY = "TumorDriver.writeMutFreqDetail";
+
+    /**
      * Name of the output file containing the tumor size (number of
      * cells) trajectories for each trial.
      */
@@ -65,6 +78,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * cells) statistics aggregated by time step.
      */
     public static final String CELL_COUNT_STAT_FILE_NAME = "cell-count-stat.csv";
+
+    /**
+     * Name of the output file containing the mutation frequency
+     * detail records.
+     */
+    public static final String MUT_FREQ_DETAIL_FILE_NAME = "mut-freq-detail.csv";
 
     /**
      * Formats integer quantities with commas for easier reading of
@@ -89,6 +108,8 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         this.initialSize  = resolveInitialSize();
         this.maxStepCount = resolveMaxStepCount();
         this.maxTumorSize = resolveMaxTumorSize();
+
+        this.writeMutFreqDetail = resolveWriteMutFreqDetail();
     }
 
     private static int resolveTrialCount() {
@@ -105,6 +126,10 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     private static long resolveMaxTumorSize() {
         return JamProperties.getRequiredLong(MAX_TUMOR_SIZE_PROPERTY, LongRange.POSITIVE);
+    }
+
+    private static boolean resolveWriteMutFreqDetail() {
+        return JamProperties.getOptionalBoolean(WRITE_MUT_FREQ_DETAIL_PROPERTY, true);
     }
 
     /**
@@ -183,8 +208,20 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     @Override protected void initializeSimulation() {
+        initializeCellCountTraj();
+        initializeMutFreqDetail();
+    }
+
+    private void initializeCellCountTraj() {
         cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
         cellCountTrajWriter.println("trialIndex,timeStep,cellCount");
+    }
+
+    private void initializeMutFreqDetail() {
+        if (writeMutFreqDetail) {
+            mutFreqDetailWriter = openWriter(MUT_FREQ_DETAIL_FILE_NAME);
+            mutFreqDetailWriter.println("trialIndex,mutationIndex,originationTime,frequency");
+        }
     }
 
     @Override protected boolean continueSimulation() {
@@ -213,5 +250,33 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     @Override protected void finalizeTrial() {
         cellCountTrajWriter.flush();
+
+        if (writeMutFreqDetail)
+            recordMutFreqDetail();
+    }
+
+    private void recordMutFreqDetail() {
+        JamLogger.info("Computing mutation frequencies...");
+
+        MutationFrequencyMap freqMap =
+            MutationFrequencyMap.compute(tumor.viewComponents());
+
+        JamLogger.info("Sorting mutation frequencies...");
+
+        List<MutationFrequency> freqList = freqMap.listFrequencies();
+        MutationFrequency.sortDescending(freqList);
+        
+        JamLogger.info("Writing mutation frequencies...");
+
+        for (MutationFrequency frequency : freqList)
+            mutFreqDetailWriter.println(formatMutationFrequency(frequency));
+    }
+
+    private String formatMutationFrequency(MutationFrequency frequency) {
+        return String.format("%d,%d,%d,%14.12f",
+                             getTrialIndex(),
+                             frequency.getMutation().getIndex(),
+                             frequency.getMutation().getOriginationTime(),
+                             frequency.getFrequency());
     }
 }

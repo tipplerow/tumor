@@ -21,7 +21,7 @@ import tumor.growth.GrowthRate;
  * only independent mutations.
  */
 public abstract class Mutation extends Ordinal {
-    private final int timeStep = DiscreteTimeSimulation.getTimeStep();
+    private final int originationTime = DiscreteTimeSimulation.getTimeStep();
     
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
@@ -103,11 +103,11 @@ public abstract class Mutation extends Ordinal {
      *
      * @return the discrete time step when this mutation originated.
      */
-    public final int getTimeStep() {
-        return timeStep;
+    public final int getOriginationTime() {
+        return originationTime;
     }
 
     @Override public String toString() {
-        return String.format("%s(%d; %d)", getClass().getSimpleName(), getIndex(), getTimeStep());
+        return String.format("%s(%d; %d)", getClass().getSimpleName(), getIndex(), getOriginationTime());
     }
 }
