@@ -61,14 +61,14 @@ public abstract class TumorComponent extends Carrier {
     }
 
     /**
-     * Creates a daughter component with new original mutations.
+     * Creates a daughter component with original mutations.
      *
      * @param parent the parent component.
      *
      * @param daughterMut the mutations originating in the daughter.
      */
     protected TumorComponent(TumorComponent parent, MutationList daughterMut) {
-        this(parent, parent.growthRate, parent.originalMut);
+        this(parent, parent.growthRate, MutationList.EMPTY);
         mutate(daughterMut);
     }
 
