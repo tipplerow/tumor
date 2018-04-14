@@ -63,7 +63,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     /**
      * Name of the system property that specifies whether or not to
-     * write the mutation frequency detail report (defaults to true).
+     * write the mutation frequency detail report (defaults to false).
      */
     public static final String WRITE_MUT_FREQ_DETAIL_PROPERTY = "TumorDriver.writeMutFreqDetail";
 
@@ -129,7 +129,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     private static boolean resolveWriteMutFreqDetail() {
-        return JamProperties.getOptionalBoolean(WRITE_MUT_FREQ_DETAIL_PROPERTY, true);
+        return JamProperties.getOptionalBoolean(WRITE_MUT_FREQ_DETAIL_PROPERTY, false);
     }
 
     /**
