@@ -9,7 +9,6 @@ import jam.math.Probability;
 
 import tumor.capacity.CapacityModel;
 import tumor.carrier.CellGroup;
-import tumor.carrier.TumorEnv;
 
 /**
  * Represents a three-dimensional tumor composed of cell groups (demes
