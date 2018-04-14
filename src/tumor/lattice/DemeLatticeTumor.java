@@ -64,6 +64,9 @@ public final class DemeLatticeTumor extends CellGroupLatticeTumor<Deme> {
         if (!daughters.isEmpty())
             throw new IllegalStateException("Demes should never divide during advancement.");
 
+        // Map the latest mutations to the deme coordinate...
+        mapMutationOrigin(parent.getLatestMutations(), parentCoord);
+
         if (mustDivide(parent, parentCoord))
             divideParent(parent, parentCoord, expansionCoord);
 

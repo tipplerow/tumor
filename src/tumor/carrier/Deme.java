@@ -17,6 +17,9 @@ import tumor.mutation.MutationList;
  * (without spawning a new deme).
  */
 public class Deme extends CellGroup {
+    // Mutations acquired in the most recent call to advance()...
+    private MutationList latestMut = MutationList.EMPTY;
+
     /**
      * Creates a founding deme with the global mutation generator as
      * the source of somatic mutations.
@@ -70,6 +73,16 @@ public class Deme extends CellGroup {
     }
 
     /**
+     * Returns the mutations acquired in the most recent time step
+     * (call to {@code advance()}).
+     *
+     * @return the mutations acquired in the most recent time step.
+     */
+    public MutationList getLatestMutations() {
+        return latestMut;
+    }
+
+    /**
      * Advances this deme through one discrete time step.
      *
      * @param tumorEnv the local tumor environment where this deme
@@ -93,6 +106,8 @@ public class Deme extends CellGroup {
         MutationList      newMutations = mutGenerator.generate(growthCount.getDaughterCount());
 
         mutate(newMutations);
+        latestMut = newMutations;
+
         return Collections.emptyList();
     }
 

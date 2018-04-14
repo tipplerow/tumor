@@ -3,7 +3,9 @@ package tumor.lattice;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import jam.app.JamProperties;
@@ -21,6 +23,8 @@ import tumor.growth.GrowthRate;
 import tumor.growth.LocalGrowthModel;
 import tumor.migrate.MigrationModel;
 import tumor.migrate.MigrationType;
+import tumor.mutation.Mutation;
+import tumor.mutation.MutationList;
 import tumor.mutation.MutationGenerator;
 
 /**
@@ -61,6 +65,11 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The random number generator.
      */
     protected final JamRandom randomSource = JamRandom.global();
+
+    /**
+     * A map from mutations to their location of origin.
+     */
+    protected final Map<Mutation, Coord> mutationOrigin = new HashMap<Mutation, Coord>();
 
     /**
      * Creates a new (empty) tumor.
@@ -264,6 +273,23 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             lattice.occupy(component, location);
         else
             throw new IllegalStateException("Exceeded local site capacity.");
+
+        mapMutationOrigin(component.getOriginalMutations(), location);
+    }
+
+    /**
+     * Records the location of origin for each mutation.
+     *
+     * @param mutations the mutations to map.
+     *
+     * @param location the location where mutations originated.
+     */
+    protected void mapMutationOrigin(MutationList mutations, Coord location) {
+        for (Mutation mutation : mutations)
+            if (!mutationOrigin.containsKey(mutation))
+                throw new IllegalStateException("Mutation is already mapped.");
+            else
+                mutationOrigin.put(mutation, location);
     }
 
     /**
