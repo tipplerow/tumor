@@ -378,22 +378,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
-     * Returns the maximum number of tumor cells that may occupy the
-     * lattice site occupied by a specified component.
-     *
-     * @param component the component located at the site of interest.
-     *
-     * @return the maximum number of tumor cells that may occupy the
-     * lattice site occupied by the specified component.
-     *
-     * @throws IllegalArgumentException unless the component is a
-     * member of this tumor.
-     */
-    public long getSiteCapacity(E component) {
-        return getSiteCapacity(locateComponent(component));
-    }
-
-    /**
      * Returns the location of a component in this tumor.
      *
      * @param component the component of interest.
