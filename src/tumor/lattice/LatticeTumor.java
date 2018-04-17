@@ -290,7 +290,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     protected void mapMutationOrigin(MutationList mutations, Coord location) {
         for (Mutation mutation : mutations)
-            if (!mutationOrigin.containsKey(mutation))
+            if (mutationOrigin.containsKey(mutation))
                 throw new IllegalStateException("Mutation is already mapped.");
             else
                 mutationOrigin.put(mutation, location);
