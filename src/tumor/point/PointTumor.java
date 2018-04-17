@@ -7,11 +7,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import jam.lattice.Coord;
+
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.carrier.TumorEnv;
 
 import tumor.growth.GrowthRate;
+import tumor.mutation.Mutation;
 import tumor.mutation.MutationGenerator;
 
 /**
@@ -95,7 +98,15 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
     @Override public long countComponents() {
         return components.size();
     }
-    
+
+    @Override public Coord locateComponent(E component) {
+        return Coord.ORIGIN;
+    }
+
+    @Override public Coord locateMutationOrigin(Mutation mutation) {
+        return Coord.ORIGIN;
+    }
+
     @Override public Set<E> viewComponents() {
         return Collections.unmodifiableSet(components);
     }

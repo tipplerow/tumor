@@ -8,12 +8,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+
 import jam.app.JamProperties;
 import jam.lattice.Coord;
 import jam.lattice.Lattice;
 import jam.lattice.LatticeView;
 import jam.lattice.Neighborhood;
 import jam.math.JamRandom;
+import jam.math.VectorMoment;
 import jam.util.ListUtil;
 
 import tumor.carrier.Tumor;
@@ -330,6 +334,33 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Computes the center of mass and gyration tensor for the cells
+     * in this tumor.
+     *
+     * @return the center of mass and gyration tensor for the cells
+     * in this tumor.
+     */
+    public VectorMoment computeVectorMoment() {
+        return VectorMoment.compute(countCoords());
+    }
+
+    /**
+     * Counts the number of cells at each occupied lattice site in
+     * this tumor.
+     *
+     * @return a multiset whose keys are the occupied lattice sites
+     * and whose counts are the number of cells at those sites.
+     */
+    public Multiset<Coord> countCoords() {
+        Multiset<Coord> counts = HashMultiset.create();
+
+        for (E component : viewComponents())
+            counts.add(locateComponent(component), (int) component.countCells());
+
+        return counts;
+    }
+
+    /**
      * Returns the local growth rate for a tumor component.
      *
      * @param component a component of this tumor.
@@ -375,25 +406,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public List<Coord> getNeighbors(Coord center) {
         return neighborhood.getNeighbors(center);
-    }
-
-    /**
-     * Returns the location of a component in this tumor.
-     *
-     * @param component the component of interest.
-     *
-     * @return the location of the specified component.
-     *
-     * @throws IllegalArgumentException unless the component is a
-     * member of this tumor.
-     */
-    public Coord locateComponent(E component) {
-        Coord coord = lattice.locate(component);
-
-        if (coord == null)
-            throw new IllegalArgumentException("Component is not present in the tumor.");
-
-        return coord;
     }
 
     /**
@@ -507,6 +519,24 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
         if (toCoord != null)
             moveComponent(component, fromCoord, toCoord);
+    }
+
+    @Override public Coord locateComponent(E component) {
+        Coord coord = lattice.locate(component);
+
+        if (coord == null)
+            throw new IllegalArgumentException("Component is not present in the tumor.");
+
+        return coord;
+    }
+
+    @Override public Coord locateMutationOrigin(Mutation mutation) {
+        Coord coord = mutationOrigin.get(mutation);
+
+        if (coord == null)
+            throw new IllegalArgumentException("Mutation location has not been mapped.");
+
+        return coord;
     }
 
     @Override public Set<E> viewComponents() {

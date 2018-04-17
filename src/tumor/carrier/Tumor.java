@@ -3,11 +3,18 @@ package tumor.carrier;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import jam.lang.OrdinalIndex;
+import jam.lang.OrdinalIndex;
+import jam.lattice.Coord;
 
 import tumor.growth.GrowthRate;
+import tumor.mutation.Mutation;
+import tumor.mutation.MutationFrequency;
+import tumor.mutation.MutationFrequencyMap;
 import tumor.mutation.MutationGenerator;
 import tumor.mutation.MutationList;
 
@@ -47,6 +54,49 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     public abstract Collection<Tumor<E>> advance();
 
     /**
+     * Returns the location of a component in this tumor.
+     *
+     * @param component the component of interest.
+     *
+     * @return the location of the specified component.
+     *
+     * @throws IllegalArgumentException unless the component is a
+     * member of this tumor.
+     */
+    public abstract Coord locateComponent(E component);
+
+    /**
+     * Returns the coordinate where a mutation in this tumor
+     * originated.
+     *
+     * @param mutation the mutation of interest.
+     *
+     * @return the location where the mutation originated.
+     *
+     * @throws IllegalArgumentException unless the location of the
+     * mutation has been mapped.
+     */
+    public abstract Coord locateMutationOrigin(Mutation mutation);
+
+    /**
+     * Computes the mutation frequency distribution for this tumor.
+     *
+     * @return a list containing the mutation frequency (fraction of
+     * tumor cells carrying that mutation) for every mutation present
+     * in this tumor, in <em>decreasing</em> order by frequency (the
+     * most frequent mutation first).
+     */
+    public List<MutationFrequency> computeMutationFrequency() {
+        MutationFrequencyMap freqMap =
+            MutationFrequencyMap.compute(viewComponents());
+
+        List<MutationFrequency> freqList = freqMap.listFrequencies();
+        MutationFrequency.sortDescending(freqList);
+
+        return freqList;
+    }
+
+    /**
      * Returns a read-only view of the active (living) components in
      * this tumor.
      *
@@ -73,7 +123,16 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     @Override public MutationList getOriginalMutations() {
-        return accumulateMutations(viewComponents());
+        //
+        // Order the mutations by their index...
+        //
+        Set<Mutation> mutations = new TreeSet<Mutation>();
+
+        for (E component : viewComponents())
+            for (Mutation mutation : component.getAccumulatedMutations())
+                mutations.add(mutation);
+
+        return MutationList.create(mutations);
     }
 
     @Override public State getState() {
