@@ -286,7 +286,6 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     private void writeMutationDetail() {
         MutationList mutations = tumor.getOriginalMutations();
-        System.out.println(mutations.size());
 
         for (Mutation mutation : mutations)
             mutationDetailWriter.write(new MutationDetailRecord(mutation,
