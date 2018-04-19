@@ -1,7 +1,11 @@
 
 package tumor.lattice;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
@@ -87,6 +91,24 @@ public final class LineageLatticeTumor extends CellGroupLatticeTumor<Lineage> {
         // total cell count does not exceed the site capacity...
         //
         return countCells(coord) + lineage.countCells() <= getSiteCapacity(coord);
+    }
+
+    @Override public Map<Coord, Collection<Lineage>> mapComponents() {
+        Map<Coord, Collection<Lineage>> map = new HashMap<Coord, Collection<Lineage>>();
+
+        for (Lineage lineage : viewComponents()) {
+            Coord coord = locateComponent(lineage);
+            Collection<Lineage> occupants = map.get(coord);
+
+            if (occupants == null) {
+                occupants = new ArrayList<Lineage>();
+                map.put(coord, occupants);
+            }
+
+            occupants.add(lineage);
+        }
+
+        return map;
     }
 
     @Override protected List<Lineage> advance(Lineage  parent,

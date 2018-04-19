@@ -1,7 +1,10 @@
 
 package tumor.lattice;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jam.lattice.Coord;
 import jam.lattice.Lattice;
@@ -53,6 +56,15 @@ public final class DemeLatticeTumor extends CellGroupLatticeTumor<Deme> {
         // Only one deme per site...
         //
         return lattice.isAvailable(coord) && deme.countCells() <= getSiteCapacity(coord);
+    }
+
+    @Override public Map<Coord, Collection<Deme>> mapComponents() {
+        Map<Coord, Collection<Deme>> map = new HashMap<Coord, Collection<Deme>>();
+
+        for (Deme deme : viewComponents())
+            map.put(locateComponent(deme), List.of(deme));
+
+        return map;
     }
 
     @Override protected List<Deme> advance(Deme parent, Coord parentCoord, Coord expansionCoord, TumorEnv localEnv) {

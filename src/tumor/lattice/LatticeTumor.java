@@ -2,6 +2,7 @@
 package tumor.lattice;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -231,6 +232,14 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * specified site without exceeding the capacity of that site.
      */
     public abstract boolean isAvailable(Coord coord, E component);
+
+    /**
+     * Maps each tumor component to its location within the tumor.
+     *
+     * @return a mapping from occupied lattice sites to the components
+     * occupying that site.
+     */
+    public abstract Map<Coord, Collection<E>> mapComponents();
 
     /**
      * Advances a parent component by one discrete time step in a
