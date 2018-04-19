@@ -21,13 +21,9 @@ public class Deme extends CellGroup {
     private MutationList latestMut = MutationList.EMPTY;
 
     /**
-     * Creates a founding deme with the global mutation generator as
-     * the source of somatic mutations.
-     *
-     * <p>Note that any mutations that triggered the transformation to
-     * malignancy will be carried by all clones (and may be tracked in
-     * the tumor itself), so they do not need to be specified in the
-     * founding deme.
+     * Creates a founding deme with the unique global mutation list
+     * responsible for transformation; the global mutation generator
+     * is the source of somatic mutations.
      *
      * @param growthRate the intrinsic growth rate of the (identical)
      * cells in the founding deme.

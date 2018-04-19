@@ -22,13 +22,9 @@ public class TumorCell extends TumorComponent {
     private State state = State.ALIVE;
 
     /**
-     * Creates a founding tumor cell with the global mutation generator
-     * as the source of somatic mutations.
-     *
-     * <p>Note that any mutations that triggered the transformation to
-     * malignancy will be carried by all daughter cells (and therefore
-     * may be tracked in the tumor itself), so they do not need to be
-     * explicitly specified in the founder cell.
+     * Creates a founding tumor cell containing the unique global
+     * mutation list responsible for transformation; the global
+     * mutation generator is the source of somatic mutations.
      *
      * @param growthRate the intrinsic growth rate of the founder.
      */

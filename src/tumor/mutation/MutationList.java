@@ -35,6 +35,11 @@ public final class MutationList extends AbstractList<Mutation> {
     public static final MutationList EMPTY = new MutationList(FixedList.empty());
 
     /**
+     * The mutations responsible for transformation to malignancy.
+     */
+    public static final MutationList TRANSFORMERS = MutationList.create(Mutation.TRANSFORMER);
+
+    /**
      * Wraps a fixed set of mutations in a {@code MutationList}.
      *
      * @param mutations the mutations that have occurred, given in

@@ -37,18 +37,14 @@ public abstract class TumorComponent extends Carrier {
     }
 
     /**
-     * Creates a founding tumor component with the global mutation
-     * generator as the source of somatic mutations.
-     *
-     * <p>Note that any mutations that triggered the transformation to
-     * malignancy will be carried by all descendants (and therefore
-     * may be tracked in the tumor itself), so they do not need to be
-     * explicitly specified in the founding component.
+     * Creates a founding tumor component with the unique global
+     * mutation list responsible for transformation; the global
+     * mutation generator is the source of somatic mutations.
      *
      * @param growthRate the intrinsic growth rate of the founder.
      */
     protected TumorComponent(GrowthRate growthRate) {
-        this(null, growthRate, MutationList.EMPTY);
+        this(null, growthRate, MutationList.TRANSFORMERS);
     }
 
     /**

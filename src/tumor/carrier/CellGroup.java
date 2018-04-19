@@ -59,12 +59,9 @@ public abstract class CellGroup extends TumorComponent {
     public static final long MINIMUM_DIVISION_SIZE = 2;
 
     /**
-     * Creates a founding cell group.
-     *
-     * <p>Note that any mutations that triggered the transformation to
-     * malignancy will be carried by all descendant groups (and may be
-     * tracked in the tumor itself), so they do not need to be
-     * explicitly specified in the founding group.
+     * Creates a founding cell group containing the unique global
+     * mutation list responsible for transformation; the global
+     * mutation generator is the source of somatic mutations.
      *
      * @param growthRate the intrinsic growth rate of the (identical)
      * cells in the founding group.
