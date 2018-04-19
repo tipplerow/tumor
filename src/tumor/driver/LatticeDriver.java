@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 import java.util.Set;
 
 import jam.app.JamProperties;
-import jam.io.IOUtil;
 import jam.lattice.Coord;
 import jam.report.ReportWriter;
 
@@ -77,9 +76,8 @@ public abstract class LatticeDriver<E extends TumorComponent> extends TumorDrive
      */
     @Override protected abstract LatticeTumor<E> createTumor();
 
-    @SuppressWarnings("unchecked")
-    protected LatticeTumor<E> getTumor() {
-        return (LatticeTumor<E>) tumor;
+    @Override protected LatticeTumor<E> getTumor() {
+        return (LatticeTumor<E>) super.getTumor();
     }
 
     @Override protected void initializeSimulation() {
@@ -87,8 +85,10 @@ public abstract class LatticeDriver<E extends TumorComponent> extends TumorDrive
 
         initializeFinalCoord();
 
-        if (writeTumorDimension)
+        if (writeTumorDimension) {
             tumorDimensionWriter = ReportWriter.create(getReportDir());
+            autoClose(tumorDimensionWriter);
+        }
     }
 
     private void initializeFinalCoord() {
@@ -110,12 +110,6 @@ public abstract class LatticeDriver<E extends TumorComponent> extends TumorDrive
             new TumorDimensionRecord(getTrialIndex(), getTimeStep(), getTumor());
 
         tumorDimensionWriter.write(record);
-    }
-
-    @Override protected void finalizeSimulation() {
-        super.finalizeSimulation();
-
-        IOUtil.close(tumorDimensionWriter);
     }
 
     @Override protected void finalizeTrial() {

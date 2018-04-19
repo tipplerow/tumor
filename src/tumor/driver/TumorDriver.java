@@ -7,7 +7,6 @@ import java.util.List;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
-import jam.io.IOUtil;
 import jam.math.IntRange;
 import jam.math.LongRange;
 import jam.report.ReportWriter;
@@ -34,15 +33,13 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private final boolean writeMutationDetail;
     private final boolean writeMutFreqDetail;
 
+    // The active tumor for the current simulation trial...
+    private Tumor<E> tumor;
+
     private PrintWriter cellCountTrajWriter;
 
     private ReportWriter<MutFreqDetailRecord> mutFreqDetailWriter;
     private ReportWriter<MutationDetailRecord> mutationDetailWriter;
-
-    /**
-     * The active tumor for the current simulation trial.
-     */
-    protected Tumor<E> tumor;
 
     /**
      * Name of the system property that defines the number of trials
@@ -152,6 +149,15 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     protected abstract Tumor<E> createTumor();
 
     /**
+     * Returns the active tumor for the current simulation trial.
+     *
+     * @return the active tumor for the current simulation trial.
+     */
+    protected Tumor<E> getTumor() {
+        return tumor;
+    }
+
+    /**
      * Records the new state of the simulation system after a time
      * step has been executed.
      *
@@ -222,11 +228,15 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     @Override protected void initializeSimulation() {
         initializeCellCountTraj();
 
-        if (writeMutationDetail)
+        if (writeMutationDetail) {
             mutationDetailWriter = ReportWriter.create(getReportDir());
+            autoClose(mutationDetailWriter);
+        }
 
-        if (writeMutFreqDetail)
+        if (writeMutFreqDetail) {
             mutFreqDetailWriter = ReportWriter.create(getReportDir());
+            autoClose(mutFreqDetailWriter);
+        }
     }
 
     private void initializeCellCountTraj() {
@@ -239,11 +249,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     @Override protected void finalizeSimulation() {
-        closeWriters();
-
-        IOUtil.close(mutFreqDetailWriter);
-        IOUtil.close(mutationDetailWriter);
-
+        autoClose();
         TrajectoryStatReport.run(getReportDir(), CELL_COUNT_TRAJ_FILE_NAME, CELL_COUNT_STAT_FILE_NAME);
     }
 

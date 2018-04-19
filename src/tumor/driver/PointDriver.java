@@ -32,9 +32,4 @@ public abstract class PointDriver<E extends TumorComponent> extends TumorDriver<
      * @return the new tumor.
      */
     @Override protected abstract PointTumor<E> createTumor();
-
-    @SuppressWarnings("unchecked")
-    protected PointTumor<E> getTumor() {
-        return (PointTumor<E>) tumor;
-    }
 }
