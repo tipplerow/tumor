@@ -14,6 +14,9 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
 import jam.math.DoubleRange;
 import jam.math.DoubleUtil;
+import jam.math.StatSummary;
+import jam.vector.JamVector;
+import jam.vector.VectorView;
 
 import tumor.carrier.Carrier;
 
@@ -75,6 +78,15 @@ public final class MutationFrequencyMap {
     }
 
     /**
+     * Returns the number of the mutations in this map.
+     *
+     * @return the number of the mutations in this map.
+     */
+    public long countMutations() {
+        return map.size();
+    }
+
+    /**
      * Returns the fraction of cells carrying a given mutation.
      *
      * @param mutation the mutation of interest.
@@ -87,9 +99,18 @@ public final class MutationFrequencyMap {
     }
 
     /**
-     * Creates a list of mutation frequencies (in no particular order).
+     * Returns the complete mutation frequency distribution.
      *
-     * @return a list containing all mutation frequencies in this map
+     * @return a vector containing all mutation frequencies in this map.
+     */
+    public VectorView getFrequencyDist() {
+        return JamVector.copyOf(map.values());
+    }
+
+    /**
+     * Creates a list of mutation-frequency pairs (in no particular order).
+     *
+     * @return a list containing all mutation-frequency pairs in this map
      * (in no particular order).
      */
     public List<MutationFrequency> listFrequencies() {
@@ -102,9 +123,18 @@ public final class MutationFrequencyMap {
     }
 
     /**
-     * Returns a read-only view of the mutations in the map.
+     * Computes a statistical summary of the frequency distribution.
      *
-     * @return a read-only view of the mutations in the map.
+     * @return a statistical summary of the frequency distribution.
+     */
+    public StatSummary summarize() {
+        return StatSummary.compute(getFrequencyDist());
+    }
+
+    /**
+     * Returns a read-only view of the mutations in this map.
+     *
+     * @return a read-only view of the mutations in this map.
      */
     public Set<Mutation> viewMutations() {
         return Collections.unmodifiableSet(map.keySet());
