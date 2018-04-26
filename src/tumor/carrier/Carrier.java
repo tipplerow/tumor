@@ -72,6 +72,27 @@ public abstract class Carrier extends Propagator {
     public abstract long countCells();
 
     /**
+     * Returns the total number of mutations that have accumulated in
+     * this carrier (traced back to the original founding carrier).
+     *
+     * @return the total number of accumulated mutations.
+     */
+    public int countAccumulatedMutations() {
+        return getAccumulatedMutations().size();
+    }
+
+    /**
+     * Returns the number of mutations that originated in this
+     * carrier.
+     *
+     * @return the number of mutations that originated in this
+     * carrier.
+     */
+    public int countOriginalMutations() {
+        return getOriginalMutations().size();
+    }
+
+    /**
      * Returns all mutations that have accumulated in this carrier
      * (traced back to the original founding carrier), assembled in
      * chronological order.

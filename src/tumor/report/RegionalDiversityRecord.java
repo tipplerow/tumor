@@ -35,6 +35,8 @@ public final class RegionalDiversityRecord implements ReportRecord {
 
     private final double normR; // |center(region) - cm(tumor)| / RG(tumor)
     private final double lineageHFI;
+    private final double meanMutLoad;
+    private final double medianMutLoad;
     private final double meanVAF;
     private final double medianVAF;
     private final double vafQ1;
@@ -46,6 +48,8 @@ public final class RegionalDiversityRecord implements ReportRecord {
                                     long mutationCount,
                                     double normR,
                                     double lineageHFI,
+                                    double meanMutLoad,
+                                    double medianMutLoad,
                                     double meanVAF,
                                     double medianVAF,
                                     double vafQ1,
@@ -58,10 +62,14 @@ public final class RegionalDiversityRecord implements ReportRecord {
 
         this.normR      = normR;
         this.lineageHFI = lineageHFI;
-        this.meanVAF    = meanVAF;
-        this.medianVAF  = medianVAF;
-        this.vafQ1      = vafQ1;
-        this.vafQ3      = vafQ3;
+
+        this.meanMutLoad  = meanMutLoad;
+        this.medianMutLoad = medianMutLoad;
+
+        this.meanVAF   = meanVAF;
+        this.medianVAF = medianVAF;
+        this.vafQ1     = vafQ1;
+        this.vafQ3     = vafQ3;
 
         this.trialIndex = DiscreteTimeSimulation.getTrialIndex();
     }
@@ -130,6 +138,12 @@ public final class RegionalDiversityRecord implements ReportRecord {
         double lineageHFI =
             HerfindahlIndex.compute(lineages, x -> (double) x.countCells()).getNormalized();
 
+        StatSummary mutLoadSummary =
+            StatSummary.compute(lineages, x -> (double) x.countAccumulatedMutations());
+
+        double meanMutLoad   = mutLoadSummary.getMean();
+        double medianMutLoad = mutLoadSummary.getMedian();
+
         StatSummary summaryVAF =
             frequencyMap.summarize();
         
@@ -144,6 +158,8 @@ public final class RegionalDiversityRecord implements ReportRecord {
                                            mutationCount,
                                            normR,
                                            lineageHFI,
+                                           meanMutLoad,
+                                           medianMutLoad,
                                            meanVAF,
                                            medianVAF,
                                            vafQ1,
@@ -260,7 +276,7 @@ public final class RegionalDiversityRecord implements ReportRecord {
     }
 
     @Override public String formatLine() {
-        return String.format("%d,%.4f,%.4f,%.4f,%.4f,%d,%d,%d,%.4f,%.4g,%.4g,%.4g,%.4g",
+        return String.format("%d,%.4f,%.4f,%.4f,%.4f,%d,%d,%d,%.4f,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g",
                              trialIndex,
                              center.getDouble(0),
                              center.getDouble(1),
@@ -270,6 +286,8 @@ public final class RegionalDiversityRecord implements ReportRecord {
                              lineageCount,
                              mutationCount,
                              lineageHFI,
+                             meanMutLoad,
+                             medianMutLoad,
                              meanVAF,
                              medianVAF,
                              vafQ1,
@@ -281,6 +299,9 @@ public final class RegionalDiversityRecord implements ReportRecord {
     }
 
     @Override public String getHeaderLine() {
-        return "trialIndex,x,y,z,normR,cellCount,lineageCount,mutationCount,lineageHFI,meanVAF,medianVAF,vafQ1,vafQ3";
+        return "trialIndex,x,y,z,normR"
+            + ",cellCount,lineageCount,mutationCount,lineageHFI"
+            + ",meanMutLoad,medianMutLoad"
+            + ",meanVAF,medianVAF,vafQ1,vafQ3";
     }
 }
