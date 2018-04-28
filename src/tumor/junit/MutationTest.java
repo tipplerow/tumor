@@ -79,6 +79,18 @@ public class MutationTest extends NumericTestBase {
         assertTrue(scalar1.isSelective());
     }
 
+    @Test public void testTransformer() {
+        assertTrue(Mutation.TRANSFORMER.isTransformer());
+
+        assertFalse(neutral1.isTransformer());
+        assertFalse(neutral2.isTransformer());
+        assertFalse(neutral3.isTransformer());
+
+        assertFalse(scalar1.isTransformer());
+        assertFalse(scalar2.isTransformer());
+        assertFalse(scalar3.isTransformer());
+    }
+
     public static void main(String[] args) {
         org.junit.runner.JUnitCore.main("tumor.junit.MutationTest");
     }

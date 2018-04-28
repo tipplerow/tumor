@@ -99,6 +99,16 @@ public abstract class Mutation extends Ordinal {
     }
 
     /**
+     * Identifies the single mutation responsible for transformation
+     * to malignancy.
+     *
+     * @return {@code true} iff this is the transforming mutation.
+     */
+    public boolean isTransformer() {
+        return this.equals(TRANSFORMER);
+    }
+
+    /**
      * Returns the discrete time step when this mutation originated.
      *
      * @return the discrete time step when this mutation originated.
