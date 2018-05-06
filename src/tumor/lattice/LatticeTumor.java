@@ -350,7 +350,12 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * in this tumor.
      */
     public VectorMoment computeVectorMoment() {
-        return VectorMoment.compute(countCoords());
+        Multiset<Coord> coordCount = countCoords();
+
+        if (coordCount.isEmpty())
+            return VectorMoment.compute(List.of(Coord.ORIGIN));
+        else
+            return VectorMoment.compute(coordCount);
     }
 
     /**
