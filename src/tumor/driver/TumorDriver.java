@@ -30,6 +30,8 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private final int  maxStepCount;
     private final long maxTumorSize;
 
+    private final boolean writeCellCountTraj;
+    private final boolean writeFinalCellCount;
     private final boolean writeMutationDetail;
     private final boolean writeMutFreqDetail;
 
@@ -37,6 +39,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private Tumor<E> tumor;
 
     private PrintWriter cellCountTrajWriter;
+    private PrintWriter finalCellCountWriter;
 
     private ReportWriter<MutFreqDetailRecord> mutFreqDetailWriter;
     private ReportWriter<MutationDetailRecord> mutationDetailWriter;
@@ -67,6 +70,18 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     /**
      * Name of the system property that specifies whether or not to
+     * write the cell and component count trajectories.
+     */
+    public static final String WRITE_CELL_COUNT_TRAJ_PROPERTY = "TumorDriver.writeCellCountTraj";
+
+    /**
+     * Name of the system property that specifies whether or not to
+     * write the final cell and component count for each trial.
+     */
+    public static final String WRITE_FINAL_CELL_COUNT_PROPERTY = "TumorDriver.writeFinalCellCount";
+
+    /**
+     * Name of the system property that specifies whether or not to
      * write the mutation frequency detail report (defaults to false).
      */
     public static final String WRITE_MUTATION_DETAIL_PROPERTY = "TumorDriver.writeMutationDetail";
@@ -88,6 +103,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * cells) statistics aggregated by time step.
      */
     public static final String CELL_COUNT_STAT_FILE_NAME = "cell-count-stat.csv";
+
+    /**
+     * Name of the output file containing the final tumor component
+     * and cell counts for each trial.
+     */
+    public static final String FINAL_COUNT_FILE_NAME = "final-count.csv";
 
     /**
      * Formats integer quantities with commas for easier reading of
@@ -113,6 +134,8 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         this.maxStepCount = resolveMaxStepCount();
         this.maxTumorSize = resolveMaxTumorSize();
 
+        this.writeCellCountTraj  = resolveWriteCellCountTraj();
+        this.writeFinalCellCount = resolveWriteFinalCellCount();
         this.writeMutationDetail = resolveWriteMutationDetail();
         this.writeMutFreqDetail  = resolveWriteMutFreqDetail();
     }
@@ -131,6 +154,14 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     private static long resolveMaxTumorSize() {
         return JamProperties.getRequiredLong(MAX_TUMOR_SIZE_PROPERTY, LongRange.POSITIVE);
+    }
+
+    private static boolean resolveWriteCellCountTraj() {
+        return JamProperties.getOptionalBoolean(WRITE_CELL_COUNT_TRAJ_PROPERTY, false);
+    }
+
+    private static boolean resolveWriteFinalCellCount() {
+        return JamProperties.getOptionalBoolean(WRITE_FINAL_CELL_COUNT_PROPERTY, false);
     }
 
     private static boolean resolveWriteMutationDetail() {
@@ -166,7 +197,9 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      */
     protected void recordStep() {
         consoleLogStep();
-        recordCellCount();
+
+        if (writeCellCountTraj)
+            writeCellCountTraj();
     }
 
     /**
@@ -177,7 +210,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
                        getTrialIndex(), getTimeStep(), SIZE_FORMATTER.format(tumor.countCells()));
     }
 
-    private void recordCellCount() {
+    private void writeCellCountTraj() {
         cellCountTrajWriter.println(formatCellCount());
     }
 
@@ -226,7 +259,15 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     @Override protected void initializeSimulation() {
-        initializeCellCountTraj();
+        if (writeCellCountTraj) {
+            cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
+            cellCountTrajWriter.println("trialIndex,timeStep,cellCount");
+        }
+
+        if (writeFinalCellCount) {
+            finalCellCountWriter = openWriter(FINAL_COUNT_FILE_NAME);
+            finalCellCountWriter.println("trialIndex,timeStep,cellCount,componentCount");
+        }
 
         if (writeMutationDetail) {
             mutationDetailWriter = ReportWriter.create(getReportDir());
@@ -239,18 +280,15 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         }
     }
 
-    private void initializeCellCountTraj() {
-        cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
-        cellCountTrajWriter.println("trialIndex,timeStep,cellCount");
-    }
-
     @Override protected boolean continueSimulation() {
         return getTrialIndex() < trialCount;
     }
 
     @Override protected void finalizeSimulation() {
         autoClose();
-        TrajectoryStatReport.run(getReportDir(), CELL_COUNT_TRAJ_FILE_NAME, CELL_COUNT_STAT_FILE_NAME);
+
+        if (writeCellCountTraj)
+            TrajectoryStatReport.run(getReportDir(), CELL_COUNT_TRAJ_FILE_NAME, CELL_COUNT_STAT_FILE_NAME);
     }
 
     @Override protected void initializeTrial() {
@@ -259,7 +297,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     @Override protected boolean continueTrial() {
-        return getTimeStep() < maxStepCount && tumor.countCells() < maxTumorSize;
+        int  timeStep  = getTimeStep();
+        long cellCount = tumor.countCells();
+
+        return (timeStep  < maxStepCount)
+            && (cellCount > 0)
+            && (cellCount < maxTumorSize);
     }
 
     @Override protected void advanceTrial() {
@@ -268,13 +311,25 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     @Override protected void finalizeTrial() {
-        cellCountTrajWriter.flush();
+        if (writeCellCountTraj)
+            cellCountTrajWriter.flush();
+
+        if (writeFinalCellCount)
+            writeFinalCellCount();
 
         if (writeMutFreqDetail)
             writeMutFreqDetail();
 
         if (writeMutationDetail)
             writeMutationDetail();
+    }
+
+    private void writeFinalCellCount() {
+        finalCellCountWriter.println(String.format("%d,%d,%d,%d",
+                                                   getTrialIndex(),
+                                                   getTimeStep(),
+                                                   getTumor().countCells(),
+                                                   getTumor().countComponents()));
     }
 
     private void writeMutFreqDetail() {
