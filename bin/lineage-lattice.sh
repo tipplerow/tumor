@@ -24,4 +24,4 @@ then
     exit 1
 fi
 
-$JAMRUN ${TUMOR_HOME} tumor.driver.LineageLatticeDriver "$@"
+$JAMRUN ${TUMOR_HOME} -Xmx96g tumor.driver.LineageLatticeDriver "$@"
