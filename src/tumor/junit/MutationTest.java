@@ -8,11 +8,16 @@ import tumor.mutation.Mutation;
 import tumor.mutation.MutationList;
 import tumor.mutation.NeutralMutation;
 import tumor.mutation.ScalarMutation;
+import tumor.driver.TumorDriver;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
 public class MutationTest extends NumericTestBase {
+    static {
+        TumorDriver.junit();
+    }
+
     private static final NeutralMutation neutral1 = Mutation.neutral();
     private static final NeutralMutation neutral2 = Mutation.neutral();
     private static final NeutralMutation neutral3 = Mutation.neutral();

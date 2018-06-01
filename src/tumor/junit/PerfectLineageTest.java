@@ -8,6 +8,7 @@ import tumor.carrier.Lineage;
 import tumor.carrier.TumorEnv;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
+import tumor.driver.TumorDriver;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -15,6 +16,7 @@ import static org.junit.Assert.*;
 public class PerfectLineageTest extends NumericTestBase {
     static {
         System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY, "EMPTY");
+        TumorDriver.junit();
     }
 
     @Test public void testPerfect() {

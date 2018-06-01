@@ -13,11 +13,11 @@ import jam.math.JamRandom;
 import jam.math.StatSummary;
 import jam.math.VectorMoment;
 import jam.report.ReportRecord;
-import jam.sim.DiscreteTimeSimulation;
 import jam.vector.VectorView;
 
 import tumor.carrier.Carrier;
 import tumor.carrier.Lineage;
+import tumor.driver.TumorDriver;
 import tumor.lattice.LineageLatticeTumor;
 import tumor.mutation.MutationFrequencyMap;
 
@@ -71,7 +71,7 @@ public final class RegionalDiversityRecord implements ReportRecord {
         this.vafQ1     = vafQ1;
         this.vafQ3     = vafQ3;
 
-        this.trialIndex = DiscreteTimeSimulation.getTrialIndex();
+        this.trialIndex = TumorDriver.global().getTrialIndex();
     }
 
     /**

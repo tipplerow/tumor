@@ -5,8 +5,8 @@ import java.util.Collection;
 
 import jam.lang.Ordinal;
 import jam.lang.OrdinalIndex;
-import jam.sim.DiscreteTimeSimulation;
 
+import tumor.driver.TumorDriver;
 import tumor.growth.GrowthRate;
 
 /**
@@ -21,7 +21,7 @@ import tumor.growth.GrowthRate;
  * only independent mutations.
  */
 public abstract class Mutation extends Ordinal {
-    private final int originationTime = DiscreteTimeSimulation.getTimeStep();
+    private final int originationTime = TumorDriver.global().getTimeStep();
     
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 

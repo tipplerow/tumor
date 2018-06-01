@@ -45,18 +45,10 @@ public abstract class LatticeDriver<E extends TumorComponent> extends TumorDrive
     public static final String WRITE_TUMOR_DIMENSION_PROPERTY = "TumorDriver.writeTumorDimension";
 
     /**
-     * Creates a new driver and reads system properties from a set of
-     * property files.
-     *
-     * @param propertyFiles one or more files containing the system
-     * properties that define the simulation parameters.
-     *
-     * @throws IllegalArgumentException unless at least one property
-     * file is specified.
+     * Creates a new driver <em>from system properties that have
+     * already been defined.</em>
      */
-    protected LatticeDriver(String[] propertyFiles) {
-        super(propertyFiles);
-
+    protected LatticeDriver() {
         this.writeFinalCoord     = resolveWriteFinalCoord();
         this.writeTumorDimension = resolveWriteTumorDimension();
     }
@@ -76,7 +68,7 @@ public abstract class LatticeDriver<E extends TumorComponent> extends TumorDrive
      */
     @Override protected abstract LatticeTumor<E> createTumor();
 
-    @Override protected LatticeTumor<E> getTumor() {
+    @Override public LatticeTumor<E> getTumor() {
         return (LatticeTumor<E>) super.getTumor();
     }
 

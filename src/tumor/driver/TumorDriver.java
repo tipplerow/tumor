@@ -7,33 +7,26 @@ import java.util.List;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
+import jam.lang.JamException;
 import jam.math.IntRange;
 import jam.math.LongRange;
-import jam.report.ReportWriter;
 import jam.sim.DiscreteTimeSimulation;
 
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
-import tumor.mutation.Mutation;
-import tumor.mutation.MutationFrequency;
-import tumor.mutation.MutationList;
-import tumor.report.MutFreqDetailRecord;
-import tumor.report.MutationDetailRecord;
-import tumor.report.TrajectoryStatReport;
+import tumor.report.ComponentCountRecord;
 
 /**
  * Provides features common to all tumor simulation applications.
  */
 public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTimeSimulation {
-    private final int  trialCount;
+    private final int  trialIndex;
     private final int  initialSize;
     private final int  maxStepCount;
     private final long maxTumorSize;
 
     private final boolean writeCellCountTraj;
     private final boolean writeFinalCellCount;
-    private final boolean writeMutationDetail;
-    private final boolean writeMutFreqDetail;
 
     // The active tumor for the current simulation trial...
     private Tumor<E> tumor;
@@ -41,56 +34,50 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private PrintWriter cellCountTrajWriter;
     private PrintWriter finalCellCountWriter;
 
-    private ReportWriter<MutFreqDetailRecord> mutFreqDetailWriter;
-    private ReportWriter<MutationDetailRecord> mutationDetailWriter;
+    // The single global instance...
+    private static TumorDriver global = null;
 
     /**
-     * Name of the system property that defines the number of trials
-     * to execute.
+     * Name of the system property that defines the concrete driver
+     * type.
      */
-    public static final String TRIAL_COUNT_PROPERTY = "TumorDriver.trialCount";
+    public static final String DRIVER_TYPE_PROPERTY = "tumor.driver.driverType";
+
+    /**
+     * Name of the system property that specifies the global (across
+     * all simulations) index of the trial to be executed.
+     */
+    public static final String TRIAL_INDEX_PROPERTY = "tumor.driver.trialIndex";
 
     /**
      * Name of the system property that defines the initial number of
      * cells in each tumor.
      */
-    public static final String INITIAL_SIZE_PROPERTY = "TumorDriver.initialSize";
+    public static final String INITIAL_SIZE_PROPERTY = "tumor.driver.initialSize";
     
     /**
      * Name of the system property that defines the maximum number of
      * time steps to execute on each growth trial.
      */
-    public static final String MAX_STEP_COUNT_PROPERTY = "TumorDriver.maxStepCount";
+    public static final String MAX_STEP_COUNT_PROPERTY = "tumor.driver.maxStepCount";
 
     /**
      * Name of the system property that defines the maximum tumor size
      * (number of cells) to allow in each trial.
      */
-    public static final String MAX_TUMOR_SIZE_PROPERTY = "TumorDriver.maxTumorSize";
+    public static final String MAX_TUMOR_SIZE_PROPERTY = "tumor.driver.maxTumorSize";
 
     /**
      * Name of the system property that specifies whether or not to
      * write the cell and component count trajectories.
      */
-    public static final String WRITE_CELL_COUNT_TRAJ_PROPERTY = "TumorDriver.writeCellCountTraj";
+    public static final String WRITE_CELL_COUNT_TRAJ_PROPERTY = "tumor.driver.writeCellCountTraj";
 
     /**
      * Name of the system property that specifies whether or not to
      * write the final cell and component count for each trial.
      */
-    public static final String WRITE_FINAL_CELL_COUNT_PROPERTY = "TumorDriver.writeFinalCellCount";
-
-    /**
-     * Name of the system property that specifies whether or not to
-     * write the mutation frequency detail report (defaults to false).
-     */
-    public static final String WRITE_MUTATION_DETAIL_PROPERTY = "TumorDriver.writeMutationDetail";
-
-    /**
-     * Name of the system property that specifies whether or not to
-     * write the mutation frequency detail report (defaults to false).
-     */
-    public static final String WRITE_MUT_FREQ_DETAIL_PROPERTY = "TumorDriver.writeMutFreqDetail";
+    public static final String WRITE_FINAL_CELL_COUNT_PROPERTY = "tumor.driver.writeFinalCellCount";
 
     /**
      * Name of the output file containing the tumor size (number of
@@ -99,16 +86,10 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final String CELL_COUNT_TRAJ_FILE_NAME = "cell-count-traj.csv";
 
     /**
-     * Name of the output file containing the tumor size (number of
-     * cells) statistics aggregated by time step.
-     */
-    public static final String CELL_COUNT_STAT_FILE_NAME = "cell-count-stat.csv";
-
-    /**
      * Name of the output file containing the final tumor component
      * and cell counts for each trial.
      */
-    public static final String FINAL_COUNT_FILE_NAME = "final-count.csv";
+    public static final String FINAL_CELL_COUNT_FILE_NAME = "final-cell-count.csv";
 
     /**
      * Formats integer quantities with commas for easier reading of
@@ -117,31 +98,21 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final DecimalFormat SIZE_FORMATTER = new DecimalFormat("#,##0");
 
     /**
-     * Creates a new driver and reads system properties from a set of
-     * property files.
-     *
-     * @param propertyFiles one or more files containing the system
-     * properties that define the simulation parameters.
-     *
-     * @throws IllegalArgumentException unless at least one property
-     * file is specified.
+     * Creates a new driver <em>from system properties that have
+     * already been defined.</em>
      */
-    protected TumorDriver(String[] propertyFiles) {
-        super(propertyFiles);
-
-        this.trialCount   = resolveTrialCount();
+    protected TumorDriver() {
+        this.trialIndex   = resolveTrialIndex();
         this.initialSize  = resolveInitialSize();
         this.maxStepCount = resolveMaxStepCount();
         this.maxTumorSize = resolveMaxTumorSize();
 
         this.writeCellCountTraj  = resolveWriteCellCountTraj();
         this.writeFinalCellCount = resolveWriteFinalCellCount();
-        this.writeMutationDetail = resolveWriteMutationDetail();
-        this.writeMutFreqDetail  = resolveWriteMutFreqDetail();
     }
 
-    private static int resolveTrialCount() {
-        return JamProperties.getRequiredInt(TRIAL_COUNT_PROPERTY, IntRange.POSITIVE);
+    private static int resolveTrialIndex() {
+        return JamProperties.getRequiredInt(TRIAL_INDEX_PROPERTY, IntRange.NON_NEGATIVE);
     }
 
     private static int resolveInitialSize() {
@@ -164,12 +135,100 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         return JamProperties.getOptionalBoolean(WRITE_FINAL_CELL_COUNT_PROPERTY, false);
     }
 
-    private static boolean resolveWriteMutationDetail() {
-        return JamProperties.getOptionalBoolean(WRITE_MUTATION_DETAIL_PROPERTY, false);
+    /**
+     * Returns the single global driver instance.
+     *
+     * @return the single global driver instance.
+     *
+     * @throws IllegalStateException unless the global instance has
+     * been initialized (or a simulation is in progress).
+     */
+    public static TumorDriver global() {
+        if (global == null)
+            throw new IllegalStateException("The global driver has not been initialized.");
+
+        return global;
     }
 
-    private static boolean resolveWriteMutFreqDetail() {
-        return JamProperties.getOptionalBoolean(WRITE_MUT_FREQ_DETAIL_PROPERTY, false);
+    /**
+     * Initializes the global driver instance but does not execute
+     * the simulation.
+     *
+     * @param propertyFiles optional files containing system
+     * properties that define the simulation parameters.
+     */
+    public static void initialize(String... propertyFiles) {
+        if (propertyFiles.length > 0)
+            JamProperties.loadFiles(propertyFiles, false);
+            
+        global = createGlobal();
+    }
+
+    /**
+     * Initialize the global driver instance used for testing other
+     * system components that require an initialized driver to exist
+     * but do not require a simulation to be executed.
+     */
+    public static void junit() {
+        System.setProperty(DRIVER_TYPE_PROPERTY, "CELLULAR_POINT");
+        System.setProperty(TRIAL_INDEX_PROPERTY, "0");
+        System.setProperty(INITIAL_SIZE_PROPERTY, "10");
+        System.setProperty(MAX_STEP_COUNT_PROPERTY, "1");
+        System.setProperty(MAX_TUMOR_SIZE_PROPERTY, "10");
+
+        initialize();
+    }
+
+    /**
+     * Runs the simulation and exits.
+     *
+     * @param propertyFiles optional files containing system
+     * properties that define the simulation parameters.
+     */
+    public static void run(String[] propertyFiles) {
+        initialize(propertyFiles);
+        global.runSimulation();
+        System.exit(0);
+    }
+
+    private static TumorDriver createGlobal() {
+        DriverType driverType = resolveDriverType();
+
+        switch (driverType) {
+        case CELLULAR_LATTICE:
+            return new CellularLatticeDriver();
+                
+        case CELLULAR_POINT:
+            return new CellularPointDriver();
+                
+        case DEME_LATTICE:
+            return new DemeLatticeDriver();
+                
+        case DEME_POINT:
+            return new DemePointDriver();
+                
+        case LINEAGE_LATTICE:
+            return new LineageLatticeDriver();
+                
+        case LINEAGE_POINT:
+            return new LineagePointDriver();
+                
+        default:
+            throw JamException.runtime("Unknown driver type: [%s]", driverType);
+        }
+    }
+
+    private static DriverType resolveDriverType() {
+        return JamProperties.getRequiredEnum(DRIVER_TYPE_PROPERTY, DriverType.class);
+    }
+
+    /**
+     * Returns the active tumor for the current simulation trial.
+     *
+     * @return the active tumor for the current simulation trial.
+     */
+    public Tumor<E> getTumor() {
+        return tumor;
     }
 
     /**
@@ -178,15 +237,6 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * @return the new tumor.
      */
     protected abstract Tumor<E> createTumor();
-
-    /**
-     * Returns the active tumor for the current simulation trial.
-     *
-     * @return the active tumor for the current simulation trial.
-     */
-    protected Tumor<E> getTumor() {
-        return tumor;
-    }
 
     /**
      * Records the new state of the simulation system after a time
@@ -211,20 +261,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     private void writeCellCountTraj() {
-        cellCountTrajWriter.println(formatCellCount());
-    }
-
-    private String formatCellCount() {
-        return String.format("%d,%d,%d", getTrialIndex(), getTimeStep(), tumor.countCells());
-    }
-
-    /**
-     * Returns the number of trials to execute.
-     *
-     * @return the number of trials to execute.
-     */
-    public int getTrialCount() {
-        return trialCount;
+        cellCountTrajWriter.println(ComponentCountRecord.snap().format());
     }
 
     /**
@@ -258,37 +295,35 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         return maxTumorSize;
     }
 
+    @Override public int getTrialTarget() {
+        //
+        // Only run a single trial...
+        //
+        return 1;
+    }
+
+    @Override protected int getTrialIndexOffset() {
+        //
+        // The global (across all simulations) index of the single
+        // trial to be executed...
+        //
+        return trialIndex;
+    }
+
     @Override protected void initializeSimulation() {
         if (writeCellCountTraj) {
             cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
-            cellCountTrajWriter.println("trialIndex,timeStep,cellCount");
+            cellCountTrajWriter.println(ComponentCountRecord.header());
         }
 
         if (writeFinalCellCount) {
-            finalCellCountWriter = openWriter(FINAL_COUNT_FILE_NAME);
-            finalCellCountWriter.println("trialIndex,timeStep,cellCount,componentCount");
+            finalCellCountWriter = openWriter(FINAL_CELL_COUNT_FILE_NAME);
+            finalCellCountWriter.println(ComponentCountRecord.header());
         }
-
-        if (writeMutationDetail) {
-            mutationDetailWriter = ReportWriter.create(getReportDir());
-            autoClose(mutationDetailWriter);
-        }
-
-        if (writeMutFreqDetail) {
-            mutFreqDetailWriter = ReportWriter.create(getReportDir());
-            autoClose(mutFreqDetailWriter);
-        }
-    }
-
-    @Override protected boolean continueSimulation() {
-        return getTrialIndex() < trialCount;
     }
 
     @Override protected void finalizeSimulation() {
         autoClose();
-
-        if (writeCellCountTraj)
-            TrajectoryStatReport.run(getReportDir(), CELL_COUNT_TRAJ_FILE_NAME, CELL_COUNT_STAT_FILE_NAME);
     }
 
     @Override protected void initializeTrial() {
@@ -316,43 +351,22 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
         if (writeFinalCellCount)
             writeFinalCellCount();
-
-        if (writeMutFreqDetail)
-            writeMutFreqDetail();
-
-        if (writeMutationDetail)
-            writeMutationDetail();
     }
 
     private void writeFinalCellCount() {
-        finalCellCountWriter.println(String.format("%d,%d,%d,%d",
-                                                   getTrialIndex(),
-                                                   getTimeStep(),
-                                                   getTumor().countCells(),
-                                                   getTumor().countComponents()));
+        finalCellCountWriter.println(ComponentCountRecord.snap().format());
     }
 
-    private void writeMutFreqDetail() {
-        JamLogger.info("Computing mutation frequencies...");
-
-        List<MutationFrequency> freqList =
-            tumor.computeMutationFrequency();
-
-        List<MutFreqDetailRecord> recordList =
-            MutFreqDetailRecord.create(freqList);
-
-        mutFreqDetailWriter.write(recordList);
-        mutFreqDetailWriter.flush();
-    }
-
-    private void writeMutationDetail() {
-        MutationList mutations = tumor.getOriginalMutations();
-
-        for (Mutation mutation : mutations)
-            mutationDetailWriter.write(new MutationDetailRecord(mutation,
-                                                                getTrialIndex(),
-                                                                tumor.locateMutationOrigin(mutation)));
-
-        mutationDetailWriter.flush();
+    /**
+     * Runs one simulation.
+     *
+     * @param propertyFiles one or more files containing the system
+     * properties that define the simulation parameters.
+     *
+     * @throws IllegalArgumentException unless at least one property
+     * file is specified.
+     */
+    public static void main(String[] propertyFiles) {
+        run(propertyFiles);
     }
 }

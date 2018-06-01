@@ -8,26 +8,8 @@ import jam.app.JamLogger;
 import tumor.carrier.TumorComponent;
 import tumor.report.TrajectoryStatReport;
 
-/**
- * Simulates tumors with multi-cellular components (demes and lineags)
- * on a lattice.
- */
-public abstract class MultiCellularLatticeDriver<E extends TumorComponent> extends LatticeDriver<E> {
+abstract class MultiCellularLatticeDriver<E extends TumorComponent> extends LatticeDriver<E> {
     private PrintWriter componentCountTrajWriter;
-
-    /**
-     * Creates a new driver and reads system properties from a set of
-     * property files.
-     *
-     * @param propertyFiles one or more files containing the system
-     * properties that define the simulation parameters.
-     *
-     * @throws IllegalArgumentException unless at least one property
-     * file is specified.
-     */
-    protected MultiCellularLatticeDriver(String[] propertyFiles) {
-        super(propertyFiles);
-    }
 
     /**
      * Returns the name of the component to use when writing log

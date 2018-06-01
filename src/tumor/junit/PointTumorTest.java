@@ -12,6 +12,7 @@ import tumor.carrier.TumorCell;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
 import tumor.point.PointTumor;
+import tumor.driver.TumorDriver;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -19,6 +20,7 @@ import static org.junit.Assert.*;
 public class PointTumorTest extends NumericTestBase {
     static {
         System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY, "EMPTY");
+        TumorDriver.junit();
     }
 
     @Test public void testTumorCell() {

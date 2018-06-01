@@ -6,11 +6,16 @@ import java.util.Set;
 
 import tumor.mutation.Mutation;
 import tumor.mutation.MutationList;
+import tumor.driver.TumorDriver;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
 public class MutationListTest {
+    static {
+        TumorDriver.junit();
+    }
+
     private static final Mutation neutral1 = Mutation.neutral();
     private static final Mutation neutral2 = Mutation.neutral();
     private static final Mutation neutral3 = Mutation.neutral();

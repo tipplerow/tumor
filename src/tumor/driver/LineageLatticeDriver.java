@@ -12,10 +12,7 @@ import tumor.growth.GrowthRate;
 import tumor.lattice.LineageLatticeTumor;
 import tumor.report.RegionalDiversityRecord;
 
-/**
- * Simulates tumors composed of lineages on a lattice.
- */
-public class LineageLatticeDriver extends MultiCellularLatticeDriver<Lineage> {
+class LineageLatticeDriver extends MultiCellularLatticeDriver<Lineage> {
     private final int sitesPerRegion;
     private final boolean writeRegionalDiversity;
 
@@ -35,18 +32,10 @@ public class LineageLatticeDriver extends MultiCellularLatticeDriver<Lineage> {
     public static final String SITES_PER_REGION_PROPERTY = "TumorDriver.sitesPerRegion";
 
     /**
-     * Creates a new driver and reads system properties from a set of
-     * property files.
-     *
-     * @param propertyFiles one or more files containing the system
-     * properties that define the simulation parameters.
-     *
-     * @throws IllegalArgumentException unless at least one property
-     * file is specified.
+     * Creates a new driver <em>from system properties that have
+     * already been defined.</em>
      */
-    protected LineageLatticeDriver(String[] propertyFiles) {
-        super(propertyFiles);
-
+    LineageLatticeDriver() {
         this.sitesPerRegion = resolveSitesPerRegion();
         this.writeRegionalDiversity = resolveWriteRegionalDiversity();
     }
@@ -62,20 +51,6 @@ public class LineageLatticeDriver extends MultiCellularLatticeDriver<Lineage> {
         return JamProperties.getOptionalBoolean(WRITE_REGIONAL_DIVERSITY_PROPERTY, false);
     }
 
-    /**
-     * Runs one simulation.
-     *
-     * @param propertyFiles one or more files containing the system
-     * properties that define the simulation parameters.
-     *
-     * @throws IllegalArgumentException unless at least one property
-     * file is specified.
-     */
-    public static void run(String[] propertyFiles) {
-        LineageLatticeDriver driver = new LineageLatticeDriver(propertyFiles);
-        driver.runSimulation();
-    }
-
     @Override public String getComponentDescription() {
         return "lineage";
     }
@@ -88,7 +63,7 @@ public class LineageLatticeDriver extends MultiCellularLatticeDriver<Lineage> {
         return Lineage.founder(GrowthRate.global(), getInitialSize());
     }
 
-    @Override protected LineageLatticeTumor getTumor() {
+    @Override public LineageLatticeTumor getTumor() {
         return (LineageLatticeTumor) super.getTumor();
     }
 
@@ -110,9 +85,5 @@ public class LineageLatticeDriver extends MultiCellularLatticeDriver<Lineage> {
 
     private void writeRegionalDiversity() {
         regionalDiversityWriter.write(RegionalDiversityRecord.compute(getTumor(), sitesPerRegion));
-    }
-
-    public static void main(String[] propertyFiles) {
-        run(propertyFiles);
     }
 }

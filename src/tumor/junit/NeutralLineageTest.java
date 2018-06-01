@@ -10,6 +10,7 @@ import tumor.carrier.Lineage;
 import tumor.carrier.TumorEnv;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
+import tumor.driver.TumorDriver;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -19,6 +20,7 @@ public class NeutralLineageTest extends NumericTestBase {
         System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY,    "NEUTRAL");
         System.setProperty(MutationGenerator.NEUTRAL_RATE_TYPE_PROPERTY, "POISSON");
         System.setProperty(MutationGenerator.NEUTRAL_MEAN_RATE_PROPERTY, "0.001");
+        TumorDriver.junit();
     }
 
     @Test public void testNeutral() {

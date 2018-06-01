@@ -11,11 +11,15 @@ import jam.util.MultisetUtil;
 import tumor.mutation.MutationList;
 import tumor.mutation.MutationRate;
 import tumor.mutation.NeutralMutationGenerator;
+import tumor.driver.TumorDriver;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
 public class NeutralMutationGeneratorTest extends NumericTestBase {
+    static {
+        TumorDriver.junit();
+    }
 
     @Test public void testPoisson() {
         double mean = 0.2;
