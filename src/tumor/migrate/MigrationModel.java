@@ -21,7 +21,7 @@ public abstract class MigrationModel {
      * Name of the system property that defines the type of migration
      * model.
      */
-    public static final String MODEL_TYPE_PROPERTY = "MigrationModel.modelType";
+    public static final String MODEL_TYPE_PROPERTY = "tumor.migrate.modelType";
 
     /**
      * Returns the global migration model defined by system properties.

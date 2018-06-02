@@ -113,13 +113,13 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * Name of the system property that defines the nearest neighbors
      * on the lattice.
      */
-    public static final String NEIGHBORHOOD_PROPERTY = "LatticeTumor.neighborhood";
+    public static final String NEIGHBORHOOD_PROPERTY = "tumor.lattice..neighborhood";
 
     /**
      * Name of the system property that defines the edge length of the
      * (periodic cubic) lattice.
      */
-    public static final String PERIOD_LENGTH_PROPERTY = "LatticeTumor.periodLength";
+    public static final String PERIOD_LENGTH_PROPERTY = "tumor.lattice.periodLength";
 
     /**
      * Computes a lattice period that is safely large enough for

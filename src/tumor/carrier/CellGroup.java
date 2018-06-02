@@ -46,7 +46,7 @@ public abstract class CellGroup extends TumorComponent {
      * Name of the system property that defines the maximum cell count
      * for which explicit event sampling will be performed.
      */
-    public static final String EXPLICIT_SAMPLING_LIMIT_PROPERTY = "CellGroup.explicitSamplingLimit";
+    public static final String EXPLICIT_SAMPLING_LIMIT_PROPERTY = "tumor.carrier.explicitSamplingLimit";
 
     /**
      * Default value for the explicit event sampling limit.

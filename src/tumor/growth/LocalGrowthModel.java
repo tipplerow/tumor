@@ -21,7 +21,7 @@ public abstract class LocalGrowthModel {
      * Name of the system property that defines the type of local
      * growth model.
      */
-    public static final String MODEL_TYPE_PROPERTY = "LocalGrowthModel.modelType";
+    public static final String MODEL_TYPE_PROPERTY = "tumor.growth.localModelType";
 
     /**
      * Returns the global local growth model defined by system

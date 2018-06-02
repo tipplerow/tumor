@@ -19,7 +19,7 @@ public abstract class CapacityModel {
      * Name of the system property that defines the type of capacity
      * model.
      */
-    public static final String MODEL_TYPE_PROPERTY = "CapacityModel.modelType";
+    public static final String MODEL_TYPE_PROPERTY = "tumor.capacity.modelType";
 
     /**
      * Returns the global capacity model defined by system properties.

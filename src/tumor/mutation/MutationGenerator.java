@@ -20,37 +20,37 @@ public abstract class MutationGenerator {
      * Name of the system property that defines the type for the
      * global mutation generator.
      */
-    public static final String GENERATOR_TYPE_PROPERTY = "MutationGenerator.generatorType";
+    public static final String GENERATOR_TYPE_PROPERTY = "tumor.mutation.generatorType";
 
     /**
      * Name of the system property that defines the type of arrival
      * rate for neutral mutations in the global mutation generator.
      */
-    public static final String NEUTRAL_RATE_TYPE_PROPERTY = "MutationGenerator.neutralRateType";
+    public static final String NEUTRAL_RATE_TYPE_PROPERTY = "tumor.mutation.neutralRateType";
 
     /**
      * Name of the system property that defines the mean arrival rate
      * for neutral mutations in the global mutation generator.
      */
-    public static final String NEUTRAL_MEAN_RATE_PROPERTY = "MutationGenerator.neutralMeanRate";
+    public static final String NEUTRAL_MEAN_RATE_PROPERTY = "tumor.mutation.neutralMeanRate";
 
     /**
      * Name of the system property that defines the type of arrival
      * rate for selective mutations in the global mutation generator.
      */
-    public static final String SELECTIVE_RATE_TYPE_PROPERTY = "MutationGenerator.selectiveRateType";
+    public static final String SELECTIVE_RATE_TYPE_PROPERTY = "tumor.mutation.selectiveRateType";
 
     /**
      * Name of the system property that defines the mean arrival rate
      * for selective mutations in the global mutation generator.
      */
-    public static final String SELECTIVE_MEAN_RATE_PROPERTY = "MutationGenerator.selectiveMeanRate";
+    public static final String SELECTIVE_MEAN_RATE_PROPERTY = "tumor.mutation.selectiveMeanRate";
 
     /**
      * Name of the system property that defines the fixed selection
      * coefficient for the global mutation generator.
      */
-    public static final String SELECTION_COEFF_PROPERTY = "MutationGenerator.selectionCoeff";
+    public static final String SELECTION_COEFF_PROPERTY = "tumor.mutation.selectionCoeff";
 
     /**
      * Stochastically generates the mutations that originate in a

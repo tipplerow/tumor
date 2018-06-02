@@ -47,13 +47,13 @@ public final class GrowthRate {
      * Name of the system property that defines the (globally uniform)
      * intrinsic tumor cell birth rate.
      */
-    public static final String BIRTH_RATE_PROPERTY = "GrowthRate.birthRate";
+    public static final String BIRTH_RATE_PROPERTY = "tumor.growth.birthRate";
 
     /**
      * Name of the system property that defines the (globally uniform)
      * intrinsic tumor cell death rate.
      */
-    public static final String DEATH_RATE_PROPERTY = "GrowthRate.deathRate";
+    public static final String DEATH_RATE_PROPERTY = "tumor.growth.deathRate";
 
     /**
      * A growth rate with zero net growth rate and unit event rate:
