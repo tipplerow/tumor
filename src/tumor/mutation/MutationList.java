@@ -139,7 +139,74 @@ public final class MutationList extends AbstractList<Mutation> {
      * @return the set difference of this list and the input list.
      */
     public MutationList difference(MutationList that) {
-        return create(Sets.difference(this.setView(), that.setView()));
+        return difference(this, that);
+    }
+
+    /**
+     * Computes the set difference of two mutation lists.
+     *
+     * @param list1 the first mutation list.
+     *
+     * @param list2 the second mutation list.
+     *
+     * @return a mutation list containing mutations contained in the
+     * first list but not the second.
+     */
+    public static MutationList difference(MutationList list1, MutationList list2) {
+        return create(Sets.difference(list1.setView(), list2.setView()));
+    }
+
+    /**
+     * Computes the mutational distance between this list and another.
+     *
+     * <p>The mutational distance is the total number of mutations not
+     * shared between the two lists.  For lists {@code A = [1, 2, 3]}
+     * and {@code B = [1, 2, 4, 5]}, the mutational distance is 3,
+     * because mutations {@code 3, 4, 5} are not shared.
+     *
+     * @param that the mutation list to compare with this.
+     *
+     * @return the mutational distance between this list and the input
+     * list.
+     */
+    public int distance(MutationList that) {
+        return distance(this, that);
+    }
+
+    /**
+     * Computes the mutational distance between two lists.
+     *
+     * <p>The mutational distance is the total number of mutations not
+     * shared between the two lists.  For lists {@code A = [1, 2, 3]}
+     * and {@code B = [1, 2, 4, 5, 6]}, the mutational distance is 4,
+     * because mutations {@code 3, 4, 5, 6} are not shared.
+     *
+     * @param list1 the first mutation list.
+     *
+     * @param list2 the second mutation list.
+     *
+     * @return the mutational distance between the two lists.
+     */
+    public int distance(MutationList list1, MutationList list2) {
+        //
+        // Explicitly iterating may be more efficient than the concise
+        // expression:
+        //
+        //     list1.size() + list2.size() - 2 * intersection(list1, list2).size()
+        //
+        // because we do not require the intersection to be created.
+        //
+        int result = 0;
+
+        for (Mutation mutation : list1)
+            if (!list2.contains(mutation))
+                ++result;
+
+        for (Mutation mutation : list2)
+            if (!list1.contains(mutation))
+                ++result;
+
+        return result;
     }
 
     /**
@@ -151,7 +218,21 @@ public final class MutationList extends AbstractList<Mutation> {
      * @return the intersection of this list and the input list.
      */
     public MutationList intersection(MutationList that) {
-        return create(Sets.intersection(this.setView(), that.setView()));
+        return intersection(this, that);
+    }
+
+    /**
+     * Returns the intersection of two mutation lists.
+     *
+     * @param list1 the first mutation list.
+     *
+     * @param list2 the second mutation list.
+     *
+     * @return a new mutation list containing mutations shared by the
+     * two lists.
+     */
+    public static MutationList intersection(MutationList list1, MutationList list2) {
+        return create(Sets.intersection(list1.setView(), list2.setView()));
     }
 
     /**
@@ -163,7 +244,21 @@ public final class MutationList extends AbstractList<Mutation> {
      * @return the union of this list and the input list.
      */
     public MutationList union(MutationList that) {
-        return create(Sets.union(this.setView(), that.setView()));
+        return union(this, that);
+    }
+
+    /**
+     * Returns the union of two mutation lists.
+     *
+     * @param list1 the first mutation list.
+     *
+     * @param list2 the second mutation list.
+     *
+     * @return a new mutation list containing mutations contained in
+     * either list.
+     */
+    public static MutationList union(MutationList list1, MutationList list2) {
+        return create(Sets.union(list1.setView(), list2.setView()));
     }
 
     /**

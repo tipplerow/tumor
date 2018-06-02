@@ -84,6 +84,20 @@ public class MutationListTest {
         assertEquals(list4, list2.difference(list1));
     }
 
+    @Test public void testDistance() {
+        MutationList list1 = MutationList.create(neutral1, neutral2);
+
+        assertEquals(2, list1.distance(MutationList.create()));
+        assertEquals(1, list1.distance(MutationList.create(neutral1)));
+        assertEquals(1, list1.distance(MutationList.create(neutral2)));
+        assertEquals(0, list1.distance(MutationList.create(neutral1, neutral2)));
+        assertEquals(1, list1.distance(MutationList.create(neutral1, neutral2, neutral3)));
+        assertEquals(2, list1.distance(MutationList.create(neutral1, neutral2, neutral3, neutral4)));
+        assertEquals(3, list1.distance(MutationList.create(neutral1, neutral2, neutral3, neutral4, neutral5)));
+
+        assertEquals(3, MutationList.create(neutral1, neutral2, neutral3, neutral4, neutral5).distance(list1));
+    }
+
     @Test public void testGet() {
         assertEquals(neutral1, founderList.get(0));
         assertEquals(neutral2, founderList.get(1));
