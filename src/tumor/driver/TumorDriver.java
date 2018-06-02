@@ -12,6 +12,7 @@ import jam.math.IntRange;
 import jam.math.LongRange;
 import jam.sim.DiscreteTimeSimulation;
 
+import tumor.carrier.ComponentType;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.report.ComponentCountRecord;
@@ -38,10 +39,16 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private static TumorDriver global = null;
 
     /**
-     * Name of the system property that defines the concrete driver
+     * Name of the system property that defines the tumor component
      * type.
      */
-    public static final String DRIVER_TYPE_PROPERTY = "tumor.driver.driverType";
+    public static final String COMPONENT_TYPE_PROPERTY = "tumor.driver.componentType";
+
+    /**
+     * Name of the system property that defines the type of spatial
+     * structure for the tumor.
+     */
+    public static final String SPATIAL_TYPE_PROPERTY = "tumor.driver.spatialType";
 
     /**
      * Name of the system property that specifies the global (across
@@ -170,7 +177,8 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * but do not require a simulation to be executed.
      */
     public static void junit() {
-        System.setProperty(DRIVER_TYPE_PROPERTY, "CELLULAR_POINT");
+        System.setProperty(COMPONENT_TYPE_PROPERTY, "CELL");
+        System.setProperty(SPATIAL_TYPE_PROPERTY, "POINT");
         System.setProperty(TRIAL_INDEX_PROPERTY, "0");
         System.setProperty(INITIAL_SIZE_PROPERTY, "10");
         System.setProperty(MAX_STEP_COUNT_PROPERTY, "1");
@@ -219,7 +227,18 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     private static DriverType resolveDriverType() {
-        return JamProperties.getRequiredEnum(DRIVER_TYPE_PROPERTY, DriverType.class);
+        ComponentType componentType = resolveComponentType();
+        SpatialType   spatialType   = resolveSpatialType();
+
+        return DriverType.instance(componentType, spatialType);
+    }
+
+    private static ComponentType resolveComponentType() {
+        return JamProperties.getRequiredEnum(COMPONENT_TYPE_PROPERTY, ComponentType.class);
+    }
+
+    private static SpatialType resolveSpatialType() {
+        return JamProperties.getRequiredEnum(SPATIAL_TYPE_PROPERTY, SpatialType.class);
     }
 
     /**
