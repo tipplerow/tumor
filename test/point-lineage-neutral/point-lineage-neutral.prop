@@ -1,20 +1,19 @@
 ########################################################################
 # Sample property file to simulate the growth of a point (well-mixed)
-# tumor containing cells that accumulate neutral mutations.
+# tumor containing perfectly replicating demes.
 ########################################################################
 
-tumor.driver.componentType = CELL
+tumor.driver.componentType = LINEAGE
 tumor.driver.spatialType   = POINT
 
 tumor.driver.trialIndex   =   1
 tumor.driver.initialSize  = 100
 tumor.driver.maxStepCount = 200
-tumor.driver.maxTumorSize = 1E5
+tumor.driver.maxTumorSize = 1E6
 
-tumor.driver.writeCellCountTraj        = true
-tumor.driver.writeFinalCellCount       = true
-tumor.driver.writeOriginalMutations    = true
-tumor.driver.writeAccumulatedMutations = true
+tumor.driver.writeCellCountTraj     = true
+tumor.driver.writeFinalCellCount    = true
+tumor.driver.writeComponentAncestry = true
 
 tumor.growth.birthRate = 0.55
 tumor.growth.deathRate = 0.45
