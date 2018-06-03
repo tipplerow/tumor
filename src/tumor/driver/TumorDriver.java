@@ -15,6 +15,7 @@ import jam.sim.DiscreteTimeSimulation;
 import tumor.carrier.ComponentType;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
+import tumor.report.ComponentAncestryRecord;
 import tumor.report.ComponentCountRecord;
 
 /**
@@ -28,12 +29,14 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     private final boolean writeCellCountTraj;
     private final boolean writeFinalCellCount;
+    private final boolean writeComponentAncestry;
 
     // The active tumor for the current simulation trial...
     private Tumor<E> tumor;
 
     private PrintWriter cellCountTrajWriter;
     private PrintWriter finalCellCountWriter;
+    private PrintWriter componentAncestryWriter;
 
     // The single global instance...
     private static TumorDriver global = null;
@@ -87,6 +90,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final String WRITE_FINAL_CELL_COUNT_PROPERTY = "tumor.driver.writeFinalCellCount";
 
     /**
+     * Name of the system property that specifies whether or not to
+     * write the component ancestry for each trial.
+     */
+    public static final String WRITE_COMPONENT_ANCESTRY_PROPERTY = "tumor.driver.writeComponentAncestry";
+
+    /**
      * Name of the output file containing the tumor size (number of
      * cells) trajectories for each trial.
      */
@@ -97,6 +106,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * and cell counts for each trial.
      */
     public static final String FINAL_CELL_COUNT_FILE_NAME = "final-cell-count.csv";
+
+    /**
+     * Name of the output file containing the component ancestry for
+     * each trial.
+     */
+    public static final String COMPONENT_ANCESTRY_NAME = "component-ancestry.csv.gz";
 
     /**
      * Formats integer quantities with commas for easier reading of
@@ -114,8 +129,9 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         this.maxStepCount = resolveMaxStepCount();
         this.maxTumorSize = resolveMaxTumorSize();
 
-        this.writeCellCountTraj  = resolveWriteCellCountTraj();
-        this.writeFinalCellCount = resolveWriteFinalCellCount();
+        this.writeCellCountTraj     = resolveWriteCellCountTraj();
+        this.writeFinalCellCount    = resolveWriteFinalCellCount();
+        this.writeComponentAncestry = resolveWriteComponentAncestry();
     }
 
     private static int resolveTrialIndex() {
@@ -140,6 +156,10 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     private static boolean resolveWriteFinalCellCount() {
         return JamProperties.getOptionalBoolean(WRITE_FINAL_CELL_COUNT_PROPERTY, false);
+    }
+
+    private static boolean resolveWriteComponentAncestry() {
+        return JamProperties.getOptionalBoolean(WRITE_COMPONENT_ANCESTRY_PROPERTY, false);
     }
 
     /**
@@ -339,6 +359,11 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
             finalCellCountWriter = openWriter(FINAL_CELL_COUNT_FILE_NAME);
             finalCellCountWriter.println(ComponentCountRecord.header());
         }
+
+        if (writeComponentAncestry) {
+            // No header line...
+            componentAncestryWriter = openWriter(COMPONENT_ANCESTRY_NAME);
+        }
     }
 
     @Override protected void finalizeSimulation() {
@@ -370,10 +395,20 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
         if (writeFinalCellCount)
             writeFinalCellCount();
+
+        if (writeComponentAncestry)
+            writeComponentAncestry();
     }
 
     private void writeFinalCellCount() {
         finalCellCountWriter.println(ComponentCountRecord.snap().format());
+    }
+
+    private void writeComponentAncestry() {
+        JamLogger.info("Writing component ancestry...");
+
+        for (TumorComponent component : getTumor().viewComponents())
+            componentAncestryWriter.println(ComponentAncestryRecord.create(component).format());
     }
 
     /**
