@@ -1,0 +1,24 @@
+########################################################################
+# Sample property file to simulate the growth of a point (well-mixed)
+# tumor containing cells that accumulate neutral mutations.
+########################################################################
+
+tumor.driver.componentType = CELL
+tumor.driver.spatialType   = POINT
+
+tumor.driver.trialIndex   =   1
+tumor.driver.initialSize  = 100
+tumor.driver.maxStepCount = 200
+tumor.driver.maxTumorSize = 1E5
+
+tumor.driver.writeCellCountTraj  = true
+tumor.driver.writeFinalCellCount = true
+
+tumor.growth.birthRate = 0.55
+tumor.growth.deathRate = 0.45
+
+tumor.mutation.generatorType   = NEUTRAL
+tumor.mutation.neutralRateType = POISSON
+tumor.mutation.neutralMeanRate = 0.01
+
+jam.math.randomSeed = 20071202
