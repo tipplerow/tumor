@@ -113,7 +113,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * Name of the system property that defines the nearest neighbors
      * on the lattice.
      */
-    public static final String NEIGHBORHOOD_PROPERTY = "tumor.lattice..neighborhood";
+    public static final String NEIGHBORHOOD_PROPERTY = "tumor.lattice.neighborhood";
 
     /**
      * Name of the system property that defines the edge length of the
