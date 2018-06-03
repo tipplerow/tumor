@@ -17,6 +17,7 @@ import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.report.ComponentAncestryRecord;
 import tumor.report.ComponentCountRecord;
+import tumor.report.ComponentMutationRecord;
 
 /**
  * Provides features common to all tumor simulation applications.
@@ -30,6 +31,8 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private final boolean writeCellCountTraj;
     private final boolean writeFinalCellCount;
     private final boolean writeComponentAncestry;
+    private final boolean writeOriginalMutations;
+    private final boolean writeAccumulatedMutations;
 
     // The active tumor for the current simulation trial...
     private Tumor<E> tumor;
@@ -37,6 +40,8 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private PrintWriter cellCountTrajWriter;
     private PrintWriter finalCellCountWriter;
     private PrintWriter componentAncestryWriter;
+    private PrintWriter originalMutationWriter;
+    private PrintWriter accumulatedMutationWriter;
 
     // The single global instance...
     private static TumorDriver global = null;
@@ -96,6 +101,18 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final String WRITE_COMPONENT_ANCESTRY_PROPERTY = "tumor.driver.writeComponentAncestry";
 
     /**
+     * Name of the system property that specifies whether or not to
+     * write the original mutations for each tumor component.
+     */
+    public static final String WRITE_ORIGINAL_MUTATIONS_PROPERTY = "tumor.driver.writeOriginalMutations";
+
+    /**
+     * Name of the system property that specifies whether or not to
+     * write the accumulated mutations for each tumor component.
+     */
+    public static final String WRITE_ACCUMULATED_MUTATIONS_PROPERTY = "tumor.driver.writeAccumulatedMutations";
+
+    /**
      * Name of the output file containing the tumor size (number of
      * cells) trajectories for each trial.
      */
@@ -114,6 +131,18 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final String COMPONENT_ANCESTRY_NAME = "component-ancestry.csv.gz";
 
     /**
+     * Name of the output file containing the original mutations for
+     * each trial.
+     */
+    public static final String ORIGINAL_MUTATIONS_NAME = "original-mutations.csv.gz";
+
+    /**
+     * Name of the output file containing the accumulated mutations for
+     * each trial.
+     */
+    public static final String ACCUMULATED_MUTATIONS_NAME = "accumulated-mutations.csv.gz";
+
+    /**
      * Formats integer quantities with commas for easier reading of
      * logs.
      */
@@ -129,9 +158,11 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         this.maxStepCount = resolveMaxStepCount();
         this.maxTumorSize = resolveMaxTumorSize();
 
-        this.writeCellCountTraj     = resolveWriteCellCountTraj();
-        this.writeFinalCellCount    = resolveWriteFinalCellCount();
-        this.writeComponentAncestry = resolveWriteComponentAncestry();
+        this.writeCellCountTraj        = resolveWriteCellCountTraj();
+        this.writeFinalCellCount       = resolveWriteFinalCellCount();
+        this.writeComponentAncestry    = resolveWriteComponentAncestry();
+        this.writeOriginalMutations    = resolveWriteOriginalMutations();
+        this.writeAccumulatedMutations = resolveWriteAccumulatedMutations();
     }
 
     private static int resolveTrialIndex() {
@@ -160,6 +191,14 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     private static boolean resolveWriteComponentAncestry() {
         return JamProperties.getOptionalBoolean(WRITE_COMPONENT_ANCESTRY_PROPERTY, false);
+    }
+
+    private static boolean resolveWriteOriginalMutations() {
+        return JamProperties.getOptionalBoolean(WRITE_ORIGINAL_MUTATIONS_PROPERTY, false);
+    }
+
+    private static boolean resolveWriteAccumulatedMutations() {
+        return JamProperties.getOptionalBoolean(WRITE_ACCUMULATED_MUTATIONS_PROPERTY, false);
     }
 
     /**
@@ -364,6 +403,16 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
             // No header line...
             componentAncestryWriter = openWriter(COMPONENT_ANCESTRY_NAME);
         }
+
+        if (writeOriginalMutations) {
+            // No header line...
+            originalMutationWriter = openWriter(ORIGINAL_MUTATIONS_NAME);
+        }
+
+        if (writeAccumulatedMutations) {
+            // No header line...
+            accumulatedMutationWriter = openWriter(ACCUMULATED_MUTATIONS_NAME);
+        }
     }
 
     @Override protected void finalizeSimulation() {
@@ -398,6 +447,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
         if (writeComponentAncestry)
             writeComponentAncestry();
+
+        if (writeOriginalMutations)
+            writeOriginalMutations();
+
+        if (writeAccumulatedMutations)
+            writeAccumulatedMutations();
     }
 
     private void writeFinalCellCount() {
@@ -409,6 +464,20 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
         for (TumorComponent component : getTumor().viewComponents())
             componentAncestryWriter.println(ComponentAncestryRecord.create(component).format());
+    }
+
+    private void writeOriginalMutations() {
+        JamLogger.info("Writing original mutations...");
+
+        for (TumorComponent component : getTumor().viewComponents())
+            originalMutationWriter.println(ComponentMutationRecord.original(component).format());
+    }
+
+    private void writeAccumulatedMutations() {
+        JamLogger.info("Writing accumulated mutations...");
+
+        for (TumorComponent component : getTumor().viewComponents())
+            accumulatedMutationWriter.println(ComponentMutationRecord.accumulated(component).format());
     }
 
     /**
