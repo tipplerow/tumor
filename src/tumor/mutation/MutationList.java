@@ -8,6 +8,9 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
+
 import jam.util.FixedList;
 import jam.util.SetUtil;
 
@@ -259,6 +262,20 @@ public final class MutationList extends AbstractList<Mutation> {
      */
     public static MutationList union(MutationList list1, MutationList list2) {
         return create(Sets.union(list1.setView(), list2.setView()));
+    }
+
+    /**
+     * Returns the indexes of the mutations in this list.
+     *
+     * @return the indexes of the mutations in this list.
+     */
+    public LongList indexList() {
+        LongList longList = new LongArrayList(size());
+
+        for (Mutation mutation : list)
+            longList.add(mutation.getIndex());
+
+        return longList;
     }
 
     /**

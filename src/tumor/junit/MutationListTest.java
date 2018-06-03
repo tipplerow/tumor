@@ -4,6 +4,8 @@ package tumor.junit;
 import java.util.Arrays;
 import java.util.Set;
 
+import it.unimi.dsi.fastutil.longs.LongList;
+
 import tumor.mutation.Mutation;
 import tumor.mutation.MutationList;
 import tumor.driver.TumorDriver;
@@ -102,6 +104,15 @@ public class MutationListTest {
         assertEquals(neutral1, founderList.get(0));
         assertEquals(neutral2, founderList.get(1));
         assertEquals(neutral3, founderList.get(2));
+    }
+
+    @Test public void testIndexList() {
+        LongList indexList = founderList.indexList();
+
+        assertEquals(3, indexList.size());
+        assertEquals(neutral1.getIndex(), indexList.getLong(0));
+        assertEquals(neutral2.getIndex(), indexList.getLong(1));
+        assertEquals(neutral3.getIndex(), indexList.getLong(2));
     }
 
     @Test public void testIntersection() {
