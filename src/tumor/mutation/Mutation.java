@@ -69,6 +69,9 @@ public abstract class Mutation extends Ordinal {
      *
      * @return the growth rate following the application of this
      * mutation; the original rate is unchanged.
+     *
+     * @throws IllegalStateException unless the mutation can be
+     * applied independently.
      */
     public abstract GrowthRate apply(GrowthRate rate);
 

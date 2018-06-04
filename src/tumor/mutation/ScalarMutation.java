@@ -11,7 +11,7 @@ import tumor.growth.GrowthRate;
  * <em>selection coefficient</em> {@code s}, which multiplies the
  * carrier growth rate by a factor {@code (1 + s)}.
  */
-public final class ScalarMutation extends Mutation {
+public class ScalarMutation extends Mutation {
     private final double selectionCoeff;
 
     /**
