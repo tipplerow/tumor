@@ -7,7 +7,6 @@ import java.util.Collection;
 import jam.app.JamProperties;
 import jam.dist.PoissonDistribution;
 import jam.lang.JamException;
-import jam.math.DoubleRange;
 import jam.math.DoubleComparator;
 
 /**

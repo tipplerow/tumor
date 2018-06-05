@@ -147,7 +147,7 @@ public abstract class MutationRate {
     }
 
     private static double resolveMeanRate(String meanName) {
-        return JamProperties.getRequiredDouble(meanName, DoubleRange.FRACTIONAL);
+        return JamProperties.getRequiredDouble(meanName, DoubleRange.NON_NEGATIVE);
     }
 
     /**
