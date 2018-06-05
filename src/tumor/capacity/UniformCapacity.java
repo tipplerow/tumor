@@ -10,7 +10,7 @@ import jam.math.LongRange;
  * through time and uniform in space.
  *
  * <p>The capacity of the global model is specified by the system
- * property <b>{@code UniformCapacity.siteCapacity}</b>.
+ * property <b>{@code tumor.capacity.siteCapacity}</b>.
  */
 public final class UniformCapacity extends CapacityModel {
     private final long siteCapacity;
@@ -19,7 +19,7 @@ public final class UniformCapacity extends CapacityModel {
      * Name of the system property that defines the constant and
      * uniform site capacity.
      */
-    public static final String SITE_CAPACITY_PROPERTY = "UniformCapacity.siteCapacity";
+    public static final String SITE_CAPACITY_PROPERTY = "tumor.capacity.siteCapacity";
 
     /**
      * Creates a new uniform model with a fixed site capacity.
