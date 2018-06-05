@@ -97,6 +97,17 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     /**
+     * Returns the active (living) components in this tumor ordered by
+     * their index.
+     *
+     * @return the active (living) components in this tumor ordered by
+     * their index.
+     */
+    public TreeSet<E> sortComponents() {
+        return new TreeSet<E>(viewComponents());
+    }
+
+    /**
      * Returns a read-only view of the active (living) components in
      * this tumor.
      *
