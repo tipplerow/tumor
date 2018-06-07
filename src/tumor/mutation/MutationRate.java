@@ -28,6 +28,11 @@ public abstract class MutationRate {
     }
 
     /**
+     * Valid range for mean mutation rates.
+     */
+    public static final DoubleRange RATE_RANGE = DoubleRange.closed(0.0, 2.0);
+
+    /**
      * Returns a mutation process with zero rate, e.g., no mutations
      * are ever generated.
      */
@@ -147,7 +152,7 @@ public abstract class MutationRate {
     }
 
     private static double resolveMeanRate(String meanName) {
-        return JamProperties.getRequiredDouble(meanName, DoubleRange.NON_NEGATIVE);
+        return JamProperties.getRequiredDouble(meanName, RATE_RANGE);
     }
 
     /**
