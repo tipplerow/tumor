@@ -3,41 +3,25 @@
 # Runs all application regression tests.
 ########################################################################
 
-TEST_DIR=$(cd `dirname $0`; pwd)
+cd `dirname $0`
 
-cd ${TEST_DIR}/point-cell-neutral
-./test-point-cell-neutral.sh || exit $?
+BASE_FILES="cell-count-traj.csv component-ancestry.csv.gz final-cell-count.csv"
+COORD_FILES="component-coord.csv.gz"
+MUTATION_FILES="accumulated-mutations.csv.gz original-mutations.csv.gz scalar-mutations.csv.gz"
 
-cd ${TEST_DIR}/point-cell-perfect
-./test-point-cell-perfect.sh || exit $?
+./test-driver.sh driver/lattice/perfect/lineage $BASE_FILES $COORD_FILES || exit $?
+exit 1
 
-cd ${TEST_DIR}/point-deme-perfect
-./test-point-deme-perfect.sh || exit $?
+./test-driver.sh driver/point/perfect/cell    $BASE_FILES || exit $?
+./test-driver.sh driver/point/perfect/deme    $BASE_FILES || exit $?
+./test-driver.sh driver/point/perfect/lineage $BASE_FILES || exit $?
 
-cd ${TEST_DIR}/point-lineage-perfect
-./test-point-lineage-perfect.sh || exit $?
+./test-driver.sh driver/point/neutral/cell    $BASE_FILES $MUTATION_FILES || exit $?
+./test-driver.sh driver/point/neutral/deme    $BASE_FILES $MUTATION_FILES || exit $?
+./test-driver.sh driver/point/neutral/lineage $BASE_FILES $MUTATION_FILES || exit $?
 
-exit 0
-
-cd ${TEST_DIR}/perfect-cell-lattice
-./test-perfect-cell-lattice.sh || exit $?
-
-cd ${TEST_DIR}/perfect-cell-point
-./test-perfect-cell-point.sh || exit $?
-
-cd ${TEST_DIR}/perfect-deme-lattice
-./test-perfect-deme-lattice.sh || exit $?
-
-cd ${TEST_DIR}/perfect-deme-point
-./test-perfect-deme-point.sh || exit $?
-
-cd ${TEST_DIR}/perfect-lineage-lattice
-./test-perfect-lineage-lattice.sh || exit $?
-
-cd ${TEST_DIR}/perfect-lineage-lattice-ea
-./test-perfect-lineage-lattice-ea.sh || exit $?
-
-cd ${TEST_DIR}/perfect-lineage-point
-./test-perfect-lineage-point.sh || exit $?
+./test-driver.sh driver/lattice/perfect/cell    $BASE_FILES $COORD_FILES || exit $?
+./test-driver.sh driver/lattice/perfect/deme    $BASE_FILES $COORD_FILES || exit $?
+./test-driver.sh driver/lattice/perfect/lineage $BASE_FILES $COORD_FILES || exit $?
 
 exit 0

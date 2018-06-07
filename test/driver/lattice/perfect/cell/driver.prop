@@ -1,0 +1,31 @@
+########################################################################
+# Sample property file to simulate the growth of a tumor containing
+# perfectly replicating cells on a (3D) cubic lattice.
+########################################################################
+
+tumor.driver.componentType = CELL
+tumor.driver.spatialType   = LATTICE
+
+tumor.driver.trialIndex   =   1
+tumor.driver.initialSize  = 100
+tumor.driver.maxStepCount = 200
+tumor.driver.maxTumorSize = 1E5
+
+tumor.driver.writeCellCountTraj     = true
+tumor.driver.writeFinalCellCount    = true
+tumor.driver.writeComponentAncestry = true
+tumor.driver.writeComponentCoord    = true
+
+tumor.growth.birthRate = 0.55
+tumor.growth.deathRate = 0.45
+
+tumor.growth.localModelType = INTRINSIC
+
+tumor.lattice.neighborhood = MOORE
+tumor.lattice.periodLength = 10000
+
+tumor.migrate.modelType = PINNED
+
+tumor.mutation.generatorType = EMPTY
+
+jam.math.randomSeed = 20071202
