@@ -9,9 +9,6 @@ BASE_FILES="cell-count-traj.csv component-ancestry.csv.gz final-cell-count.csv"
 COORD_FILES="component-coord.csv.gz"
 MUTATION_FILES="accumulated-mutations.csv.gz original-mutations.csv.gz scalar-mutations.csv.gz"
 
-./test-driver.sh driver/lattice/perfect/lineage $BASE_FILES $COORD_FILES || exit $?
-exit 1
-
 ./test-driver.sh driver/point/perfect/cell    $BASE_FILES || exit $?
 ./test-driver.sh driver/point/perfect/deme    $BASE_FILES || exit $?
 ./test-driver.sh driver/point/perfect/lineage $BASE_FILES || exit $?
