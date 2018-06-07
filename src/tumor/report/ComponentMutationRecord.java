@@ -1,10 +1,15 @@
 
 package tumor.report;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.Collection;
+
 import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongLists;
 
-import jam.sim.TrialRecord;
+import jam.io.IOUtil;
+import jam.sim.StepRecord;
 import jam.util.LongListUtil;
 import jam.util.RegexUtil;
 
@@ -16,12 +21,12 @@ import tumor.mutation.MutationList;
 /**
  * Records the original or accumulated mutations for a tumor component.
  */
-public final class ComponentMutationRecord extends TrialRecord {
+public final class ComponentMutationRecord extends StepRecord {
     private final long component;
     private final LongList mutations;
 
-    private ComponentMutationRecord(int trialIndex, long component, LongList mutations) {
-        super(trialIndex);
+    private ComponentMutationRecord(int trialIndex, int timeStep, long component, LongList mutations) {
+        super(trialIndex, timeStep);
         this.component = component;
         this.mutations = LongLists.unmodifiable(mutations);
     }
@@ -52,10 +57,12 @@ public final class ComponentMutationRecord extends TrialRecord {
 
     private static ComponentMutationRecord create(TumorComponent component, MutationList mutationList) {
         int trialIndex = TumorDriver.global().getTrialIndex();
+        int timeStep   = TumorDriver.global().getTimeStep();
+        
         long componentIndex = component.getIndex();
         LongList mutationIndexes = mutationList.indexList();
 
-        return new ComponentMutationRecord(trialIndex, componentIndex, mutationIndexes);
+        return new ComponentMutationRecord(trialIndex, timeStep, componentIndex, mutationIndexes);
     }
 
     /**
@@ -72,14 +79,52 @@ public final class ComponentMutationRecord extends TrialRecord {
     public static ComponentMutationRecord parse(String s) {
         String[] fields = RegexUtil.SEMICOLON.split(s);
 
-        if (fields.length != 3)
+        if (fields.length != 4)
             throw new IllegalArgumentException("Invalid record: [" + s + "].");
 
-        int  trialIndex = Integer.parseInt(fields[0].trim());
-        long componentIndex = Long.parseLong(fields[1].trim());
-        LongList mutationIndexes = LongListUtil.parse(fields[2], RegexUtil.COMMA);
+        int trialIndex = Integer.parseInt(fields[0].trim());
+        int timeStep   = Integer.parseInt(fields[1].trim());
+        
+        long componentIndex = Long.parseLong(fields[2].trim());
+        LongList mutationIndexes = LongListUtil.parse(fields[3], RegexUtil.COMMA);
 
-        return new ComponentMutationRecord(trialIndex, componentIndex, mutationIndexes);
+        return new ComponentMutationRecord(trialIndex, timeStep, componentIndex, mutationIndexes);
+    }
+
+    /**
+     * Generates an accumulated mutation report.
+     *
+     * @param reportDir the directory where the report file will be written.
+     *
+     * @param baseName the base name of the report file that will be written.
+     *
+     * @param components the tumor components to report.
+     */
+    public static void writeAccumulated(File reportDir, String baseName, Collection<? extends TumorComponent> components) {
+        PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
+
+        for (TumorComponent component : components)
+            writer.println(accumulated(component).format());
+
+        writer.close();
+    }
+
+    /**
+     * Generates an original mutation report.
+     *
+     * @param reportDir the directory where the report file will be written.
+     *
+     * @param baseName the base name of the report file that will be written.
+     *
+     * @param components the tumor components to report.
+     */
+    public static void writeOriginal(File reportDir, String baseName, Collection<? extends TumorComponent> components) {
+        PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
+
+        for (TumorComponent component : components)
+            writer.println(original(component).format());
+
+        writer.close();
     }
 
     /**
@@ -91,6 +136,8 @@ public final class ComponentMutationRecord extends TrialRecord {
         StringBuilder builder = new StringBuilder();
 
         builder.append(getTrialIndex());
+        builder.append(";");
+        builder.append(getTimeStep());
         builder.append(";");
         builder.append(component);
         builder.append(";");

@@ -1,11 +1,16 @@
 
 package tumor.report;
 
+import java.io.File;
+import java.io.PrintWriter;
+
+import jam.io.IOUtil;
 import jam.sim.TrialRecord;
 import jam.util.RegexUtil;
 
 import tumor.driver.TumorDriver;
 import tumor.mutation.Mutation;
+import tumor.mutation.MutationList;
 import tumor.mutation.ScalarMutation;
 
 /**
@@ -70,6 +75,25 @@ public final class ScalarMutationRecord extends TrialRecord {
         double selectionCoeff = Double.parseDouble(fields[2].trim());
 
         return new ScalarMutationRecord(trialIndex, mutationIndex, selectionCoeff);
+    }
+
+    /**
+     * Generates a scalar mutation report.
+     *
+     * @param reportDir the directory where the report file will be written.
+     *
+     * @param baseName the base name of the report file that will be written.
+     *
+     * @param mutations the mutations to record.
+     */
+    public static void write(File reportDir, String baseName, MutationList mutations) {
+        PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
+        writer.println(header());
+
+        for (Mutation mutation : mutations)
+            writer.println(create(mutation).format());
+
+        writer.close();
     }
 
     /**

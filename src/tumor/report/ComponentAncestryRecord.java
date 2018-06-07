@@ -1,8 +1,13 @@
 
 package tumor.report;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.Collection;
+
 import jam.bio.AncestryRecord;
-import jam.sim.TrialRecord;
+import jam.io.IOUtil;
+import jam.sim.StepRecord;
 import jam.util.RegexUtil;
 
 import tumor.carrier.TumorComponent;
@@ -11,11 +16,11 @@ import tumor.driver.TumorDriver;
 /**
  * Encapsulates tumor component ancestry for a fixed simulation trial.
  */
-public final class ComponentAncestryRecord extends TrialRecord {
+public final class ComponentAncestryRecord extends StepRecord {
     private final AncestryRecord bioRecord;
 
-    private ComponentAncestryRecord(int trialIndex, AncestryRecord bioRecord) {
-        super(trialIndex);
+    private ComponentAncestryRecord(int trialIndex, int timeStep, AncestryRecord bioRecord) {
+        super(trialIndex, timeStep);
         this.bioRecord = bioRecord;
     }
 
@@ -27,7 +32,9 @@ public final class ComponentAncestryRecord extends TrialRecord {
      * @return the ancestry record for the given tumor component.
      */
     public static ComponentAncestryRecord create(TumorComponent component) {
-        return new ComponentAncestryRecord(TumorDriver.global().getTrialIndex(), AncestryRecord.create(component));
+        return new ComponentAncestryRecord(TumorDriver.global().getTrialIndex(),
+                                           TumorDriver.global().getTimeStep(),
+                                           AncestryRecord.create(component));
     }
 
     /**
@@ -44,10 +51,30 @@ public final class ComponentAncestryRecord extends TrialRecord {
     public static ComponentAncestryRecord parse(String s) {
         String[] fields = RegexUtil.SEMICOLON.split(s);
 
-        if (fields.length != 2)
+        if (fields.length != 3)
             throw new IllegalArgumentException("Invalid record: [" + s + "].");
 
-        return new ComponentAncestryRecord(Integer.parseInt(fields[0]), AncestryRecord.parse(fields[1]));
+        return new ComponentAncestryRecord(Integer.parseInt(fields[0]),
+                                           Integer.parseInt(fields[1]),
+                                           AncestryRecord.parse(fields[2]));
+    }
+
+    /**
+     * Generates a component ancestry report.
+     *
+     * @param reportDir the directory where the report file will be written.
+     *
+     * @param baseName the base name of the report file that will be written.
+     *
+     * @param components the tumor components to report.
+     */
+    public static void write(File reportDir, String baseName, Collection<? extends TumorComponent> components) {
+        PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
+
+        for (TumorComponent component : components)
+            writer.println(create(component).format());
+
+        writer.close();
     }
 
     /**
@@ -56,7 +83,7 @@ public final class ComponentAncestryRecord extends TrialRecord {
      * @return the canonical string representation for this record.
      */
     public String format() {
-        return getTrialIndex() + ";" + getBioRecord().format();
+        return getTrialIndex() + ";" + getTimeStep() + ";" + getBioRecord().format();
     }
 
     /**

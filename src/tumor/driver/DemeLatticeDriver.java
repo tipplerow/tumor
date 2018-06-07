@@ -5,11 +5,7 @@ import tumor.carrier.Deme;
 import tumor.growth.GrowthRate;
 import tumor.lattice.DemeLatticeTumor;
 
-class DemeLatticeDriver extends MultiCellularLatticeDriver<Deme> {
-    @Override public String getComponentDescription() {
-        return "deme";
-    }
-
+class DemeLatticeDriver extends TumorDriver<Deme> {
     @Override protected DemeLatticeTumor createTumor() {
         return DemeLatticeTumor.primary(createFounder());
     }

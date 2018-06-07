@@ -1,12 +1,14 @@
 
 package tumor.driver;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
-import java.util.List;
+import java.util.Collection;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
+import jam.io.IOUtil;
 import jam.lang.JamException;
 import jam.math.IntRange;
 import jam.math.LongRange;
@@ -16,7 +18,9 @@ import tumor.carrier.ComponentType;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.mutation.Mutation;
+import tumor.mutation.MutationList;
 import tumor.report.ComponentAncestryRecord;
+import tumor.report.ComponentCoordRecord;
 import tumor.report.ComponentCountRecord;
 import tumor.report.ComponentMutationRecord;
 import tumor.report.ScalarMutationRecord;
@@ -28,24 +32,25 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private final int  trialIndex;
     private final int  initialSize;
     private final int  maxStepCount;
+    private final int  snapInterval;
     private final long maxTumorSize;
 
     private final boolean writeCellCountTraj;
     private final boolean writeFinalCellCount;
     private final boolean writeComponentAncestry;
+    private final boolean writeComponentCoord;
     private final boolean writeOriginalMutations;
     private final boolean writeAccumulatedMutations;
     private final boolean writeScalarMutations;
 
+    private final ComponentType componentType;
+    private final SpatialType   spatialType;
+
     // The active tumor for the current simulation trial...
     private Tumor<E> tumor;
 
+    // Writer open for the duration of the simulation...
     private PrintWriter cellCountTrajWriter;
-    private PrintWriter finalCellCountWriter;
-    private PrintWriter componentAncestryWriter;
-    private PrintWriter originalMutationWriter;
-    private PrintWriter accumulatedMutationWriter;
-    private PrintWriter scalarMutationWriter;
 
     // The single global instance...
     private static TumorDriver global = null;
@@ -87,6 +92,13 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final String MAX_TUMOR_SIZE_PROPERTY = "tumor.driver.maxTumorSize";
 
     /**
+     * Name of the system property that defines the number of time
+     * steps between snapshot recording: any positive integer will
+     * initiate snapshot recording.
+     */
+    public static final String SNAPSHOT_INTERVAL_PROPERTY = "tumor.driver.snapshotInterval";
+
+    /**
      * Name of the system property that specifies whether or not to
      * write the cell and component count trajectories.
      */
@@ -103,6 +115,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * write the component ancestry for each trial.
      */
     public static final String WRITE_COMPONENT_ANCESTRY_PROPERTY = "tumor.driver.writeComponentAncestry";
+
+    /**
+     * Name of the system property that specifies whether or not to
+     * write the component coordinates for each trial.
+     */
+    public static final String WRITE_COMPONENT_COORD_PROPERTY = "tumor.driver.writeComponentCoord";
 
     /**
      * Name of the system property that specifies whether or not to
@@ -142,6 +160,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final String COMPONENT_ANCESTRY_NAME = "component-ancestry.csv.gz";
 
     /**
+     * Name of the output file containing the component coordinates
+     * for each trial.
+     */
+    public static final String COMPONENT_COORD_NAME = "component-coord.csv.gz";
+
+    /**
      * Name of the output file containing the original mutations for
      * each trial.
      */
@@ -166,6 +190,11 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final DecimalFormat SIZE_FORMATTER = new DecimalFormat("#,##0");
 
     /**
+     * Prefix for subdirectories containing time-step snapshots.
+     */
+    public static final String SUBDIR_PREFIX = "T";
+
+    /**
      * Creates a new driver <em>from system properties that have
      * already been defined.</em>
      */
@@ -173,14 +202,19 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         this.trialIndex   = resolveTrialIndex();
         this.initialSize  = resolveInitialSize();
         this.maxStepCount = resolveMaxStepCount();
+        this.snapInterval = resolveSnapInterval();
         this.maxTumorSize = resolveMaxTumorSize();
 
         this.writeCellCountTraj        = resolveWriteCellCountTraj();
         this.writeFinalCellCount       = resolveWriteFinalCellCount();
         this.writeComponentAncestry    = resolveWriteComponentAncestry();
+        this.writeComponentCoord       = resolveWriteComponentCoord();
         this.writeOriginalMutations    = resolveWriteOriginalMutations();
         this.writeAccumulatedMutations = resolveWriteAccumulatedMutations();
-        this.writeScalarMutations = resolveWriteScalarMutations();
+        this.writeScalarMutations      = resolveWriteScalarMutations();
+
+        this.componentType = resolveComponentType();
+        this.spatialType   = resolveSpatialType();
     }
 
     private static int resolveTrialIndex() {
@@ -193,6 +227,10 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     private static int resolveMaxStepCount() {
         return JamProperties.getRequiredInt(MAX_STEP_COUNT_PROPERTY, IntRange.POSITIVE);
+    }
+
+    private static int resolveSnapInterval() {
+        return JamProperties.getOptionalInt(SNAPSHOT_INTERVAL_PROPERTY, 0);
     }
 
     private static long resolveMaxTumorSize() {
@@ -211,6 +249,10 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         return JamProperties.getOptionalBoolean(WRITE_COMPONENT_ANCESTRY_PROPERTY, false);
     }
 
+    private static boolean resolveWriteComponentCoord() {
+        return JamProperties.getOptionalBoolean(WRITE_COMPONENT_COORD_PROPERTY, false);
+    }
+
     private static boolean resolveWriteOriginalMutations() {
         return JamProperties.getOptionalBoolean(WRITE_ORIGINAL_MUTATIONS_PROPERTY, false);
     }
@@ -221,6 +263,14 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     private static boolean resolveWriteScalarMutations() {
         return JamProperties.getOptionalBoolean(WRITE_SCALAR_MUTATIONS_PROPERTY, false);
+    }
+
+    private static ComponentType resolveComponentType() {
+        return JamProperties.getRequiredEnum(COMPONENT_TYPE_PROPERTY, ComponentType.class);
+    }
+
+    private static SpatialType resolveSpatialType() {
+        return JamProperties.getRequiredEnum(SPATIAL_TYPE_PROPERTY, SpatialType.class);
     }
 
     /**
@@ -314,21 +364,66 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         return DriverType.instance(componentType, spatialType);
     }
 
-    private static ComponentType resolveComponentType() {
-        return JamProperties.getRequiredEnum(COMPONENT_TYPE_PROPERTY, ComponentType.class);
-    }
-
-    private static SpatialType resolveSpatialType() {
-        return JamProperties.getRequiredEnum(SPATIAL_TYPE_PROPERTY, SpatialType.class);
-    }
-
     /**
      * Returns the active tumor for the current simulation trial.
      *
      * @return the active tumor for the current simulation trial.
      */
-    public Tumor<E> getTumor() {
+    protected Tumor<E> getTumor() {
         return tumor;
+    }
+
+    /**
+     * Returns the full path name of the directory where snapshot
+     * files will be written for the current time step.
+     *
+     * @return the full path name of the directory where snapshot
+     * files will be written for the current time step.
+     */
+    public File getSnapshotDir() {
+        return getSnapshotDir(getTimeStep());
+    }
+
+    /**
+     * Returns the full path name of the directory where snapshot
+     * files will be written for a given time step.
+     *
+     * @param timeStep the time step for the snapshot.
+     *
+     * @return the full path name of the directory where snapshot
+     * files will be written for the specified time step.
+     */
+    public File getSnapshotDir(int timeStep) {
+        return new File(getReportDir(), formatSnapshotSubDir(timeStep));
+    }
+
+    /**
+     * Returns the name of the snapshot subdirectory (relative to the
+     * top-level report directory) for a given time step.
+     *
+     * @param timeStep the time step for the snapshot.
+     *
+     * @return the name of the snapshot subdirectory (relative to the
+     * top-level report directory) for a given time step.
+     */
+    public static String formatSnapshotSubDir(int timeStep) {
+        return String.format("%s%05d", SUBDIR_PREFIX, timeStep);
+    }
+
+    /**
+     * Infers the time step when a snapshot was taken from the name of
+     * the subdirectory where its files were written.
+     *
+     * @param subDir the base name of the subdirectory containing the
+     * snapshot files.
+     *
+     * @return the time step when a snapshot was taken.
+     */
+    public static int parseSnapshotSubDir(String subDir) {
+        if (subDir.startsWith(SUBDIR_PREFIX))
+            return Integer.parseInt(subDir.substring(SUBDIR_PREFIX.length()));
+        else
+            throw new IllegalArgumentException("Invalid snapshot directory.");
     }
 
     /**
@@ -350,18 +445,72 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
         if (writeCellCountTraj)
             writeCellCountTraj();
+
+        if (isSnapshotStep())
+            recordSnapshot(getSnapshotDir());
     }
 
     /**
      * Logs a message to the console after every step.
      */
     protected void consoleLogStep() {
-        JamLogger.info("TRIAL: %4d, STEP: %5d; SIZE: %15s",
-                       getTrialIndex(), getTimeStep(), SIZE_FORMATTER.format(tumor.countCells()));
+        int trialIndex = getTrialIndex();
+        int timeStep   = getTimeStep();
+
+        String cellCount = SIZE_FORMATTER.format(tumor.countCells());
+        String compCount = SIZE_FORMATTER.format(tumor.countComponents());
+
+        switch (componentType) {
+        case CELL:
+            JamLogger.info("TRIAL: %4d, STEP: %5d; SIZE: %15s", trialIndex, timeStep, cellCount);
+            break;
+
+        case DEME:
+            JamLogger.info("TRIAL: %4d, STEP: %5d; DEMES: %12s, CELLS: %15s", trialIndex, timeStep, compCount, cellCount);
+            break;
+
+        case LINEAGE:
+            JamLogger.info("TRIAL: %4d, STEP: %5d; LINEAGES: %12s, CELLS: %15s", trialIndex, timeStep, compCount, cellCount);
+            break;
+
+        default:
+            throw new IllegalStateException("Unknown component type.");
+        }
     }
 
     private void writeCellCountTraj() {
-        cellCountTrajWriter.println(ComponentCountRecord.snap().format());
+        cellCountTrajWriter.println(ComponentCountRecord.snap(tumor).format());
+    }
+
+    private boolean isSnapshotStep() {
+        return (snapInterval > 0) && (getTimeStep() % snapInterval == 0);
+    }
+
+    /**
+     * Writes snapshot reports into a specified output directory.
+     *
+     * @param snapshotDir the destination for the snapshot reports.
+     */
+    protected void recordSnapshot(File snapshotDir) {
+        JamLogger.info("Recording snapshot...");
+
+        MutationList  mutations  = getTumor().getAccumulatedMutations();
+        Collection<E> components = getTumor().sortComponents();
+
+        if (writeComponentAncestry)
+            ComponentAncestryRecord.write(snapshotDir, COMPONENT_ANCESTRY_NAME, components);
+
+        if (writeComponentCoord)
+            ComponentCoordRecord.write(snapshotDir, COMPONENT_COORD_NAME, tumor, components);
+
+        if (writeOriginalMutations)
+            ComponentMutationRecord.writeOriginal(snapshotDir, ORIGINAL_MUTATIONS_NAME, components);
+
+        if (writeAccumulatedMutations)
+            ComponentMutationRecord.writeAccumulated(snapshotDir, ACCUMULATED_MUTATIONS_NAME, components);
+
+        if (writeScalarMutations)
+            ScalarMutationRecord.write(snapshotDir, SCALAR_MUTATIONS_NAME, mutations);
     }
 
     /**
@@ -415,31 +564,6 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
             cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
             cellCountTrajWriter.println(ComponentCountRecord.header());
         }
-
-        if (writeFinalCellCount) {
-            finalCellCountWriter = openWriter(FINAL_CELL_COUNT_FILE_NAME);
-            finalCellCountWriter.println(ComponentCountRecord.header());
-        }
-
-        if (writeComponentAncestry) {
-            // No header line...
-            componentAncestryWriter = openWriter(COMPONENT_ANCESTRY_NAME);
-        }
-
-        if (writeOriginalMutations) {
-            // No header line...
-            originalMutationWriter = openWriter(ORIGINAL_MUTATIONS_NAME);
-        }
-
-        if (writeAccumulatedMutations) {
-            // No header line...
-            accumulatedMutationWriter = openWriter(ACCUMULATED_MUTATIONS_NAME);
-        }
-
-        if (writeScalarMutations) {
-            scalarMutationWriter = openWriter(SCALAR_MUTATIONS_NAME);
-            scalarMutationWriter.println(ScalarMutationRecord.header());
-        }
     }
 
     @Override protected void finalizeSimulation() {
@@ -472,50 +596,11 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         if (writeFinalCellCount)
             writeFinalCellCount();
 
-        if (writeComponentAncestry)
-            writeComponentAncestry();
-
-        if (writeOriginalMutations)
-            writeOriginalMutations();
-
-        if (writeAccumulatedMutations)
-            writeAccumulatedMutations();
-
-        if (writeScalarMutations)
-            writeScalarMutations();
+        recordSnapshot(getReportDir());
     }
 
     private void writeFinalCellCount() {
-        finalCellCountWriter.println(ComponentCountRecord.snap().format());
-    }
-
-    private void writeComponentAncestry() {
-        JamLogger.info("Writing component ancestry...");
-
-        for (TumorComponent component : getTumor().sortComponents())
-            componentAncestryWriter.println(ComponentAncestryRecord.create(component).format());
-    }
-
-    private void writeOriginalMutations() {
-        JamLogger.info("Writing original mutations...");
-
-        for (TumorComponent component : getTumor().sortComponents())
-            originalMutationWriter.println(ComponentMutationRecord.original(component).format());
-    }
-
-    private void writeAccumulatedMutations() {
-        JamLogger.info("Writing accumulated mutations...");
-
-        for (TumorComponent component : getTumor().sortComponents())
-            accumulatedMutationWriter.println(ComponentMutationRecord.accumulated(component).format());
-    }
-
-
-    private void writeScalarMutations() {
-        JamLogger.info("Writing scalar mutations...");
-
-        for (Mutation mutation : getTumor().getAccumulatedMutations())
-            scalarMutationWriter.println(ScalarMutationRecord.create(mutation).format());
+        ComponentCountRecord.write(getReportDir(), FINAL_CELL_COUNT_FILE_NAME, tumor);
     }
 
     /**

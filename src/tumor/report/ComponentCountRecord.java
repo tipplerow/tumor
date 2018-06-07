@@ -1,10 +1,15 @@
 
 package tumor.report;
 
+import java.io.File;
+import java.io.PrintWriter;
+
+import jam.io.IOUtil;
 import jam.math.LongRange;
 import jam.sim.StepRecord;
 import jam.util.RegexUtil;
 
+import tumor.carrier.Tumor;
 import tumor.driver.TumorDriver;
 
 /**
@@ -67,20 +72,39 @@ public final class ComponentCountRecord extends StepRecord {
     }
 
     /**
-     * Records the current state of the simulation.
+     * Records the current component count.
      *
-     * @return a new record reflecting the current state of the simulation.
+     * @param tumor the tumor being simulated.
+     *
+     * @return a new record containing the current component count.
      */
-    public static ComponentCountRecord snap() {
+    public static ComponentCountRecord snap(Tumor tumor) {
         TumorDriver driver = TumorDriver.global();
 
         int trialIndex = driver.getTrialIndex();
         int timeStep   = driver.getTimeStep();
 
-        long cellCount      = driver.getTumor().countCells();
-        long componentCount = driver.getTumor().countComponents();
+        long cellCount      = tumor.countCells();
+        long componentCount = tumor.countComponents();
 
         return new ComponentCountRecord(trialIndex, timeStep, cellCount, componentCount);
+    }
+
+    /**
+     * Writes the current component count to a file.
+     *
+     * @param reportDir the directory where the report file will be written.
+     *
+     * @param baseName the base name of the report file that will be written.
+     *
+     * @param tumor the tumor being simulated.
+     */
+    public static void write(File reportDir, String baseName, Tumor tumor) {
+        PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
+
+        writer.println(header());
+        writer.println(snap(tumor).format());
+        writer.close();
     }
 
     /**

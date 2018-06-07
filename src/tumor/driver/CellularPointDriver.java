@@ -7,7 +7,7 @@ import tumor.carrier.TumorCell;
 import tumor.growth.GrowthRate;
 import tumor.point.PointTumor;
 
-class CellularPointDriver extends PointDriver<TumorCell> {
+class CellularPointDriver extends TumorDriver<TumorCell> {
     @Override protected PointTumor<TumorCell> createTumor() {
         return PointTumor.primary(createFounders());
     }
