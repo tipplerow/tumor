@@ -4,15 +4,11 @@ package tumor.mutation;
 import java.util.Collection;
 import java.util.AbstractList;
 import java.util.List;
-import java.util.Set;
-
-import com.google.common.collect.Sets;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 
 import jam.util.FixedList;
-import jam.util.SetUtil;
 
 import tumor.growth.GrowthRate;
 
@@ -25,8 +21,11 @@ import tumor.growth.GrowthRate;
 public final class MutationList extends AbstractList<Mutation> {
     private final FixedList<Mutation> list;
 
+    // Immutable hash code computed on demand...
+    private Integer hashCode = null;
+
     // An immutable set view created on demand...
-    private Set<Mutation> setView = null;
+    private MutationSet setView = null;
 
     private MutationList(FixedList<Mutation> list) {
         this.list = list;
@@ -35,12 +34,12 @@ public final class MutationList extends AbstractList<Mutation> {
     /**
      * The single globally-sharable empty mutation list.
      */
-    public static final MutationList EMPTY = new MutationList(FixedList.empty());
+    public static final MutationList EMPTY = create();
 
     /**
      * The mutations responsible for transformation to malignancy.
      */
-    public static final MutationList TRANSFORMERS = MutationList.create(Mutation.TRANSFORMER);
+    public static final MutationList TRANSFORMERS = create(Mutation.TRANSFORMER);
 
     /**
      * Wraps a fixed set of mutations in a {@code MutationList}.
@@ -134,137 +133,6 @@ public final class MutationList extends AbstractList<Mutation> {
     }
 
     /**
-     * Returns the set difference of this list and another list in a
-     * new mutation list.
-     *
-     * @param that a mutation list to remove from with this list.
-     *
-     * @return the set difference of this list and the input list.
-     */
-    public MutationList difference(MutationList that) {
-        return difference(this, that);
-    }
-
-    /**
-     * Computes the set difference of two mutation lists.
-     *
-     * @param list1 the first mutation list.
-     *
-     * @param list2 the second mutation list.
-     *
-     * @return a mutation list containing mutations contained in the
-     * first list but not the second.
-     */
-    public static MutationList difference(MutationList list1, MutationList list2) {
-        return create(Sets.difference(list1.setView(), list2.setView()));
-    }
-
-    /**
-     * Computes the mutational distance between this list and another.
-     *
-     * <p>The mutational distance is the total number of mutations not
-     * shared between the two lists.  For lists {@code A = [1, 2, 3]}
-     * and {@code B = [1, 2, 4, 5]}, the mutational distance is 3,
-     * because mutations {@code 3, 4, 5} are not shared.
-     *
-     * @param that the mutation list to compare with this.
-     *
-     * @return the mutational distance between this list and the input
-     * list.
-     */
-    public int distance(MutationList that) {
-        return distance(this, that);
-    }
-
-    /**
-     * Computes the mutational distance between two lists.
-     *
-     * <p>The mutational distance is the total number of mutations not
-     * shared between the two lists.  For lists {@code A = [1, 2, 3]}
-     * and {@code B = [1, 2, 4, 5, 6]}, the mutational distance is 4,
-     * because mutations {@code 3, 4, 5, 6} are not shared.
-     *
-     * @param list1 the first mutation list.
-     *
-     * @param list2 the second mutation list.
-     *
-     * @return the mutational distance between the two lists.
-     */
-    public int distance(MutationList list1, MutationList list2) {
-        //
-        // Explicitly iterating may be more efficient than the concise
-        // expression:
-        //
-        //     list1.size() + list2.size() - 2 * intersection(list1, list2).size()
-        //
-        // because we do not require the intersection to be created.
-        //
-        int result = 0;
-
-        for (Mutation mutation : list1)
-            if (!list2.contains(mutation))
-                ++result;
-
-        for (Mutation mutation : list2)
-            if (!list1.contains(mutation))
-                ++result;
-
-        return result;
-    }
-
-    /**
-     * Returns the intersection of this list and another list in a new
-     * mutation list.
-     *
-     * @param that a mutation list to intersect with this list.
-     *
-     * @return the intersection of this list and the input list.
-     */
-    public MutationList intersection(MutationList that) {
-        return intersection(this, that);
-    }
-
-    /**
-     * Returns the intersection of two mutation lists.
-     *
-     * @param list1 the first mutation list.
-     *
-     * @param list2 the second mutation list.
-     *
-     * @return a new mutation list containing mutations shared by the
-     * two lists.
-     */
-    public static MutationList intersection(MutationList list1, MutationList list2) {
-        return create(Sets.intersection(list1.setView(), list2.setView()));
-    }
-
-    /**
-     * Returns the union of this list and another list in a new
-     * mutation list.
-     *
-     * @param that a mutation list to join with this list.
-     *
-     * @return the union of this list and the input list.
-     */
-    public MutationList union(MutationList that) {
-        return union(this, that);
-    }
-
-    /**
-     * Returns the union of two mutation lists.
-     *
-     * @param list1 the first mutation list.
-     *
-     * @param list2 the second mutation list.
-     *
-     * @return a new mutation list containing mutations contained in
-     * either list.
-     */
-    public static MutationList union(MutationList list1, MutationList list2) {
-        return create(Sets.union(list1.setView(), list2.setView()));
-    }
-
-    /**
      * Returns the indexes of the mutations in this list.
      *
      * @return the indexes of the mutations in this list.
@@ -283,9 +151,9 @@ public final class MutationList extends AbstractList<Mutation> {
      *
      * @return a read-only set view of the mutations in this list.
      */
-    public Set<Mutation> setView() {
+    public MutationSet setView() {
         if (setView == null)
-            setView = SetUtil.fixed(this);
+            setView = MutationSet.create(this);
 
         return setView;
     }
@@ -311,14 +179,13 @@ public final class MutationList extends AbstractList<Mutation> {
     }
 
     /**
-     * Compares the contents of two mutation lists without regard to
-     * their order.
+     * Compares the contents (and chronological order) of two mutation
+     * lists.
      *
      * @param that an object to compare to this list.
      *
      * @return {@code true} iff the input object is another mutation
-     * list with identical mutations as this list (without regard to
-     * their order).
+     * list with identical mutations as this list in the same order.
      */
     @Override public boolean equals(Object that) {
         return (that instanceof MutationList) && equalsList((MutationList) that);
@@ -328,6 +195,21 @@ public final class MutationList extends AbstractList<Mutation> {
         //
         // Compare contents only, without regard to order...
         //
-        return this.setView().equals(that.setView());
+        return this.list.equals(that.list);
+    }
+
+    @Override public int hashCode() {
+        if (hashCode == null)
+            hashCode = computeHashCode();
+
+        return hashCode.intValue();
+    }
+
+    private Integer computeHashCode() {
+        //
+        // Since the equality comparison is based on the underlying
+        // list, the hash code must be also...
+        //
+        return Integer.valueOf(list.hashCode());
     }
 }

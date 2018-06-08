@@ -76,28 +76,22 @@ public class MutationListTest {
         assertEquals(neutral5, daughterList.get(4));
     }
 
-    @Test public void testDifference() {
-        MutationList list1 = MutationList.create(neutral1, neutral2, neutral3, neutral4);
-        MutationList list2 = MutationList.create(neutral3, neutral4, neutral5);
-        MutationList list3 = MutationList.create(neutral1, neutral2);
-        MutationList list4 = MutationList.create(neutral5);
+    @Test public void testEquals() {
+        MutationList list1 = MutationList.create(neutral1, neutral2, neutral3);
+        MutationList list2 = MutationList.create(neutral1, neutral2, neutral3);
+        MutationList list3 = MutationList.create(neutral1, neutral3, neutral2);
 
-        assertEquals(list3, list1.difference(list2));
-        assertEquals(list4, list2.difference(list1));
+        assertTrue(list1.equals(list2));
+        assertFalse(list1.equals(list3));
     }
 
-    @Test public void testDistance() {
-        MutationList list1 = MutationList.create(neutral1, neutral2);
+    @Test public void testHashCode() {
+        MutationList list1 = MutationList.create(neutral1, neutral2, neutral3);
+        MutationList list2 = MutationList.create(neutral1, neutral2, neutral3);
+        MutationList list3 = MutationList.create(neutral1, neutral3, neutral2);
 
-        assertEquals(2, list1.distance(MutationList.create()));
-        assertEquals(1, list1.distance(MutationList.create(neutral1)));
-        assertEquals(1, list1.distance(MutationList.create(neutral2)));
-        assertEquals(0, list1.distance(MutationList.create(neutral1, neutral2)));
-        assertEquals(1, list1.distance(MutationList.create(neutral1, neutral2, neutral3)));
-        assertEquals(2, list1.distance(MutationList.create(neutral1, neutral2, neutral3, neutral4)));
-        assertEquals(3, list1.distance(MutationList.create(neutral1, neutral2, neutral3, neutral4, neutral5)));
-
-        assertEquals(3, MutationList.create(neutral1, neutral2, neutral3, neutral4, neutral5).distance(list1));
+        assertTrue(list1.hashCode() == list2.hashCode());
+        assertTrue(list1.hashCode() != list3.hashCode());
     }
 
     @Test public void testGet() {
@@ -113,15 +107,6 @@ public class MutationListTest {
         assertEquals(neutral1.getIndex(), indexList.getLong(0));
         assertEquals(neutral2.getIndex(), indexList.getLong(1));
         assertEquals(neutral3.getIndex(), indexList.getLong(2));
-    }
-
-    @Test public void testIntersection() {
-        MutationList list1 = MutationList.create(neutral1, neutral2, neutral3, neutral4);
-        MutationList list2 = MutationList.create(neutral3, neutral4, neutral5);
-        MutationList list3 = MutationList.create(neutral3, neutral4);
-
-        assertEquals(list3, list1.intersection(list2));
-        assertEquals(list3, list2.intersection(list1));
     }
 
     @Test(expected = UnsupportedOperationException.class) 
@@ -163,15 +148,6 @@ public class MutationListTest {
     @Test public void testSize() {
         assertEquals(0, MutationList.EMPTY.size());
         assertEquals(3, founderList.size());
-    }
-
-    @Test public void testUnion() {
-        MutationList list1 = MutationList.create(neutral1, neutral2, neutral3, neutral4);
-        MutationList list2 = MutationList.create(neutral3, neutral4, neutral5);
-        MutationList list3 = MutationList.create(neutral1, neutral2, neutral3, neutral4, neutral5);
-
-        assertEquals(list3.setView(), list1.union(list2).setView());
-        assertEquals(list3.setView(), list2.union(list1).setView());
     }
 
     public static void main(String[] args) {
