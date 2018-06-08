@@ -144,6 +144,20 @@ public abstract class TumorComponent extends Carrier {
         return originalMut;
     }
 
+    /**
+     * Determines whether another component is genetically identical
+     * to this component.
+     *
+     * @param component the component to compare to this.
+     *
+     * @return {@code true} iff the input component is the same type
+     * as this component and has accumulated identical mutations.
+     */
+    protected boolean isClone(TumorComponent component) {
+        return this.getClass().equals(component.getClass())
+            && this.getAccumulatedMutations().equals(component.getAccumulatedMutations());
+    }
+
     @Override public MutationList getAccumulatedMutations() {
         if (accumulatedMut == null)
             accumulatedMut = accumulateMutations(traceLineage());

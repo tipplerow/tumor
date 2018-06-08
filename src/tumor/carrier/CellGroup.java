@@ -25,7 +25,7 @@ import tumor.mutation.MutationList;
  * product of the group population and the birth and death rates,
  * respectively).  Implicit calculation is much more efficient for
  * large groups.  The boundary between the two algorithms is defined
- * by the system property {@code CellGroup.explicitSamplingLimit}.
+ * by the system property {@code tumor.carrier.explicitSamplingLimit}.
  */
 public abstract class CellGroup extends TumorComponent {
     /**

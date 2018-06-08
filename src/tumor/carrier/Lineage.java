@@ -93,6 +93,44 @@ public class Lineage extends CellGroup {
     }
 
     /**
+     * Determines whether another lineage is genetically identical
+     * to this lineage.
+     *
+     * @param lineage the lineage to compare to this.
+     *
+     * @return {@code true} iff the input lineage has accumulated
+     * identical mutations as this lineage.
+     */
+    public boolean isClone(Lineage lineage) {
+        return super.isClone(lineage);
+    }
+
+    /**
+     * Transfers cells between this lineage and an identical clone
+     * lineage (typically residing on a neighboring lattice site).
+     *
+     * @param clone the lineage to which cells will be transferred.
+     *
+     * @param transferCount the number of cells to transfer from this
+     * lineage to the clone.
+     *
+     * @throws IllegalArgumentException unless the input lineage is
+     * genetically identical to this lineage or if the transfer count
+     * is greater than the current cell count of this lineage.
+     */
+    public void transfer(Lineage clone, long transferCount) {
+        assert isClone(clone);
+
+        if (transferCount > cellCount)
+            throw new IllegalArgumentException("Transfer count exceeds this lineage size.");
+
+        this.cellCount  -= transferCount;
+        clone.cellCount += transferCount;
+
+        assert this.cellCount >= 0;
+    }
+
+    /**
      * Advances this lineage through one discrete time step.
      *
      * @param tumorEnv the local tumor environment where this lineage
