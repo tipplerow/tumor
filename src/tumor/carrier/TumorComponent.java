@@ -95,6 +95,8 @@ public abstract class TumorComponent extends Carrier {
      * die, or both.  Children will be added to the population; dead
      * components will be removed.
      *
+     * @param <E> the runtime tumor component type.
+     *
      * @param components the tumor components to advance.
      *
      * @param tumorEnv the local tumor environment where each member
@@ -144,6 +146,8 @@ public abstract class TumorComponent extends Carrier {
      *
      * @param tumorEnv the local tumor environment where this tumor
      * component and all of its offspring reside.
+     *
+     * @param timeSteps the number of time steps to simulate.
      *
      * @return any new components created during the time steps.
      */
