@@ -82,9 +82,8 @@ public abstract class TumorComponent extends Carrier {
         originalMut = originalMut.append(newMutations);
         growthRate  = newMutations.apply(growthRate);
 
-        // Update any cached accumulated mutations...
-        if (accumulatedMut != null)
-            accumulatedMut = accumulatedMut.append(newMutations);
+        // The cached accumulated mutations are now invalid...
+        accumulatedMut = null;
     }
 
     /**
