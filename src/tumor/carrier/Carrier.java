@@ -3,6 +3,7 @@ package tumor.carrier;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 import jam.bio.Propagator;
@@ -15,6 +16,16 @@ import tumor.mutation.MutationList;
  * mutations: a tumor, a single tumor cell, or a cell lineage.
  */
 public abstract class Carrier extends Propagator {
+    /**
+     * A comparator to sort carriers in increasing order by cell count.
+     */
+    public static final Comparator<Carrier> CELL_COUNT_COMPARATOR =
+        new Comparator<Carrier>() {
+            @Override public int compare(Carrier c1, Carrier c2) {
+                return Long.compare(c1.countCells(), c2.countCells());
+            }
+        };
+
     /**
      * Creates all carriers.
      *
