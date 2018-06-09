@@ -1,7 +1,10 @@
 
 package tumor.carrier;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import jam.lang.OrdinalIndex;
 
@@ -85,6 +88,35 @@ public abstract class TumorComponent extends Carrier {
     }
 
     /**
+     * Advances a population of tumor components through one discrete
+     * time step.
+     *
+     * <p>During the time step, tumor components may produce children,
+     * die, or both.  Children will be added to the population; dead
+     * components will be removed.
+     *
+     * @param components the tumor components to advance.
+     *
+     * @param tumorEnv the local tumor environment where each member
+     * of the population resides during the time step.
+     */
+    @SuppressWarnings("unchecked")
+    public static <E extends TumorComponent> void advance(Collection<E> components, TumorEnv tumorEnv) {
+        List<E>     children = new ArrayList<E>();
+        Iterator<E> iterator = components.iterator();
+
+        while (iterator.hasNext()) {
+            E parent = iterator.next();
+            children.addAll((Collection<E>) parent.advance(tumorEnv));
+
+            if (parent.isDead())
+                iterator.remove();
+        }
+
+        components.addAll(children);
+    }
+
+    /**
      * Advances this tumor component through one discrete time step.
      *
      * <p>After calling this method, the replication state (identified
@@ -100,6 +132,33 @@ public abstract class TumorComponent extends Carrier {
      * @return any new components created during the time step.
      */
     public abstract Collection<? extends TumorComponent> advance(TumorEnv tumorEnv);
+
+    /**
+     * Advances this tumor component (and its children) through
+     * multiple discrete time steps and accumulates children from all
+     * generations.
+     *
+     * <p>After calling this method, the replication state (identified
+     * by the {@code getState()} method) may be changed: components
+     * may die.
+     *
+     * @param tumorEnv the local tumor environment where this tumor
+     * component and all of its offspring reside.
+     *
+     * @return any new components created during the time steps.
+     */
+    public List<? extends TumorComponent> advance(TumorEnv tumorEnv, int timeSteps) {
+        List<TumorComponent> population = new ArrayList<TumorComponent>();
+        population.add(this);
+
+        for (int stepIndex = 0; stepIndex < timeSteps; ++stepIndex)
+            advance(population, tumorEnv);
+
+        // Remove the original component to return only the children...
+        population.remove(this);
+
+        return population;
+    }
 
     /**
      * Computes the intrinsic growth rate of a daughter object,
