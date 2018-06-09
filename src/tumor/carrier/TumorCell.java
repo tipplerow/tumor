@@ -146,6 +146,11 @@ public class TumorCell extends TumorComponent {
         return Collections.emptyList();
     }
     
+    @SuppressWarnings("unchecked")
+    @Override public List<TumorCell> advance(TumorEnv tumorEnv, int timeSteps) {
+        return (List<TumorCell>) super.advance(tumorEnv, timeSteps);
+    }
+
     @Override public final long countCells() {
         return 1L;
     }

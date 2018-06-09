@@ -107,6 +107,11 @@ public class Deme extends CellGroup {
         return Collections.emptyList();
     }
 
+    @SuppressWarnings("unchecked")
+    @Override public List<Deme> advance(TumorEnv tumorEnv, int timeSteps) {
+        return (List<Deme>) super.advance(tumorEnv, timeSteps);
+    }
+
     @Override public Deme divide(long cloneCellCount) {
         return (Deme) super.divide(cloneCellCount);
     }

@@ -182,6 +182,11 @@ public class Lineage extends CellGroup {
         return daughters;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override public List<Lineage> advance(TumorEnv tumorEnv, int timeSteps) {
+        return (List<Lineage>) super.advance(tumorEnv, timeSteps);
+    }
+
     @Override public Lineage divide(long cloneCellCount) {
         return (Lineage) super.divide(cloneCellCount);
     }
