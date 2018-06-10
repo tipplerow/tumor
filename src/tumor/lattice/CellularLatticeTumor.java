@@ -11,6 +11,8 @@ import jam.lattice.Lattice;
 import jam.math.JamRandom;
 import jam.util.ListUtil;
 
+import tumor.capacity.CapacityModel;
+import tumor.capacity.SingleCapacity;
 import tumor.carrier.TumorCell;
 import tumor.carrier.TumorEnv;
 
@@ -94,12 +96,30 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         */
     }
 
-    @Override public long computeGrowthCapacity(Coord parentCoord, Coord neighborCoord) {
+    @Override public long computeExcessParentOccupancy(Coord parentCoord) {
+        //
+        // The parent cell itself never increases in size...
+        //
+        return 0;
+    }
+
+    @Override public long computeExpansionFreeCapacity(Coord expansionCoord) {
+        return lattice.isOccupied(expansionCoord) ? 0 : 1;
+    }
+
+    @Override public long computeGrowthCapacity(Coord parentCoord, Coord expansionCoord) {
         //
         // The parent site is always occupied, so just check the
-        // neighbor...
+        // expansion site...
         //
-        return lattice.isAvailable(neighborCoord) ? 1 : 0;
+        return computeExpansionFreeCapacity(expansionCoord);
+    }
+
+    @Override public long computeParentFreeCapacity(Coord parentCoord) {
+        //
+        // The parent site is always occupied...
+        //
+        return 0;
     }
 
     @Override public long countCells() {
@@ -108,6 +128,10 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
 
     @Override public long countCells(Coord coord) {
         return lattice.countOccupants(coord);
+    }
+
+    @Override public CapacityModel getCapacityModel() {
+        return SingleCapacity.INSTANCE;
     }
 
     @Override public long getSiteCapacity(Coord coord) {
@@ -127,12 +151,19 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         return map;
     }
 
-    @Override protected List<TumorCell> advance(TumorCell parent,
-                                                Coord     parentCoord,
-                                                Coord     expansionCoord,
-                                                TumorEnv  localEnv) {
-        // The single parent cell never moves to the expansion site,
-        // and the LatticeTumor superclass handles everything else...
+    @Override protected List<TumorCell> advance(TumorCell parent, Coord parentCoord, TumorEnv localEnv) {
+        //
+        // The base class handles everything...
+        //
         return parent.advance(localEnv);
+    }
+
+    @Override protected void distributeExcessOccupants(TumorCell parent,
+                                                       Coord     parentCoord,
+                                                       Coord     expansionCoord,
+                                                       long      excessOccupancy) {
+        // Parent cells never increase in size, so they can never
+        // outgrow their original site...
+        throw new IllegalStateException("Tumor cells should never exceed the site capacity.");
     }
 }

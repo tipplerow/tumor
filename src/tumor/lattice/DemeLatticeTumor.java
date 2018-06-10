@@ -10,6 +10,7 @@ import jam.lattice.Coord;
 import jam.lattice.Lattice;
 import jam.math.Probability;
 
+import tumor.capacity.CapacityModel;
 import tumor.carrier.Carrier;
 import tumor.carrier.Deme;
 import tumor.carrier.TumorEnv;
@@ -20,7 +21,7 @@ import tumor.carrier.TumorEnv;
  * <p><b>Single-site occupancy restriction.</b> Site occupancy is
  * limited to a single deme.
  */
-public final class DemeLatticeTumor extends CellGroupLatticeTumor<Deme> {
+public final class DemeLatticeTumor extends LatticeTumor<Deme> {
     private DemeLatticeTumor(DemeLatticeTumor parent) {
         super(parent, createLattice());
     }
@@ -47,8 +48,24 @@ public final class DemeLatticeTumor extends CellGroupLatticeTumor<Deme> {
         addComponent(founder, FOUNDER_COORD);
     }
 
+    @Override public long computeExpansionFreeCapacity(Coord expansionCoord) {
+        //
+        // Only one deme per site, so the expansion capacity is zero
+        // if the site is already occupied; if unoccupied, then the
+        // expansion capacity is the full site capacity.
+        //
+        if (lattice.isOccupied(expansionCoord))
+            return 0;
+        else
+            return getSiteCapacity(expansionCoord);
+    }
+
     @Override public long countCells(Coord coord) {
         return Carrier.countCells(lattice.viewOccupants(coord));
+    }
+
+    @Override public CapacityModel getCapacityModel() {
+        return CapacityModel.global();
     }
 
     @Override public boolean isAvailable(Coord coord, Deme deme) {
@@ -67,36 +84,28 @@ public final class DemeLatticeTumor extends CellGroupLatticeTumor<Deme> {
         return map;
     }
 
-    @Override protected List<Deme> advance(Deme parent, Coord parentCoord, Coord expansionCoord, TumorEnv localEnv) {
+    @Override protected List<Deme> advance(Deme parent, Coord parentCoord, TumorEnv localEnv) {
         //
-        // Demes never divide during advancement...
+        // The base class tracks the original coordinate of mutations
+        // when new demes are added to the lattice, but here we must
+        // also track any new mutations that occur in the parent deme
+        // during this step...
         //
         List<Deme> daughters = parent.advance(localEnv);
-
-        if (!daughters.isEmpty())
-            throw new IllegalStateException("Demes should never divide during advancement.");
 
         // Map the latest mutations to the deme coordinate...
         mapMutationOrigin(parent.getLatestMutations(), parentCoord);
 
-        if (mustDivide(parent, parentCoord))
-            divideParent(parent, parentCoord, expansionCoord);
-
         return daughters;
     }
 
-    @Override protected long computeCloneCapacity(Coord cloneCoord) {
+    @Override protected void distributeExcessOccupants(Deme  parent,
+                                                       Coord parentCoord,
+                                                       Coord expansionCoord,
+                                                       long  excessOccupancy) {
         //
-        // Only one deme per site, so the clone capacity is zero if
-        // the site is already occupied...
+        // Divide the parent deme and place the clone at the expansion site...
         //
-        if (lattice.isOccupied(cloneCoord))
-            return 0;
-        else
-            return getSiteCapacity(cloneCoord) - countCells(cloneCoord);
-    }
-
-    @Override protected Deme divideParent(Deme parent, long minCloneCellCount, long maxCloneCellCount) {
-        return parent.divide(TRANSFER_PROBABILITY, minCloneCellCount, maxCloneCellCount);
+        addComponent(parent.divide(excessOccupancy), expansionCoord);
     }
 }
