@@ -201,7 +201,6 @@ public final class LineageLatticeTumor extends LatticeTumor<Lineage> {
     }
 
     @Override protected void addComponent(Lineage component, Coord location) {
-        System.out.println("Adding: " + component + " => " + location);
         super.addComponent(component, location);
 
         addCellCount(location, component);
@@ -219,7 +218,6 @@ public final class LineageLatticeTumor extends LatticeTumor<Lineage> {
     }
 
     @Override protected void removeComponent(Lineage component, Coord location) {
-        System.out.println("Removing: " + component);
         super.removeComponent(component, location);
 
         removeCellCount(location, component);
