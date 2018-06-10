@@ -8,4 +8,6 @@ GOLD_DIR=gold
 cd $1
 shift
 
+echo "Testing in directory [`pwd`]..."
+
 $JAM_TEST "$TUMOR_DRIVER -ea $DRIVER_PROP" $GOLD_DIR "$@"

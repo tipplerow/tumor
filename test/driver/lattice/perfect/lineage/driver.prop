@@ -9,7 +9,7 @@ tumor.driver.spatialType   = LATTICE
 tumor.driver.trialIndex   =   1
 tumor.driver.initialSize  = 100
 tumor.driver.maxStepCount = 200
-tumor.driver.maxTumorSize = 1E5
+tumor.driver.maxTumorSize = 1E6
 
 tumor.driver.writeCellCountTraj     = true
 tumor.driver.writeFinalCellCount    = true
