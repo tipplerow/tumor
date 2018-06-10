@@ -8,9 +8,9 @@ import jam.math.DoubleUtil;
 
 import tumor.carrier.Lineage;
 import tumor.carrier.TumorEnv;
+import tumor.driver.TumorDriver;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
-import tumor.driver.TumorDriver;
 
 import org.junit.*;
 import static org.junit.Assert.*;
