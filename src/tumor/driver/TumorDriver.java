@@ -462,15 +462,15 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
         switch (componentType) {
         case CELL:
-            JamLogger.info("TRIAL: %4d, STEP: %5d; SIZE: %15s", trialIndex, timeStep, cellCount);
+            JamLogger.info("TRIAL: %4d; STEP: %5d; %15s CELLS", trialIndex, timeStep, cellCount);
             break;
 
         case DEME:
-            JamLogger.info("TRIAL: %4d, STEP: %5d; DEMES: %12s, CELLS: %15s", trialIndex, timeStep, compCount, cellCount);
+            JamLogger.info("TRIAL: %4d; STEP: %5d; %12s DEMES; %15s CELLS", trialIndex, timeStep, compCount, cellCount);
             break;
 
         case LINEAGE:
-            JamLogger.info("TRIAL: %4d, STEP: %5d; LINEAGES: %12s, CELLS: %15s", trialIndex, timeStep, compCount, cellCount);
+            JamLogger.info("TRIAL: %4d; STEP: %5d; %12s LINEAGES; %15s CELLS", trialIndex, timeStep, compCount, cellCount);
             break;
 
         default:
