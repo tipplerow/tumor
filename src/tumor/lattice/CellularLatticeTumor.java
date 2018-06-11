@@ -143,12 +143,7 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
     }
 
     @Override public Map<Coord, Collection<TumorCell>> mapComponents() {
-        Map<Coord, Collection<TumorCell>> map = new HashMap<Coord, Collection<TumorCell>>();
-
-        for (TumorCell cell : viewComponents())
-            map.put(locateComponent(cell), List.of(cell));
-
-        return map;
+        return mapComponentsSO();
     }
 
     @Override protected List<TumorCell> advance(TumorCell parent, Coord parentCoord, TumorEnv localEnv) {

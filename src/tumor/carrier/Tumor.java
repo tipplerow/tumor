@@ -1,15 +1,22 @@
 
 package tumor.carrier;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 
 import jam.lang.OrdinalIndex;
 import jam.lang.OrdinalIndex;
 import jam.lattice.Coord;
+import jam.math.VectorMoment;
 
 import tumor.growth.GrowthRate;
 import tumor.mutation.Mutation;
@@ -66,19 +73,6 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     public abstract Coord locateComponent(E component);
 
     /**
-     * Returns the coordinate where a mutation in this tumor
-     * originated.
-     *
-     * @param mutation the mutation of interest.
-     *
-     * @return the location where the mutation originated.
-     *
-     * @throws IllegalArgumentException unless the location of the
-     * mutation has been mapped.
-     */
-    public abstract Coord locateMutationOrigin(Mutation mutation);
-
-    /**
      * Computes the mutation frequency distribution for this tumor.
      *
      * @return a list containing the mutation frequency (fraction of
@@ -94,6 +88,71 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
         MutationFrequency.sortDescending(freqList);
 
         return freqList;
+    }
+
+    /**
+     * Computes the center of mass and gyration tensor for the cells
+     * in this tumor.
+     *
+     * @return the center of mass and gyration tensor for the cells
+     * in this tumor.
+     */
+    public VectorMoment computeVectorMoment() {
+        Multiset<Coord> coordCount = countCoords();
+
+        if (coordCount.isEmpty())
+            return VectorMoment.compute(List.of(Coord.ORIGIN));
+        else
+            return VectorMoment.compute(coordCount);
+    }
+
+    /**
+     * Returns the number of active (living) components in this tumor.
+     *
+     * @return the number of active (living) components in this tumor.
+     */
+    public long countComponents() {
+        return viewComponents().size();
+    }
+
+    /**
+     * Counts the number of cells at each occupied lattice site in
+     * this tumor.
+     *
+     * @return a multiset whose keys are the occupied lattice sites
+     * and whose counts are the number of cells at those sites.
+     */
+    public Multiset<Coord> countCoords() {
+        Multiset<Coord> counts = HashMultiset.create();
+
+        for (E component : viewComponents())
+            counts.add(locateComponent(component), (int) component.countCells());
+
+        return counts;
+    }
+
+    /**
+     * Maps each tumor component to its location within the tumor.
+     *
+     * @return a mapping from occupied locations to the components
+     * occupying those locations.
+     */
+    public Map<Coord, Collection<E>> mapComponents() {
+        Map<Coord, Collection<E>> map = new HashMap<Coord, Collection<E>>();
+
+        for (E component : viewComponents()) {
+            Coord coord = locateComponent(component);
+            Collection<E> occupants = map.get(coord);
+
+            if (occupants == null) {
+                occupants = new ArrayList<E>();
+                map.put(coord, occupants);
+            }
+
+            occupants.add(component);
+        }
+
+        return map;
     }
 
     /**
@@ -115,15 +174,6 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      * this tumor.
      */
     public abstract Set<E> viewComponents();
-
-    /**
-     * Returns the number of active (living) components in this tumor.
-     *
-     * @return the number of active (living) components in this tumor.
-     */
-    public long countComponents() {
-        return viewComponents().size();
-    }
 
     @Override public long countCells() {
         return countCells(viewComponents());

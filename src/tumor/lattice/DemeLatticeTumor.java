@@ -76,27 +76,14 @@ public final class DemeLatticeTumor extends LatticeTumor<Deme> {
     }
 
     @Override public Map<Coord, Collection<Deme>> mapComponents() {
-        Map<Coord, Collection<Deme>> map = new HashMap<Coord, Collection<Deme>>();
-
-        for (Deme deme : viewComponents())
-            map.put(locateComponent(deme), List.of(deme));
-
-        return map;
+        return mapComponentsSO();
     }
 
     @Override protected List<Deme> advance(Deme parent, Coord parentCoord, TumorEnv localEnv) {
         //
-        // The base class tracks the original coordinate of mutations
-        // when new demes are added to the lattice, but here we must
-        // also track any new mutations that occur in the parent deme
-        // during this step...
+        // The base class takes care of everything else...
         //
-        List<Deme> daughters = parent.advance(localEnv);
-
-        // Map the latest mutations to the deme coordinate...
-        mapMutationOrigin(parent.getLatestMutations(), parentCoord);
-
-        return daughters;
+        return parent.advance(localEnv);
     }
 
     @Override protected void distributeExcessOccupants(Deme  parent,

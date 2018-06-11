@@ -9,16 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
-
 import jam.app.JamProperties;
 import jam.lattice.Coord;
 import jam.lattice.Lattice;
 import jam.lattice.LatticeView;
 import jam.lattice.Neighborhood;
 import jam.math.JamRandom;
-import jam.math.VectorMoment;
 import jam.util.ListUtil;
 
 import tumor.capacity.CapacityModel;
@@ -71,11 +67,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The random number generator.
      */
     protected final JamRandom randomSource = JamRandom.global();
-
-    /**
-     * A map from mutations to their location of origin.
-     */
-    protected final Map<Mutation, Coord> mutationOrigin = new HashMap<Mutation, Coord>();
 
     /**
      * Creates a new (empty) tumor.
@@ -226,14 +217,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     public abstract boolean isAvailable(Coord coord, E component);
 
     /**
-     * Maps each tumor component to its location within the tumor.
-     *
-     * @return a mapping from occupied lattice sites to the components
-     * occupying that site.
-     */
-    public abstract Map<Coord, Collection<E>> mapComponents();
-
-    /**
      * Advances a parent component by one discrete time step in a
      * given local environment and returns any offspring produced.
      *
@@ -318,38 +301,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public long computeParentFreeCapacity(Coord parentCoord) {
         return getSiteCapacity(parentCoord) - countCells(parentCoord);
-    }
-
-    /**
-     * Computes the center of mass and gyration tensor for the cells
-     * in this tumor.
-     *
-     * @return the center of mass and gyration tensor for the cells
-     * in this tumor.
-     */
-    public VectorMoment computeVectorMoment() {
-        Multiset<Coord> coordCount = countCoords();
-
-        if (coordCount.isEmpty())
-            return VectorMoment.compute(List.of(Coord.ORIGIN));
-        else
-            return VectorMoment.compute(coordCount);
-    }
-
-    /**
-     * Counts the number of cells at each occupied lattice site in
-     * this tumor.
-     *
-     * @return a multiset whose keys are the occupied lattice sites
-     * and whose counts are the number of cells at those sites.
-     */
-    public Multiset<Coord> countCoords() {
-        Multiset<Coord> counts = HashMultiset.create();
-
-        for (E component : viewComponents())
-            counts.add(locateComponent(component), (int) component.countCells());
-
-        return counts;
     }
 
     /**
@@ -482,22 +433,36 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         else
             throw new IllegalStateException("Exceeded local site capacity.");
 
-        mapMutationOrigin(component.getOriginalMutations(), location);
+        //mapMutationOrigin(component.getOriginalMutations(), location);
     }
 
-    /**
-     * Records the location of origin for each mutation.
-     *
-     * @param mutations the mutations to map.
-     *
-     * @param location the location where mutations originated.
-     */
-    protected void mapMutationOrigin(MutationList mutations, Coord location) {
+    /*
+    private void mapMutationOrigin(MutationList mutations, Coord location) {
         for (Mutation mutation : mutations)
             if (mutationOrigin.containsKey(mutation) && !mutation.isTransformer())
                 throw new IllegalStateException("Mutation is already mapped.");
             else
                 mutationOrigin.put(mutation, location);
+    }
+    */
+
+    /**
+     * Maps the locations of the components in a single-occupancy
+     * lattice tumor.
+     *
+     * @return a mapping from occupied sites to the single occupant of
+     * those sites.
+     */
+    protected Map<Coord, Collection<E>> mapComponentsSO() {
+        if (lattice.siteCapacity() > 1)
+            throw new IllegalStateException("This method is only valid for single-occupancy lattices.");
+
+        Map<Coord, Collection<E>> map = new HashMap<Coord, Collection<E>>();
+
+        for (E component : viewComponents())
+            map.put(locateComponent(component), List.of(component));
+
+        return map;
     }
 
     /**
@@ -646,15 +611,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
         if (coord == null)
             throw new IllegalArgumentException("Component is not present in the tumor.");
-
-        return coord;
-    }
-
-    @Override public Coord locateMutationOrigin(Mutation mutation) {
-        Coord coord = mutationOrigin.get(mutation);
-
-        if (coord == null)
-            throw new IllegalArgumentException("Mutation location has not been mapped.");
 
         return coord;
     }
