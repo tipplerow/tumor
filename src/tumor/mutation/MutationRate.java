@@ -2,6 +2,7 @@
 package tumor.mutation;
 
 import jam.app.JamProperties;
+import jam.dist.DiscretePDF;
 import jam.dist.PoissonDistribution;
 import jam.lang.JamException;
 import jam.math.DoubleComparator;
@@ -215,19 +216,22 @@ public abstract class MutationRate {
     }
 
     private static final class PoissonRate extends MutationRate {
+        private final DiscretePDF cache;
         private final PoissonDistribution dist;
-        
+
         private PoissonRate(double mean) {
             super(mean);
-            this.dist = PoissonDistribution.create(mean);
+
+            this.dist  = PoissonDistribution.create(mean);
+            this.cache = DiscretePDF.cache(dist);
         }
 
         @Override public long[] computeMutationDistribution(long daughterCount) {
-            IntRange range  = dist.effectiveRange();
+            IntRange range  = cache.support();
             long[]   counts = new long[range.upper() + 1];
 
             for (int k = 0; k <= range.upper(); ++k)
-                counts[k] = JamRandom.global().discretize(daughterCount * dist.pdf(k));
+                counts[k] = JamRandom.global().discretize(daughterCount * cache.evaluate(k));
 
             return counts;
         }
