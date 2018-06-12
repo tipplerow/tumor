@@ -6,6 +6,7 @@ import jam.dist.PoissonDistribution;
 import jam.lang.JamException;
 import jam.math.DoubleComparator;
 import jam.math.DoubleRange;
+import jam.math.IntRange;
 import jam.math.JamRandom;
 
 /**
@@ -28,33 +29,10 @@ public abstract class MutationRate {
     }
 
     /**
-     * Valid range for mean mutation rates.
-     */
-    public static final DoubleRange RATE_RANGE = DoubleRange.closed(0.0, 2.0);
-
-    /**
      * Returns a mutation process with zero rate, e.g., no mutations
      * are ever generated.
      */
     public static final MutationRate ZERO = new ZeroRate();
-
-    private static final class ZeroRate extends MutationRate {
-        private ZeroRate() {
-            super(0.0);
-        }
-
-        @Override public boolean isZero() {
-            return true;
-        }
-
-        @Override public int sampleMutationCount() {
-            return 0;
-        }
-
-        @Override public int sampleMutationCount(long daughterCount) {
-            return 0;
-        }
-    }
 
     /**
      * Returns a new mutation process in which mutations arise with a
@@ -72,19 +50,6 @@ public abstract class MutationRate {
         return new PoissonRate(mean);
     }
 
-    private static final class PoissonRate extends MutationRate {
-        private final PoissonDistribution dist;
-        
-        private PoissonRate(double mean) {
-            super(mean);
-            this.dist = PoissonDistribution.create(mean);
-        }
-
-        @Override public int sampleMutationCount() {
-            return dist.sample();
-        }
-    }
-
     /**
      * Returns a new mutation process in which exactly one mutation
      * arises with probability {@code mean} (and no mutations arise
@@ -99,19 +64,6 @@ public abstract class MutationRate {
      */
     public static MutationRate uniform(double mean) {
         return new UniformRate(mean);
-    }
-
-    private static final class UniformRate extends MutationRate {
-        private UniformRate(double mean) {
-            super(mean);
-
-            if (mean < 0.0)
-                throw new IllegalArgumentException("Mutation rate cannot be negative.");
-        }
-
-        @Override public int sampleMutationCount() {
-            return JamRandom.global().accept(getMean()) ? 1 : 0;
-        }
     }
 
     /**
@@ -152,8 +104,42 @@ public abstract class MutationRate {
     }
 
     private static double resolveMeanRate(String meanName) {
-        return JamProperties.getRequiredDouble(meanName, RATE_RANGE);
+        return JamProperties.getRequiredDouble(meanName);
     }
+
+    /**
+     * Computes the total number of mutations <em>expected</em> to
+     * arise in a generation of daughter cells.
+     *
+     * <p>Note that this is a <em>semi-stochastic</em> calculation,
+     * with a random number source used only to discretize the exact
+     * expectation value.
+     *
+     * @param daughterCount the number of daughter cells in the new
+     * generation.
+     *
+     * @return the number of expected mutations in a generation of the
+     * given size.
+     */
+    public long computeMutationCount(long daughterCount) {
+        return JamRandom.global().discretize(daughterCount * mean);
+    }
+
+    /**
+     * Computes the distribution of <em>expected</em> mutation counts
+     * in a generation of daughter cells.
+     *
+     * <p>Note that this is a <em>semi-stochastic</em> calculation,
+     * with a random number source used only to discretize the exact
+     * expectation values.
+     *
+     * @param daughterCount the number of daughter cells in the new
+     * generation.
+     *
+     * @return an array {@code counts} where {@code counts[k]} is the
+     * number of daughter cells receiving exactly {@code k} mutations.
+     */
+    public abstract long[] computeMutationDistribution(long daughterCount);
 
     /**
      * Stochastically samples the number of mutations arising in a
@@ -161,20 +147,20 @@ public abstract class MutationRate {
      *
      * @return a randomly generated mutation count.
      */
-    public abstract int sampleMutationCount();
+    public abstract long sampleMutationCount();
 
     /**
      * Stochastically samples the number of mutations arising in a
-     * population of daughter cells.
+     * generation of daughter cells.
      *
      * @param daughterCount the number of new daughter cells in the
-     * population.
+     * generation.
      *
      * @return the total number of mutations arising across the
-     * population of daughter cells.
+     * generation of daughter cells.
      */
-    public int sampleMutationCount(long daughterCount) {
-        int result = 0;
+    public long sampleMutationCount(long daughterCount) {
+        long result = 0;
 
         for (long index = 0; index < daughterCount; ++index)
             result += sampleMutationCount();
@@ -200,6 +186,75 @@ public abstract class MutationRate {
      */
     public boolean isZero() {
         return DoubleComparator.DEFAULT.isZero(mean);
+    }
+
+    private static final class ZeroRate extends MutationRate {
+        private ZeroRate() {
+            super(0.0);
+        }
+
+        @Override public long computeMutationCount(long daughterCount) {
+            return 0;
+        }
+
+        @Override public long[] computeMutationDistribution(long daughterCount) {
+            return new long[] { 0 };
+        }
+
+        @Override public boolean isZero() {
+            return true;
+        }
+
+        @Override public long sampleMutationCount() {
+            return 0;
+        }
+
+        @Override public long sampleMutationCount(long daughterCount) {
+            return 0;
+        }
+    }
+
+    private static final class PoissonRate extends MutationRate {
+        private final PoissonDistribution dist;
+        
+        private PoissonRate(double mean) {
+            super(mean);
+            this.dist = PoissonDistribution.create(mean);
+        }
+
+        @Override public long[] computeMutationDistribution(long daughterCount) {
+            IntRange range  = dist.effectiveRange();
+            long[]   counts = new long[range.upper() + 1];
+
+            for (int k = 0; k <= range.upper(); ++k)
+                counts[k] = JamRandom.global().discretize(daughterCount * dist.pdf(k));
+
+            return counts;
+        }
+
+        @Override public long sampleMutationCount() {
+            return dist.sample();
+        }
+    }
+
+    private static final class UniformRate extends MutationRate {
+        private UniformRate(double mean) {
+            super(mean);
+            DoubleRange.FRACTIONAL.validate("Mean mutation rate", mean);
+        }
+
+        @Override public long[] computeMutationDistribution(long daughterCount) {
+            long mutationCount = computeMutationCount(daughterCount);
+            
+            assert mutationCount >= 0;
+            assert mutationCount <= daughterCount;
+            
+            return new long[] { daughterCount - mutationCount, mutationCount };
+        }
+
+        @Override public long sampleMutationCount() {
+            return JamRandom.global().accept(getMean()) ? 1 : 0;
+        }
     }
 
     @Override public boolean equals(Object that) {

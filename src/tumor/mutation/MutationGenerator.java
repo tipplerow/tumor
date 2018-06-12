@@ -1,13 +1,10 @@
 
 package tumor.mutation;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import jam.app.JamProperties;
-import jam.dist.PoissonDistribution;
 import jam.lang.JamException;
-import jam.math.DoubleComparator;
 
 /**
  * Generates mutations in a carrier.
@@ -52,58 +49,40 @@ public abstract class MutationGenerator {
     public static final String SELECTION_COEFF_PROPERTY = "tumor.mutation.selectionCoeff";
 
     /**
-     * Stochastically generates the mutations that originate in a
-     * single daughter cell during one cell division.
-     *
-     * <p>Note that the list will frequently be empty because
-     * mutations are typically rare.
+     * Generates the mutations that originate in a single daughter
+     * cell during one cell division.
      *
      * @return the mutations that originated in the daughter cell
      * (or an empty list if no mutations occurred).
      */
-    public abstract MutationList generate();
+    public abstract MutationList generateCellMutations();
 
     /**
-     * Stochastically generates the mutations that originate in a
-     * well-mixed cell group.
+     * Generates the mutations that originate in a (well-mixed) deme
+     * cell during one division cycle.
      *
-     * @param daughterCount the number of new daughter cells in the
-     * cell group.
+     * @param daughterCount the number of daughter cells produced
+     * during the division cycle.
      *
-     * @return all mutations that originated in the cell group (or
-     * an empty list if no mutations occurred).
+     * @return the mutations that originated in the deme.
      */
-    public MutationList generate(long daughterCount) {
-        Collection<Mutation> mutations = new ArrayList<Mutation>();
-
-        for (long index = 0; index < daughterCount; ++index)
-            mutations.addAll(generate());
-
-        return MutationList.create(mutations);
-    }
+    public abstract MutationList generateDemeMutations(long daughterCount);
 
     /**
-     * Returns a mutator that always returns an empty mutation list.
+     * Generates the mutations that originate in a lineage during
+     * one division cycle.
      *
-     * @return a mutator that always returns an empty mutation list.
+     * <p>The returned {@code List} will contain only (non-empty)
+     * mutation lists corresponding to mutated daughter cells who
+     * will form new genetically distinct lineages.
+     *
+     * @param daughterCount the number of daughter cells produced
+     * during the division cycle.
+     *
+     * @return the mutations originating in mutated daughter lineages
+     * only.
      */
-    public static MutationGenerator empty() {
-        return EmptyGenerator.INSTANCE;
-    }
-
-    private static final class EmptyGenerator extends MutationGenerator {
-        private EmptyGenerator() {}
-
-        private static final MutationGenerator INSTANCE = new EmptyGenerator();
-
-        @Override public MutationList generate() {
-            return MutationList.EMPTY;
-        }
-
-        @Override public MutationList generate(long daughterCount) {
-            return MutationList.EMPTY;
-        }
-    }
+    public abstract Collection<MutationList> generateLineageMutations(long daughterCount);
 
     /**
      * Returns the global mutation generator (defined through system
@@ -126,7 +105,7 @@ public abstract class MutationGenerator {
 
         switch (generatorType) {
         case EMPTY:
-            return empty();
+            return EmptyGenerator.INSTANCE;
 
         case NEUTRAL:
             return globalNeutral();

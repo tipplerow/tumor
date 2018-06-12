@@ -2,6 +2,7 @@
 package tumor.carrier;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -155,27 +156,23 @@ public class Lineage extends CellGroup {
         long daughterCount = growthCount.getDaughterCount();
         assert daughterCount <= cellCount;
 
+        // Obtain the new mutations for each mutated daughter cell...
+        Collection<MutationList> daughterMutLists =
+            tumorEnv.getMutationGenerator().generateLineageMutations(daughterCount);
+
         // Store each mutated daughter cell as a new single-cell
         // lineage...
         List<Lineage> daughters = new ArrayList<Lineage>();
 
-        for (long daughterIndex = 0; daughterIndex < daughterCount; ++daughterIndex) {
-            //
-            // Stochastically generate the mutations originating in
-            // this daughter cell...
-            //
-            MutationList daughterMut = tumorEnv.getMutationGenerator().generate();
+        for (MutationList daughterMut : daughterMutLists) {
+            if (daughterMut.isEmpty())
+                continue;
 
-            if (!daughterMut.isEmpty()) {
-                //
-                // Spawn a new lineage for this mutated daughter
-                // cell...
-                //
-                Lineage daughter = newDaughter(daughterMut);
-                
-                daughters.add(daughter);
-                cellCount -= daughter.countCells();
-            }
+            // Spawn a new lineage for this mutated daughter cell...
+            Lineage daughter = newDaughter(daughterMut);
+
+            daughters.add(daughter);
+            cellCount -= daughter.countCells();
         }
 
         assert cellCount >= 0;

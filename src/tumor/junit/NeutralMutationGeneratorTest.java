@@ -29,7 +29,7 @@ public class NeutralMutationGeneratorTest extends NumericTestBase {
         Multiset<Integer> counts = HashMultiset.create();
 
         for (int trial = 0; trial < 100000; ++trial) {
-            MutationList mutations = generator.generate();
+            MutationList mutations = generator.generateCellMutations();
             counts.add(mutations.size());
         }
 

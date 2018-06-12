@@ -60,16 +60,25 @@ public final class CompositeGenerator extends MutationGenerator {
         return Collections.unmodifiableList(generators);
     }
 
-    @Override public MutationList generate() {
-        return generate(1);
-    }
-
-    @Override public MutationList generate(long daughterCount) {
-        List<Mutation> mutations = new ArrayList<Mutation>();
+    @Override public MutationList generateCellMutations() {
+        Collection<Mutation> mutations = new ArrayList<Mutation>();
 
         for (MutationGenerator generator : generators)
-            mutations.addAll(generator.generate(daughterCount));
+            mutations.addAll(generator.generateCellMutations());
 
         return MutationList.create(mutations);
+    }
+
+    @Override public MutationList generateDemeMutations(long daughterCount) {
+        Collection<Mutation> mutations = new ArrayList<Mutation>();
+
+        for (MutationGenerator generator : generators)
+            mutations.addAll(generator.generateDemeMutations(daughterCount));
+
+        return MutationList.create(mutations);
+    }
+
+    @Override public Collection<MutationList> generateLineageMutations(long daughterCount) {
+        throw new UnsupportedOperationException("Composite generators are not yet implemented for lineage mutations.");
     }
 }

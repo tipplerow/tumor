@@ -133,7 +133,7 @@ public class TumorCell extends TumorComponent {
 
     private TumorCell newDaughter(TumorEnv tumorEnv) {
         MutationGenerator mutGenerator = tumorEnv.getMutationGenerator();
-        MutationList      daughterMut  = mutGenerator.generate();
+        MutationList      daughterMut  = mutGenerator.generateCellMutations();
         
         return newDaughter(daughterMut);
     }

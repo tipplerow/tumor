@@ -99,7 +99,7 @@ public class Deme extends CellGroup {
         // Each birth event creates two opportunities for mutations to
         // occur, so generate them...
         MutationGenerator mutGenerator = tumorEnv.getMutationGenerator();
-        MutationList      newMutations = mutGenerator.generate(growthCount.getDaughterCount());
+        MutationList      newMutations = mutGenerator.generateDemeMutations(growthCount.getDaughterCount());
 
         mutate(newMutations);
         latestMut = newMutations;

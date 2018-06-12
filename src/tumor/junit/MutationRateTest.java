@@ -15,26 +15,26 @@ import static org.junit.Assert.*;
 
 public class MutationRateTest extends NumericTestBase {
 
-    @Test public void testPoisson() {
+    @Test public void testPoissonSample() {
         double mean = 0.1;
         MutationRate rate = MutationRate.poisson(mean);
         PoissonDistribution dist = PoissonDistribution.create(mean);
         Multiset<Integer> counts = HashMultiset.create();
 
         for (int trial = 0; trial < 100000; ++trial)
-            counts.add(rate.sampleMutationCount());
+            counts.add((int) rate.sampleMutationCount());
 
         for (int count : counts.elementSet())
             assertEquals(dist.pdf(count), MultisetUtil.frequency(counts, count), 0.001);
     }
 
-    @Test public void testUniform() {
+    @Test public void testUniformSample() {
         double mean = 0.1;
         MutationRate rate = MutationRate.uniform(mean);
         Multiset<Integer> counts = HashMultiset.create();
 
         for (int trial = 0; trial < 100000; ++trial)
-            counts.add(rate.sampleMutationCount());
+            counts.add((int) rate.sampleMutationCount());
 
         assertEquals(2, counts.elementSet().size());
 
