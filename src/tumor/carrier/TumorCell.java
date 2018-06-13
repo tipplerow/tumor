@@ -14,7 +14,7 @@ import tumor.mutation.MutationList;
 /**
  * Represents a single tumor cell.
  */
-public class TumorCell extends TumorComponent {
+public final class TumorCell extends FixedComponent {
     //
     // Tumor cells are alive when created; the state becomes DEAD
     // during the time-step advancement if a death event occurs.
@@ -81,17 +81,6 @@ public class TumorCell extends TumorComponent {
     }
 
     /**
-     * Creates a daughter cell with new original mutations.
-     *
-     * @param daughterMut the mutations originating in the daughter.
-     *
-     * @return the daughter cell.
-     */
-    public TumorCell newDaughter(MutationList daughterMut) {
-        return new TumorCell(this, daughterMut);
-    }
-
-    /**
      * Advances this tumor cell through one discrete time step.
      *
      * @param tumorEnv the local tumor environment where this cell
@@ -109,7 +98,7 @@ public class TumorCell extends TumorComponent {
         // Stochastically sample the event to occur on this step...
         long        netCapacity = tumorEnv.getGrowthCapacity();
         GrowthRate  growthRate  = tumorEnv.getGrowthRate();
-        GrowthCount growthCount = growthRate.sample(1L, netCapacity);
+        GrowthCount growthCount = growthRate.sampleCount(1L, netCapacity);
 
         assert growthCount.getEventCount() <= 1;
 
@@ -136,6 +125,10 @@ public class TumorCell extends TumorComponent {
         MutationList      daughterMut  = mutGenerator.generateCellMutations();
         
         return newDaughter(daughterMut);
+    }
+
+    private TumorCell newDaughter(MutationList daughterMut) {
+        return new TumorCell(this, daughterMut);
     }
 
     private List<TumorCell> deathEvent() {

@@ -28,12 +28,12 @@ public class GrowthRateTest extends NumericTestBase {
         int TRIAL_COUNT = 100;
 
         for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
-            GrowthCount count = rate2025.compute(100);
+            GrowthCount count = rate2025.computeCount(100);
 
             assertEquals(20, count.getBirthCount());
             assertEquals(25, count.getDeathCount());
 
-            count = rate5545.compute(100);
+            count = rate5545.computeCount(100);
 
             assertEquals(55, count.getBirthCount());
             assertEquals(45, count.getDeathCount());
@@ -44,17 +44,17 @@ public class GrowthRateTest extends NumericTestBase {
         int TRIAL_COUNT = 100;
 
         for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
-            GrowthCount count = rate7525.compute(100, -10);
+            GrowthCount count = rate7525.computeCount(100, -10);
 
             assertEquals(15, count.getBirthCount());
             assertEquals(25, count.getDeathCount());
 
-            count = rate7525.compute(100, 0);
+            count = rate7525.computeCount(100, 0);
 
             assertEquals(25, count.getBirthCount());
             assertEquals(25, count.getDeathCount());
 
-            count = rate7525.compute(100, 20);
+            count = rate7525.computeCount(100, 20);
 
             assertEquals(45, count.getBirthCount());
             assertEquals(25, count.getDeathCount());
@@ -70,8 +70,8 @@ public class GrowthRateTest extends NumericTestBase {
         Collection<GrowthCount> coll5545 = new ArrayList<GrowthCount>();
 
         for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
-            GrowthCount count2025 = rate2025.compute(POP_2025);
-            GrowthCount count5545 = rate5545.compute(POP_5545);
+            GrowthCount count2025 = rate2025.computeCount(POP_2025);
+            GrowthCount count5545 = rate5545.computeCount(POP_5545);
 
             assertTrue(34 <= count2025.getEventCount() && count2025.getEventCount() <= 35);
             assertTrue(18 <= count2025.getDeathCount() && count2025.getDeathCount() <= 20);
@@ -102,17 +102,17 @@ public class GrowthRateTest extends NumericTestBase {
         int TRIAL_COUNT = 10000;
 
         for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
-            GrowthCount count = rate7525.compute(105, -10);
+            GrowthCount count = rate7525.computeCount(105, -10);
 
             assertTrue(26 <= count.getDeathCount() && count.getDeathCount() <= 27);
             assertEquals(-10, count.getNetChange());
 
-            count = rate7525.compute(105, 0);
+            count = rate7525.computeCount(105, 0);
 
             assertTrue(26 <= count.getDeathCount() && count.getDeathCount() <= 27);
             assertEquals(0, count.getNetChange());
 
-            count = rate7525.compute(105, 20);
+            count = rate7525.computeCount(105, 20);
 
             assertTrue(26 <= count.getDeathCount() && count.getDeathCount() <= 27);
             assertEquals(20, count.getNetChange());
@@ -257,7 +257,7 @@ public class GrowthRateTest extends NumericTestBase {
         assertDouble(f2 * rate5545.getGrowthFactor(), r4.getGrowthFactor());
     }
 
-    @Test public void testSample() {
+    @Test public void testSampleCount() {
         int POP_2025    = 7;
         int POP_5545    = 13;
         int TRIAL_COUNT = 10000;
@@ -266,8 +266,8 @@ public class GrowthRateTest extends NumericTestBase {
         Collection<GrowthCount> coll5545 = new ArrayList<GrowthCount>();
 
         for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
-            coll2025.add(rate2025.sample(POP_2025));
-            coll5545.add(rate5545.sample(POP_5545));
+            coll2025.add(rate2025.sampleCount(POP_2025));
+            coll5545.add(rate5545.sampleCount(POP_5545));
         }
 
         GrowthCount sum2025 = GrowthCount.sum(coll2025);
@@ -284,17 +284,17 @@ public class GrowthRateTest extends NumericTestBase {
         int TRIAL_COUNT = 10;
 
         for (int trial = 0; trial < TRIAL_COUNT; ++trial) {
-            GrowthCount count = rate7525.sample(10000, -500);
+            GrowthCount count = rate7525.sampleCount(10000, -500);
 
             assertTrue(-505 <= count.getNetChange()  && count.getNetChange()  <= -500);
             assertTrue(2400 <= count.getDeathCount() && count.getDeathCount() <= 2600);
 
-            count = rate7525.sample(10000, 0);
+            count = rate7525.sampleCount(10000, 0);
 
             assertTrue(  -5 <= count.getNetChange()  && count.getNetChange()  <=    0);
             assertTrue(2400 <= count.getDeathCount() && count.getDeathCount() <= 2600);
 
-            count = rate7525.sample(10000, 1000);
+            count = rate7525.sampleCount(10000, 1000);
 
             assertTrue( 995 <= count.getNetChange()  && count.getNetChange()  <= 1000);
             assertTrue(2400 <= count.getDeathCount() && count.getDeathCount() <= 2600);

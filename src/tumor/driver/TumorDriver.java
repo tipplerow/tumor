@@ -493,8 +493,6 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      */
     protected void recordSnapshot(File snapshotDir) {
         JamLogger.info("Recording snapshot...");
-
-        MutationList  mutations  = getTumor().getAccumulatedMutations();
         Collection<E> components = getTumor().sortComponents();
 
         if (writeComponentAncestry)
@@ -510,7 +508,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
             ComponentMutationRecord.writeAccumulated(snapshotDir, ACCUMULATED_MUTATIONS_NAME, components);
 
         if (writeScalarMutations)
-            ScalarMutationRecord.write(snapshotDir, SCALAR_MUTATIONS_NAME, mutations);
+            ScalarMutationRecord.write(snapshotDir, SCALAR_MUTATIONS_NAME, getTumor().getAccumulatedMutations());
     }
 
     /**

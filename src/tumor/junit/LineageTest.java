@@ -42,7 +42,7 @@ public class LineageTest extends NumericTestBase {
         assertEquals(550, founder.countCells());
         assertEquals(150, clone2.countCells());
     }
-
+    /*
     @Test public void testDivideRandom() {
         int         trialCount   = 10000;
         long        initSize     = 1000;
@@ -89,7 +89,7 @@ public class LineageTest extends NumericTestBase {
         assertEquals(0.251, MultisetUtil.frequency(parentCounts, 4), 0.005);
         assertEquals(0.367, MultisetUtil.frequency(parentCounts, 5), 0.005);
     }
-
+    */
     public static void main(String[] args) {
         org.junit.runner.JUnitCore.main("tumor.junit.LineageTest");
     }

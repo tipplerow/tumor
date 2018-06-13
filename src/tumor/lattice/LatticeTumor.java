@@ -176,15 +176,11 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
-     * Computes the number of <em>additional</em> tumor cells that may
-     * be accomodated at a specified expansion site.
+     * Advances a parent component by one discrete time step.
      *
-     * @param expansionCoord the site where the new cells would be
-     * placed.
-     *
-     * @return the additional capacity of the expansion site.
+     * @param parent the parent component to be advanced.
      */
-    public abstract long computeExpansionFreeCapacity(Coord expansionCoord);
+    protected abstract void advance(E parent);
 
     /**
      * Returns the total number of tumor cells present at a given
@@ -215,93 +211,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * specified site without exceeding the capacity of that site.
      */
     public abstract boolean isAvailable(Coord coord, E component);
-
-    /**
-     * Advances a parent component by one discrete time step in a
-     * given local environment and returns any offspring produced.
-     *
-     * <p>The parent site may exceed its capacity after advancement.
-     * Subclasses must not distribute any excess capacity during this
-     * method call; that occurs in {@code distributeExcessOccupants}.
-     *
-     * @param parent the parent component to be advanced.
-     *
-     * @param parentCoord the location of the parent component.
-     *
-     * @param localEnv the local environment at the parent site.
-     *
-     * @return any offspring created during advancement.
-     */
-    protected abstract List<E> advance(E parent, Coord parentCoord, TumorEnv localEnv);
-
-    /**
-     * Moves tumor cells from a parent component that has outgrown its
-     * site to an expansion site so that the site capacity constraints
-     * are satisfied.
-     *
-     * @param parent the parent component that has outgrown its site.
-     *
-     * @param parentCoord the coordinate of the parent component.
-     *
-     * @param expansionCoord the coordinate of the expansion site.
-     *
-     * @param excessOccupancy the number of cell that must be moved
-     * to the expansion site.
-     */
-    protected abstract void distributeExcessOccupants(E     parent,
-                                                      Coord parentCoord,
-                                                      Coord expansionCoord,
-                                                      long  excessOccupancy);
-
-    /**
-     * Computes the (non-negative) number of tumor cells present at
-     * the location of a parent group <em>in excess of</em> its site
-     * capacity.
-     *
-     * <p>Lattice sites should never have excess occupancy before or
-     * after the advancement step, but a site may temporarily exceed
-     * its capacity immediately after the advancement of a parent
-     * component.  The tumor implementation must then distribute the
-     * excess to an adjacent site (or sites).
-     *
-     * @param parentCoord the coordinate of the parent component.
-     *
-     * @return the difference between the occupancy of the parent site
-     * and its capacity (or zero if the site is below its capacity).
-     */
-    public long computeExcessParentOccupancy(Coord parentCoord) {
-        return Math.max(0, countCells(parentCoord) - getSiteCapacity(parentCoord));
-    }
-
-    /**
-     * Computes the local growth capacity: the total number of new
-     * tumor cells that may be accomodated at the site of a parent
-     * component (about to grow stochastically) and a neighboring
-     * expansion site where offspring will be placed if necessary.
-     *
-     * @param parentCoord the coordinate of the parent component.
-     *
-     * @param expansionCoord the coordinate of the neighboring site
-     * where offspring will be placed if necessary.
-     *
-     * @return the local growth capacity for the specified lattice
-     * sites.
-     */
-    public long computeGrowthCapacity(Coord parentCoord, Coord expansionCoord) {
-        return computeParentFreeCapacity(parentCoord) + computeExpansionFreeCapacity(expansionCoord);
-    }
-
-    /**
-     * Computes the number of <em>additional</em> tumor cells that may
-     * be accomodated in a parent group at its current lattice site.
-     *
-     * @param parentCoord the site where the parent group is located.
-     *
-     * @return the additional capacity of the parent site.
-     */
-    public long computeParentFreeCapacity(Coord parentCoord) {
-        return getSiteCapacity(parentCoord) - countCells(parentCoord);
-    }
 
     /**
      * Determines whether the number of tumor cells at a given lattice
@@ -447,6 +356,31 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     */
 
     /**
+     * Creates the appropriate local environment for advancing a
+     * parent component.
+     *
+     * @param parent the parent component being advanced.
+     *
+     * @param parentCoord the location of the parent coordinate.
+     *
+     * @param growthCapacity the total local growth capacity in the
+     * neighborhood surrounding the parent.
+     *
+     * @return the local environment containing the appropriate net
+     * growth rate.
+     */
+    protected TumorEnv createLocalEnv(E parent, Coord parentCoord, long growthCapacity) {
+        //
+        // The parent coordinate is currently not needed, but it may
+        // be required in the future to optimize the retrieval of the
+        // local growth rates and mutation generators...
+        //
+        return new TumorEnv(growthCapacity,
+                            getLocalGrowthRate(parent),
+                            getLocalMutationGenerator(parent));
+    }
+
+    /**
      * Maps the locations of the components in a single-occupancy
      * lattice tumor.
      *
@@ -525,19 +459,37 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
     private void advance(List<E> parents) {
         for (E parent : parents)
-            advance(parent);
+            if (parent.isDead())
+                throw new IllegalStateException("Cannot advance a dead parent.");
+            else
+                advance(parent);
     }
-
+    /*
     private void advance(E parent) {
-        //
-        // Ensure that dead parents have been removed and are not advanced...
-        //
-        if (parent.isDead())
-            throw new IllegalStateException("Cannot advance a dead parent.");
-
         // Locate the parent...
         Coord parentCoord = locateComponent(parent);
 
+        // Compute the free capacity of the parent site...
+        long parentFreeCapacity = computeParentFreeCapacity(parent, parentCoord);
+
+        if (canExceedParentCapacity(parent, parentCoord, parentFreeCapacity))
+            advanceWithExpansion(parent, parentCoord, parentFreeCapacity);
+        else
+            advanceInPlace(parent, parentCoord, parentFreeCapacity);
+    }
+
+    private boolean canExceedParentCapacity(E parent, Coord parentCoord, long parentFreeCapacity) {
+        //
+        // This is a very loose criterion: examine the maximum
+        // possible population growth in the local environment...
+        //
+        GrowthRate localRate = getLocalGrowthRate(parent);
+        long       maxGrowth = localRate.resolveMaximumGrowth(parent.countCells());
+
+        return maxGrowth > parentFreeCapacity;
+    }
+
+    private void advanceWithExpansion(E parent, Coord parentCoord, long parentFreeCapacity) {
         // Select an expansion site (which may be required to
         // accomodate offspring) at random...
         Coord expansionCoord = selectNeighbor(parentCoord);
@@ -545,11 +497,12 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         // Compute the local growth capacity: the total number of new
         // tumor cells that can be accomodated the parent site and the
         // neighbor site...
-        long growthCapacity = computeGrowthCapacity(parentCoord, expansionCoord);
+        long expansionFreeCapacity = computeExpansionFreeCapacity(expansionCoord);
+        long totalGrowthCapacity   = parentFreeCapacity + expansionFreeCapacity;
 
         // Construct the appropriate local environment...
         TumorEnv localEnv =
-            new TumorEnv(growthCapacity,
+            new TumorEnv(totalGrowthCapacity,
                          getLocalGrowthRate(parent),
                          getLocalMutationGenerator(parent));
 
@@ -586,6 +539,30 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         assert satisfiesCapacityConstraint(expansionCoord);
     }
     
+    private void advanceInPlace(E parent, Coord parentCoord, long parentFreeCapacity) {
+        // Construct the appropriate local environment...
+        TumorEnv localEnv =
+            new TumorEnv(parentFreeCapacity,
+                         getLocalGrowthRate(parent),
+                         getLocalMutationGenerator(parent));
+
+        // Advance the parent component within the local environment...
+        List<E> daughters = advance(parent, parentCoord, localEnv);
+
+        if (parent.isDead()) {
+            //
+            // Remove dead parents...
+            //
+            removeComponent(parent, parentCoord);
+        }
+
+        // All daughters should be accomodated on the parent site...
+        for (E daughter : daughters)
+            addComponent(daughter, parentCoord);
+
+        assert satisfiesCapacityConstraint(parentCoord);
+    }
+    */
     private void migrate() {
         if (migrationModel.getType() == MigrationType.PINNED)
             return;

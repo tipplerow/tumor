@@ -2,6 +2,7 @@
 package tumor.lattice;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ import tumor.carrier.TumorEnv;
  * <p><b>Single-site occupancy restriction.</b> Site occupancy is
  * limited to a single deme.
  */
-public final class DemeLatticeTumor extends LatticeTumor<Deme> {
+public final class DemeLatticeTumor extends MultiCellularLatticeTumor<Deme> {
     private DemeLatticeTumor(DemeLatticeTumor parent) {
         super(parent, createLattice());
     }
@@ -48,24 +49,8 @@ public final class DemeLatticeTumor extends LatticeTumor<Deme> {
         addComponent(founder, FOUNDER_COORD);
     }
 
-    @Override public long computeExpansionFreeCapacity(Coord expansionCoord) {
-        //
-        // Only one deme per site, so the expansion capacity is zero
-        // if the site is already occupied; if unoccupied, then the
-        // expansion capacity is the full site capacity.
-        //
-        if (lattice.isOccupied(expansionCoord))
-            return 0;
-        else
-            return getSiteCapacity(expansionCoord);
-    }
-
     @Override public long countCells(Coord coord) {
         return Carrier.countCells(lattice.viewOccupants(coord));
-    }
-
-    @Override public CapacityModel getCapacityModel() {
-        return CapacityModel.global();
     }
 
     @Override public boolean isAvailable(Coord coord, Deme deme) {
@@ -79,20 +64,62 @@ public final class DemeLatticeTumor extends LatticeTumor<Deme> {
         return mapComponentsSO();
     }
 
-    @Override protected List<Deme> advance(Deme parent, Coord parentCoord, TumorEnv localEnv) {
-        //
-        // The base class takes care of everything else...
-        //
-        return parent.advance(localEnv);
+    @Override protected void advanceInPlace(Deme parent, Coord parentCoord, long growthCapacity) {
+        // ============================================================
+        // The superclass advance() method updates the cell-count cache
+        // for changes in the parent size, so we do not do that here.
+        // ============================================================
+
+        // Construct the appropriate local environment...
+        TumorEnv localEnv = createLocalEnv(parent, parentCoord, growthCapacity);
+
+        // Advance the parent component within the local environment...
+        List<Deme> daughters = parent.advance(localEnv);
+
+        // Demes should never produce offspring...
+        assert daughters.isEmpty();
     }
 
-    @Override protected void distributeExcessOccupants(Deme  parent,
-                                                       Coord parentCoord,
-                                                       Coord expansionCoord,
-                                                       long  excessOccupancy) {
+    @Override protected void advanceWithExpansion(Deme parent, Coord parentCoord, long parentFreeCapacity) {
+        // ============================================================
+        // The superclass advance() method updates the cell-count cache
+        // for changes in the parent size, so we do not do that here.
+        // ============================================================
+
+        // Select a neighboring expansion site at random...
+        Coord expansionCoord = selectNeighbor(parentCoord);
+
+        // Compute the total growth capacity...
+        long growthCapacity = parentFreeCapacity + computeExpansionFreeCapacity(expansionCoord);
+
+        // Advance the parent component using the total growth capacity...
+        advanceInPlace(parent, parentCoord, growthCapacity);
+
+        // Compute the excess occupancy...
+        long excessOccupancy = Math.max(0, parent.countCells() - getSiteCapacity(parentCoord));
+
+        if (excessOccupancy > 0) {
+            //
+            // The deme must be divided and the clone placed on the
+            // expansion site.  The addComponent() method will add
+            // the cell count for the deme to the cached total, and
+            // the base class method will update the parent count...
+            //
+            addComponent(parent.divide(excessOccupancy), expansionCoord);
+        }
+
+        assert satisfiesCapacityConstraint(expansionCoord);
+    }
+
+    private long computeExpansionFreeCapacity(Coord expansionCoord) {
         //
-        // Divide the parent deme and place the clone at the expansion site...
+        // Only one deme per site, so the expansion capacity is zero
+        // if the site is already occupied; if unoccupied, then the
+        // expansion capacity is the full site capacity.
         //
-        addComponent(parent.divide(excessOccupancy), expansionCoord);
+        if (lattice.isOccupied(expansionCoord))
+            return 0;
+        else
+            return getSiteCapacity(expansionCoord);
     }
 }

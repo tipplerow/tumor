@@ -96,32 +96,6 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         */
     }
 
-    @Override public long computeExcessParentOccupancy(Coord parentCoord) {
-        //
-        // The parent cell itself never increases in size...
-        //
-        return 0;
-    }
-
-    @Override public long computeExpansionFreeCapacity(Coord expansionCoord) {
-        return lattice.isOccupied(expansionCoord) ? 0 : 1;
-    }
-
-    @Override public long computeGrowthCapacity(Coord parentCoord, Coord expansionCoord) {
-        //
-        // The parent site is always occupied, so just check the
-        // expansion site...
-        //
-        return computeExpansionFreeCapacity(expansionCoord);
-    }
-
-    @Override public long computeParentFreeCapacity(Coord parentCoord) {
-        //
-        // The parent site is always occupied...
-        //
-        return 0;
-    }
-
     @Override public long countCells() {
         return lattice.countOccupants();
     }
@@ -146,19 +120,44 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         return mapComponentsSO();
     }
 
-    @Override protected List<TumorCell> advance(TumorCell parent, Coord parentCoord, TumorEnv localEnv) {
+    @Override protected void advance(TumorCell parent) {
         //
-        // The base class handles everything...
+        // Locate the parent and choose a neighboring site at random
+        // where a daughter cell will be placed...
         //
-        return parent.advance(localEnv);
-    }
+        Coord parentCoord   = locateComponent(parent);
+        Coord neighborCoord = selectNeighbor(parentCoord);
 
-    @Override protected void distributeExcessOccupants(TumorCell parent,
-                                                       Coord     parentCoord,
-                                                       Coord     expansionCoord,
-                                                       long      excessOccupancy) {
-        // Parent cells never increase in size, so they can never
-        // outgrow their original site...
-        throw new IllegalStateException("Tumor cells should never exceed the site capacity.");
+        // The growth capacity depends on the availability of the
+        // neighbor site...
+        long growthCapacity =
+            lattice.isAvailable(neighborCoord) ? 1 : 0;
+
+        // Construct the appropriate local environment...
+        TumorEnv localEnv = createLocalEnv(parent, parentCoord, growthCapacity);
+
+        // Advance the parent component within the local environment...
+        List<TumorCell> daughters = parent.advance(localEnv);
+
+        // Either there is a birth event or there is not...
+        assert daughters.isEmpty() || (daughters.size() == 2 && parent.isDead());
+
+        if (daughters.size() == 2) {
+            //
+            // The parent divided and died:  Remove the dead parent,
+            // place the first daughter at the parent site and place
+            // the second daughter at the neighbor site...
+            //
+            removeComponent(parent, parentCoord);
+
+            addComponent(daughters.get(0), parentCoord);
+            addComponent(daughters.get(1), neighborCoord);
+        }
+        else if (parent.isDead()) {
+            //
+            // The parent died without producing any offspring...
+            //
+            removeComponent(parent, parentCoord);
+        }
     }
 }

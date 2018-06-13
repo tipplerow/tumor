@@ -6,8 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import jam.math.Probability;
-
 import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationList;
@@ -16,58 +14,24 @@ import tumor.mutation.MutationList;
  * Represents a well-mixed population of genetically identical cells
  * where any new mutation spawns a new distinct daughter lineage.
  */
-public class Lineage extends CellGroup {
-    /**
-     * Creates a founding lineage with the unique global mutation list
-     * responsible for transformation; the global mutation generator
-     * is the source of somatic mutations.
-     *
-     * @param growthRate the intrinsic growth rate of the (identical)
-     * cells in the founding lineage.
-     *
-     * @param cellCount the number of (identical) cells in the founding 
-     * lineage.
-     */
-    protected Lineage(GrowthRate growthRate, long cellCount) {
-        super(growthRate, cellCount);
+public final class Lineage extends FixedComponent {
+    //
+    // The number of identical cells in this lineage...
+    //
+    private long cellCount;
+
+    private Lineage(Lineage parent, GrowthRate growthRate, MutationList originalMut, long cellCount) {
+        super(parent, growthRate, originalMut);
     }
 
     /**
-     * Creates a cloned lineage with no original mutations.
-     *
-     * @param parent the parent lineage.
-     *
-     * @param cellCount the number of (identical) cells in the cloned
-     * lineage.
-     */
-    protected Lineage(Lineage parent, long cellCount) {
-        super(parent, cellCount);
-    }
-
-    /**
-     * Creates a daughter lineage.
-     *
-     * @param parent the parent lineage.
-     *
-     * @param daughterMut the mutations originating in the daughter.
-     */
-    protected Lineage(Lineage parent, MutationList daughterMut) {
-        super(parent, daughterMut, DAUGHTER_CELL_COUNT);
-    }
-
-    /**
-     * Number of cells in a newly mutated daughter lineage.
+     * Number of cells in a newly created mutant daughter lineage.
      */
     public static final long DAUGHTER_CELL_COUNT = 1L;
 
     /**
-     * Creates a founding lineage with the global mutation generator
-     * as the source of somatic mutations.
-     *
-     * <p>Note that any mutations that triggered the transformation to
-     * malignancy will be carried by all daughter cells (and therefore
-     * may be tracked in the tumor itself), so they do not need to be
-     * explicitly specified in the founding lineage.
+     * Creates a founding lineage containing the mutations responsible
+     * for transformation.
      *
      * @param growthRate the intrinsic growth rate of the (identical)
      * cells in the founding lineage.
@@ -78,29 +42,37 @@ public class Lineage extends CellGroup {
      * @return the founding lineage.
      */
     public static Lineage founder(GrowthRate growthRate, long cellCount) {
-        return new Lineage(growthRate, cellCount);
+        return new Lineage(null, growthRate, MutationList.TRANSFORMERS, cellCount);
     }
 
     /**
-     * Creates a (single-celled) daughter lineage with new original
-     * mutations.
+     * Creates a new genetically identical lineage (a clone).
      *
-     * @param daughterMut the mutations originating in the daughter.
+     * @param cloneCellCount the number of cells to transfer to
+     * the new clone.
      *
-     * @return the daughter lineage.
+     * @return the new clone lineage.
+     *
+     * @throws IllegalArgumentException if the clone cell count
+     * exceeds the size of this lineage.
      */
-    protected Lineage newDaughter(MutationList daughterMut) {
-        return new Lineage(this, daughterMut);
+    public Lineage divide(long cloneCellCount) {
+        if (cellCount >= cloneCellCount)
+            cellCount -= cloneCellCount;
+        else
+            throw new IllegalArgumentException("Clone cannot exceed the size of the parent.");
+
+        return new Lineage(this, this.growthRate, MutationList.EMPTY, cloneCellCount);
     }
 
     /**
-     * Determines whether another lineage is genetically identical
-     * to this lineage.
+     * Determines whether another lineage is genetically identical to
+     * this lineage.
      *
      * @param lineage the lineage to compare to this.
      *
-     * @return {@code true} iff the input lineage has accumulated
-     * identical mutations as this lineage.
+     * @return {@code true} iff the input lineage has a genome that is
+     * identical to this lineage.
      */
     public boolean isClone(Lineage lineage) {
         return super.isClone(lineage);
@@ -179,24 +151,16 @@ public class Lineage extends CellGroup {
         return daughters;
     }
 
+    private Lineage newDaughter(MutationList daughterMut) {
+        return new Lineage(this, daughterMut.apply(this.growthRate), daughterMut, DAUGHTER_CELL_COUNT);
+    }
+
+    @Override public long countCells() {
+        return cellCount;
+    }
+
     @SuppressWarnings("unchecked")
     @Override public List<Lineage> advance(TumorEnv tumorEnv, int timeSteps) {
         return (List<Lineage>) super.advance(tumorEnv, timeSteps);
-    }
-
-    @Override public Lineage divide(long cloneCellCount) {
-        return (Lineage) super.divide(cloneCellCount);
-    }
-
-    @Override public Lineage divide(Probability transferProb) {
-        return (Lineage) super.divide(transferProb);
-    }
-
-    @Override public Lineage divide(Probability transferProb, long minCloneCellCount, long maxCloneCellCount) {
-        return (Lineage) super.divide(transferProb, minCloneCellCount, maxCloneCellCount);
-    }
-
-    @Override public Lineage newClone(long cellCount) {
-        return new Lineage(this, cellCount);
     }
 }

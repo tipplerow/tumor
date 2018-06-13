@@ -1,13 +1,13 @@
 
 package tumor.carrier;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import jam.math.Probability;
-
 import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
+import tumor.mutation.Mutation;
 import tumor.mutation.MutationGenerator;
 import tumor.mutation.MutationList;
 
@@ -16,45 +16,31 @@ import tumor.mutation.MutationList;
  * where any new mutation becomes fixed throughout the population
  * (without spawning a new deme).
  */
-public class Deme extends CellGroup {
-    // Mutations acquired in the most recent call to advance()...
-    private MutationList latestMut = MutationList.EMPTY;
+public final class Deme extends TumorComponent {
+    // The number of identical cells in this deme...
+    private long cellCount;
+
+    // The current growth rate for this deme...
+    private GrowthRate growthRate;
+
+    // All mutations accumulated in this deme...
+    private final List<Mutation> accumulatedMut;
+
+    // Index of the first original mutation...
+    private final int firstOriginal;
+
+    private Deme(Deme parent, long cellCount, GrowthRate growthRate, List<Mutation> accumulatedMut, int firstOriginal) {
+        super(parent);
+
+        this.cellCount      = cellCount;
+        this.growthRate     = growthRate;
+        this.accumulatedMut = accumulatedMut;
+        this.firstOriginal  = firstOriginal;
+    }
 
     /**
      * Creates a founding deme with the unique global mutation list
-     * responsible for transformation; the global mutation generator
-     * is the source of somatic mutations.
-     *
-     * @param growthRate the intrinsic growth rate of the (identical)
-     * cells in the founding deme.
-     *
-     * @param cellCount the number of (identical) cells in the founding 
-     * deme.
-     */
-    protected Deme(GrowthRate growthRate, long cellCount) {
-        super(growthRate, cellCount);
-    }
-
-    /**
-     * Creates a cloned deme with no original mutations.
-     *
-     * @param parent the parent deme.
-     *
-     * @param cellCount the number of (identical) cells in the cloned
-     * deme.
-     */
-    protected Deme(Deme parent, long cellCount) {
-        super(parent, cellCount);
-    }
-
-    /**
-     * Creates a founding deme with the global mutation generator as
-     * the source of somatic mutations.
-     *
-     * <p>Note that any mutations that triggered the transformation to
-     * malignancy will be carried by all clones (and may be tracked in
-     * the tumor itself), so they do not need to be specified in the
-     * founding deme.
+     * responsible for transformation.
      *
      * @param growthRate the intrinsic growth rate of the (identical)
      * cells in the founding deme.
@@ -65,17 +51,48 @@ public class Deme extends CellGroup {
      * @return the founding deme.
      */
     public static Deme founder(GrowthRate growthRate, long cellCount) {
-        return new Deme(growthRate, cellCount);
+        return new Deme(null, cellCount, growthRate, founderMutations(), 0);
+    }
+
+    private static List<Mutation> founderMutations() {
+        return new ArrayList<Mutation>(MutationList.TRANSFORMERS);
     }
 
     /**
-     * Returns the mutations acquired in the most recent time step
-     * (call to {@code advance()}).
+     * Creates a new genetically identical deme (a clone).
      *
-     * @return the mutations acquired in the most recent time step.
+     * @param cloneCellCount the number of cells to transfer to
+     * the new clone.
+     *
+     * @return the new clone deme.
+     *
+     * @throws IllegalArgumentException if the clone cell count
+     * exceeds the size of this deme.
      */
-    public MutationList getLatestMutations() {
-        return latestMut;
+    public Deme divide(long cloneCellCount) {
+        if (cellCount >= cloneCellCount)
+            cellCount -= cloneCellCount;
+        else
+            throw new IllegalArgumentException("Clone cannot exceed the size of the parent.");
+
+        return new Deme(this, cloneCellCount, this.growthRate, cloneMutations(), cloneOriginal());
+    }
+
+    private List<Mutation> cloneMutations() {
+        //
+        // Must create a deep copy because the clone will proceed to
+        // accumulate its own unique mutations...
+        //
+        return new ArrayList<Mutation>(accumulatedMut);
+    }
+
+    private int cloneOriginal() {
+        //
+        // The clone does not contain any original mutations, so the
+        // index of the first original mutation is one beyond the last
+        // mutation in the list...
+        //
+        return accumulatedMut.size();
     }
 
     /**
@@ -101,30 +118,31 @@ public class Deme extends CellGroup {
         MutationGenerator mutGenerator = tumorEnv.getMutationGenerator();
         MutationList      newMutations = mutGenerator.generateDemeMutations(growthCount.getDaughterCount());
 
-        mutate(newMutations);
-        latestMut = newMutations;
+        // Add the new mutations and update the growth rate...
+        accumulatedMut.addAll(newMutations);
+        growthRate = newMutations.apply(growthRate);
 
         return Collections.emptyList();
+    }
+
+    @Override public long countCells() {
+        return cellCount;
+    }
+
+    @Override public MutationList getAccumulatedMutations() {
+        return MutationList.create(accumulatedMut);
+    }
+
+    @Override public GrowthRate getGrowthRate() {
+        return growthRate;
+    }
+
+    @Override public MutationList getOriginalMutations() {
+        return MutationList.create(accumulatedMut.subList(firstOriginal, accumulatedMut.size()));
     }
 
     @SuppressWarnings("unchecked")
     @Override public List<Deme> advance(TumorEnv tumorEnv, int timeSteps) {
         return (List<Deme>) super.advance(tumorEnv, timeSteps);
-    }
-
-    @Override public Deme divide(long cloneCellCount) {
-        return (Deme) super.divide(cloneCellCount);
-    }
-
-    @Override public Deme divide(Probability transferProb) {
-        return (Deme) super.divide(transferProb);
-    }
-
-    @Override public Deme divide(Probability transferProb, long minCloneCellCount, long maxCloneCellCount) {
-        return (Deme) super.divide(transferProb, minCloneCellCount, maxCloneCellCount);
-    }
-
-    @Override public Deme newClone(long cellCount) {
-        return new Deme(this, cellCount);
     }
 }

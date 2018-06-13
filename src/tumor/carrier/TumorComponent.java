@@ -8,9 +8,9 @@ import java.util.List;
 
 import jam.lang.OrdinalIndex;
 
+import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
 import tumor.mutation.MutationGenerator;
-import tumor.mutation.MutationList;
 
 /**
  * Represents the most fundamental (non-divisible) tumor components:
@@ -20,70 +20,16 @@ import tumor.mutation.MutationList;
  * well defined growth rate, and are always contained within a tumor.
  */
 public abstract class TumorComponent extends Carrier {
-    // The intrinsic growth rate of this component...
-    private GrowthRate growthRate;
-
-    // Only those mutations that originated in this component...
-    private MutationList originalMut;
-
-    // All mutations accumulated in this component, traced back to the
-    // founder, computed on-demand and cached...
-    private MutationList accumulatedMut = null;
-
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
-    private TumorComponent(TumorComponent parent, GrowthRate growthRate, MutationList originalMut) {
-        super(ordinalIndex.next(), parent);
-
-        this.growthRate  = growthRate;
-        this.originalMut = originalMut;
-    }
-
     /**
-     * Creates a founding tumor component with the unique global
-     * mutation list responsible for transformation; the global
-     * mutation generator is the source of somatic mutations.
+     * Creates all tumor components.
      *
-     * @param growthRate the intrinsic growth rate of the founder.
-     */
-    protected TumorComponent(GrowthRate growthRate) {
-        this(null, growthRate, MutationList.TRANSFORMERS);
-    }
-
-    /**
-     * Creates a cloned component with no original mutations.
-     *
-     * @param parent the parent component.
+     * @param parent the parent component; {@code null} for founding
+     * components.
      */
     protected TumorComponent(TumorComponent parent) {
-        this(parent, parent.growthRate, MutationList.EMPTY);
-    }
-
-    /**
-     * Creates a daughter component with original mutations.
-     *
-     * @param parent the parent component.
-     *
-     * @param daughterMut the mutations originating in the daughter.
-     */
-    protected TumorComponent(TumorComponent parent, MutationList daughterMut) {
-        this(parent, parent.growthRate, MutationList.EMPTY);
-        mutate(daughterMut);
-    }
-
-    /**
-     * Mutates this tumor component: adds new mutations to the genome
-     * of this component (the original mutation list) and adjusts the
-     * growth rate accordingly.
-     *
-     * @param newMutations the new mutations that have occurred.
-     */
-    protected final void mutate(MutationList newMutations) {
-        originalMut = originalMut.append(newMutations);
-        growthRate  = newMutations.apply(growthRate);
-
-        // The cached accumulated mutations are now invalid...
-        accumulatedMut = null;
+        super(ordinalIndex.next(), parent);
     }
 
     /**
@@ -164,26 +110,11 @@ public abstract class TumorComponent extends Carrier {
     }
 
     /**
-     * Computes the intrinsic growth rate of a daughter object,
-     * derived from the intrinsic growth rate of this parent and
-     * the new mutations originating in the daughter.
-     *
-     * @param daughterMut the mutations originating in the daughter.
-     *
-     * @return the intrinsic growth rate of the daughter object.
-     */
-    public GrowthRate computeDaughterGrowthRate(MutationList daughterMut) {
-        return daughterMut.apply(growthRate);
-    }
-
-    /**
      * Returns the intrinsic growth rate of this component.
      *
      * @return the intrinsic growth rate of this component.
      */
-    public final GrowthRate getGrowthRate() {
-        return growthRate;
-    }
+    public abstract GrowthRate getGrowthRate();
 
     /**
      * Returns the source of somatic mutations for this component.
@@ -195,15 +126,6 @@ public abstract class TumorComponent extends Carrier {
      */
     public MutationGenerator getMutationGenerator() {
         return MutationGenerator.global();
-    }
-
-    /**
-     * Returns the mutations that originated in this component.
-     *
-     * @return the mutations that originated in this component.
-     */
-    public final MutationList getOriginalMutations() {
-        return originalMut;
     }
 
     /**
@@ -220,11 +142,20 @@ public abstract class TumorComponent extends Carrier {
             && this.getAccumulatedMutations().equals(component.getAccumulatedMutations());
     }
 
-    @Override public MutationList getAccumulatedMutations() {
-        if (accumulatedMut == null)
-            accumulatedMut = accumulateMutations(traceLineage());
+    /**
+     * Determines the number of birth and death events for this tumor
+     * component in a local tumor environment.
+     *
+     * @param tumorEnv the local tumor environment where this cell
+     * group resides.
+     *
+     * @return the number of birth and death events.
+     */
+    public GrowthCount resolveGrowthCount(TumorEnv tumorEnv) {
+        long netCapacity = tumorEnv.getGrowthCapacity();
+        GrowthRate growthRate = tumorEnv.getGrowthRate();
 
-        return accumulatedMut;
+        return growthRate.resolveCount(countCells(), netCapacity);
     }
 
     @Override public String toString() {

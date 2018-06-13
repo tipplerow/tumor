@@ -27,6 +27,18 @@ import jam.math.Probability;
  * to define the initial growth rate for a simulation: properties
  * {@code GrowthRate.birthRate} and {@code GrowthRate.deathRate}
  * define the {@link GrowthRate#global()} rate object.
+ *
+ * <p><b>Explicit sampling limit.</b> When multi-cellular tumor
+ * components (demes or lineages) advance through one time step,
+ * the number of birth and death events can be sampled explicitly
+ * (by iterating over all cells in the component and choosing an
+ * event at random for each cell) or computed implicitly using the
+ * limit of large cell counts (assuming that the number of birth
+ * and death events is exactly equal to the product of the group
+ * population and the birth and death rates, respectively).  The
+ * implicit calculation is much more efficient for large tumor
+ * components.  The boundary between the two algorithms is defined 
+ * by the system property {@code tumor.growth.explicitSamplingLimit}.
  */
 public final class GrowthRate {
     private final Probability birthRate;
@@ -43,6 +55,15 @@ public final class GrowthRate {
     private static final int DEATH_EVENT = 1;
     private static final int NO_EVENT    = 2;
 
+
+    // Tumor components larger than this will use implicit computation
+    // of birth and death rates...
+    private static final long EXPLICIT_SAMPLING_LIMIT = resolveSamplingLimit();
+
+    private static long resolveSamplingLimit() {
+        return JamProperties.getOptionalInt(EXPLICIT_SAMPLING_LIMIT_PROPERTY,
+                                            EXPLICIT_SAMPLING_LIMIT_DEFAULT);
+    }
     /**
      * Name of the system property that defines the (globally uniform)
      * intrinsic tumor cell birth rate.
@@ -60,6 +81,17 @@ public final class GrowthRate {
      * birth and death probabilities are both one-half.
      */
     public static GrowthRate NO_GROWTH = noGrowth(1.0);
+
+    /**
+     * Name of the system property that defines the maximum cell count
+     * for which explicit event sampling will be performed.
+     */
+    public static final String EXPLICIT_SAMPLING_LIMIT_PROPERTY = "tumor.growth.explicitSamplingLimit";
+
+    /**
+     * Default value for the explicit event sampling limit.
+     */
+    public static final int EXPLICIT_SAMPLING_LIMIT_DEFAULT = 10;
 
     /**
      * Creates a new growth rate with fixed birth and death components.
@@ -210,13 +242,12 @@ public final class GrowthRate {
      * with a random number source used only to discretize the exact
      * expectation value.
      *
-     * @param population the number of entities having this growth
-     * rate.
+     * @param population the number of cells having this growth rate.
      *
      * @return the expected number of cell divisions and deaths.
      */
-    public GrowthCount compute(long population) {
-        return compute(population, Long.MAX_VALUE);
+    public GrowthCount computeCount(long population) {
+        return computeCount(population, Long.MAX_VALUE);
     }
 
     /**
@@ -227,14 +258,13 @@ public final class GrowthRate {
      * with a random number source used only to discretize the exact
      * expectation value.
      *
-     * @param population the number of entities having this growth
-     * rate.
+     * @param population the number of cells having this growth rate.
      *
      * @param netCapacity the maximum allowed increase in population.
      *
      * @return the expected number of cell divisions and deaths.
      */
-    public GrowthCount compute(long population, long netCapacity) {
+    public GrowthCount computeCount(long population, long netCapacity) {
         double eventRate = birthRate.doubleValue() + deathRate.doubleValue();
         double deathFrac = deathRate.doubleValue() / eventRate;
 
@@ -251,19 +281,72 @@ public final class GrowthRate {
     }
 
     /**
+     * Returns the expected number of cell divisions and deaths in a
+     * population with finite capacity.
+     *
+     * <p>This method will use the efficient semi-stochastic algorithm
+     * for populations larger than the sampling limit and the explicit
+     * sampling algorithm for smaller populations.
+     *
+     * @param population the number of cells having this growth rate.
+     *
+     * @param netCapacity the maximum allowed increase in population.
+     *
+     * @return the expected number of cell divisions and deaths.
+     */
+    public GrowthCount resolveCount(long population, long netCapacity) {
+        if (population <= EXPLICIT_SAMPLING_LIMIT)
+            return sampleCount(population, netCapacity);
+        else
+            return computeCount(population, netCapacity);
+    }
+
+    /**
+     * Computes the maximum possible growth in a population with this
+     * growth rate and the governing algorithm used to resolve growth
+     * counts.
+     *
+     * @param population the number of cells having this growth rate.
+     *
+     * @return the maximum possible net increase in population (in a
+     * single round of cell division).
+     */
+    public long resolveMaximumGrowth(long population) {
+        if (birthRate.equals(Probability.ZERO)) {
+            //
+            // No increase possible...
+            //
+            return 0;
+        }
+        else if (population <= EXPLICIT_SAMPLING_LIMIT) {
+            //
+            // For a non-zero birth rate, every random sample could
+            // result in a birth event...
+            //
+            return population;
+        }
+        else {
+            //
+            // In the semi-stochastic calculation, the maximum
+            // possible is...
+            //
+            return (long) Math.ceil(population * birthRate.doubleValue());
+        }
+    }
+
+    /**
      * Samples the realized number of cell divisions and deaths in an
      * unconstrained population.
      *
      * <p>Note that this is a <em>fully stochastic</em> calculation,
      * with a random number drawn for each member of the population.
      *
-     * @param population the number of entities having this growth
-     * rate.
+     * @param population the number of cells having this growth rate.
      *
      * @return the realized number of cell divisions and deaths.
      */
-    public GrowthCount sample(long population) {
-        return sample(population, Long.MAX_VALUE);
+    public GrowthCount sampleCount(long population) {
+        return sampleCount(population, Long.MAX_VALUE);
     }
 
     /**
@@ -273,14 +356,13 @@ public final class GrowthRate {
      * <p>Note that this is a <em>fully stochastic</em> calculation,
      * with a random number drawn for each member of the population.
      *
-     * @param population the number of entities having this growth
-     * rate.
+     * @param population the number of cells having this growth rate.
      *
      * @param netCapacity the maximum allowed increase in population.
      *
      * @return the realized number of cell divisions and deaths.
      */
-    public GrowthCount sample(long population, long netCapacity) {
+    public GrowthCount sampleCount(long population, long netCapacity) {
         long netGrowth = 0;
         long birthCount = 0;
         long deathCount = 0;
