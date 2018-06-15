@@ -3,6 +3,7 @@ package tumor.report;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.List;
 
 import jam.io.IOUtil;
 import jam.sim.TrialRecord;
@@ -10,7 +11,6 @@ import jam.util.RegexUtil;
 
 import tumor.driver.TumorDriver;
 import tumor.mutation.Mutation;
-import tumor.mutation.MutationList;
 import tumor.mutation.ScalarMutation;
 
 /**
@@ -86,7 +86,7 @@ public final class ScalarMutationRecord extends TrialRecord {
      *
      * @param mutations the mutations to record.
      */
-    public static void write(File reportDir, String baseName, MutationList mutations) {
+    public static void write(File reportDir, String baseName, List<Mutation> mutations) {
         PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
         writer.println(header());
 

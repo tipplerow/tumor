@@ -10,14 +10,11 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
 import jam.lattice.Coord;
 import jam.lattice.Lattice;
-import jam.math.Probability;
 
-import tumor.capacity.CapacityModel;
 import tumor.carrier.Carrier;
 import tumor.carrier.GenotypeMap;
 import tumor.carrier.Lineage;
 import tumor.carrier.TumorEnv;
-import tumor.mutation.MutationList;
 
 /**
  * Represents a three-dimensional tumor composed of lineages arranged
@@ -31,23 +28,23 @@ import tumor.mutation.MutationList;
 public final class LineageLatticeTumor extends MultiCellularLatticeTumor<Lineage> {
     //
     // To minimize the number of lineage instances in the tumor, we
-    // allow only one genotype (lineage clone) per site.  We maintain
-    // a genotype map at each lattice coordinate in order to identify
-    // genetically identical lineages on neighboring lattice sites. We
-    // may then transfer cells between identical lineages rather than
-    // dividing lineages and placing a new instance on a neighbor site.
+    // allow only one lineage clone (unique genotype) per site.  To
+    // enforce this restriction, we maintain a genotype map at each
+    // lattice coordinate in order to identify genetically identical
+    // lineages on neighboring lattice sites. We may then transfer
+    // cells between identical lineages rather than dividing lineages
+    // and placing a new instance on a neighbor site.
     //
     private final Map<Coord, GenotypeMap> genotypeMaps = new HashMap<Coord, GenotypeMap>();
     
-    // In a large tumor, there may be hundreds of lineages present at
-    // each site.  Computing the total number of cells at a site by
-    // explicitly iterating over each lineage becomes the most time
-    // consuming operation in the simulation.  As a performance
-    // optimization, we maintain a cache of the cell count at each
-    // site and update the cache when lineages advance (change their
-    // cell count), produce offspring, or die.  The multi-cellular
-    // superclass maintains a cache of the total cell count in the
-    // tumor.
+    // A large tumor with high mutation rates may contain hundreds of
+    // lineages at each site.  Computing the total number of cells at
+    // a site by explicitly iterating over each lineage becomes a
+    // severe bottleneck.  As a performance optimization, we maintain
+    // a cache of the cell count at each site and update the cache
+    // when lineages change their cell count, produce offspring, or
+    // die.  The multi-cellular superclass maintains a cache of the
+    // total cell count in the tumor.
     private final Object2LongOpenHashMap<Coord> siteCellCounts =
         new Object2LongOpenHashMap<Coord>();
 
@@ -98,16 +95,17 @@ public final class LineageLatticeTumor extends MultiCellularLatticeTumor<Lineage
     }
 
     @Override protected void advanceInPlace(Lineage parent, Coord parentCoord, long growthCapacity) {
-        // ============================================================
-        // The superclass advance() method updates the cell-count cache
-        // for changes in the parent size, so we do not do that here.
-        // ============================================================
-
         // Construct the appropriate local environment...
         TumorEnv localEnv = createLocalEnv(parent, parentCoord, growthCapacity);
 
         // Advance the parent component within the local environment...
         List<Lineage> daughters = parent.advance(localEnv);
+
+        // Sanity check...
+        assert populationGrowth(parent, daughters) <= growthCapacity;
+
+        // Update the cached cell count for the parent component...
+        updateComponentCellCount(parent, parentCoord);
 
         // Add the daughters at the parent site, which is guaranteed
         // to have the necessary free capacity...
@@ -115,34 +113,30 @@ public final class LineageLatticeTumor extends MultiCellularLatticeTumor<Lineage
             addComponent(daughter, parentCoord);
     }
 
-    @Override protected void advanceWithExpansion(Lineage parent, Coord parentCoord, long parentFreeCapacity) {
-        // ============================================================
-        // The superclass advance() method updates the cell-count cache
-        // for changes in the parent size, so we do not do that here.
-        // ============================================================
+    private long populationGrowth(Lineage parent, List<Lineage> daughters) {
+        return parent.netChange() + Lineage.DAUGHTER_CELL_COUNT * daughters.size();
+    }
 
+    @Override protected void advanceWithExpansion(Lineage parent, Coord parentCoord, long parentFreeCapacity) {
         // Select a neighboring expansion site at random...
         Coord expansionCoord = selectNeighbor(parentCoord);
 
         // Compute the total growth capacity...
         long growthCapacity = parentFreeCapacity + computeExpansionFreeCapacity(expansionCoord);
 
-        // Save the initial size of the parent to compute the net
-        // population growth (but not update the cache)...
-        long priorParentCount = parent.countCells();
-
         // Advance the parent component using the total growth capacity...
         TumorEnv      localEnv  = createLocalEnv(parent, parentCoord, growthCapacity);
         List<Lineage> daughters = parent.advance(localEnv);
 
+        assert populationGrowth(parent, daughters) <= growthCapacity;
+
+        // Update the cached cell count for the parent component...
+        updateComponentCellCount(parent, parentCoord);
+
         // Compute the net population growth...
         assert Lineage.DAUGHTER_CELL_COUNT == 1;
         
-        //long parentGrowth   = parent.countCells() - priorParentCount;
-        //long daughterGrowth = daughters.size();
-        //long familyGrowth   = parentGrowth + daughterGrowth;
-
-        int parentGrowth   = (int) (parent.countCells() - priorParentCount);
+        int parentGrowth   = (int) parent.netChange();
         int daughterGrowth = daughters.size();
         int familyGrowth   = parentGrowth + daughterGrowth;
 
@@ -185,21 +179,22 @@ public final class LineageLatticeTumor extends MultiCellularLatticeTumor<Lineage
             if (clone != null) {
                 //
                 // Transfer the excess parent cell count to the clone,
-                // and update the clone cell count.  Do not update the
-                // parent cell count: the superclass will do it.
+                // and update the cell counts...
                 //
-                long priorCloneCount = clone.countCells();
-
                 parent.transfer(clone, parentExcess);
-                updateComponentCellCount(clone, expansionCoord, priorCloneCount);
+
+                updateComponentCellCount(parent, parentCoord);
+                updateComponentCellCount(clone, expansionCoord);
             }
             else {
                 //
                 // Create a new clone and add it to the expansion
                 // site.  [The addComponent() method updates the
-                // cell-count cache so we do not.]
+                // cell-count cache at the expansion coordinate
+                // so we do not.]
                 //
                 addComponent(parent.divide(parentExcess), expansionCoord);
+                updateComponentCellCount(parent, parentCoord);
             }
 
             // And finally add all daughters to the expansion site...
@@ -210,26 +205,36 @@ public final class LineageLatticeTumor extends MultiCellularLatticeTumor<Lineage
         assert satisfiesCapacityConstraint(expansionCoord);
     }
 
-    private long computeExpansionFreeCapacity(Coord expansionCoord) {
-        return getSiteCapacity(expansionCoord) - countCells(expansionCoord);
-    }
-
     private Lineage findClone(Lineage lineage, Coord coord) {
-        MutationList genotype = lineage.getAccumulatedMutations();
-        GenotypeMap  genoMap  = genotypeMaps.get(coord);
+        GenotypeMap genoMap = genotypeMaps.get(coord);
 
         if (genoMap != null)
-            return genoMap.lookup(genotype);
+            return genoMap.getUnique(lineage.getGenotype());
         else
             return null;
     }
 
-    @Override protected void updateComponentCellCount(Lineage component, Coord componentCoord, long priorCount) {
-        // The superclass updates the tumor total...
-        super.updateComponentCellCount(component, componentCoord, priorCount);
+    @Override protected long computeExpansionFreeCapacity(Coord expansionCoord) {
+        return getSiteCapacity(expansionCoord) - countCells(expansionCoord);
+    }
 
-        // We update the site-specific count...
-        siteCellCounts.addTo(componentCoord, component.countCells() - priorCount);
+    @Override protected long computeParentFreeCapacity(Lineage parent, Coord parentCoord) {
+        return getSiteCapacity(parentCoord) - countCells(parentCoord);
+    }
+
+    @Override protected void updateComponentCellCount(Lineage component, Coord location) {
+        //
+        // Avoid a needless hash table lookup...
+        //
+        long netChange = component.netChange();
+
+        if (netChange != 0) {
+            // The superclass updates the tumor total...
+            super.updateComponentCellCount(component, location);
+
+            // We update the site-specific count...
+            siteCellCounts.addTo(location, netChange);
+        }
     }
 
     @Override protected void addComponent(Lineage component, Coord location) {

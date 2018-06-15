@@ -1,6 +1,8 @@
 
 package tumor.junit;
 
+import java.util.List;
+
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
@@ -8,7 +10,7 @@ import jam.dist.PoissonDistribution;
 import jam.junit.NumericTestBase;
 import jam.util.MultisetUtil;
 
-import tumor.mutation.MutationList;
+import tumor.mutation.Mutation;
 import tumor.mutation.MutationRate;
 import tumor.mutation.NeutralMutationGenerator;
 import tumor.driver.TumorDriver;
@@ -29,7 +31,7 @@ public class NeutralMutationGeneratorTest extends NumericTestBase {
         Multiset<Integer> counts = HashMultiset.create();
 
         for (int trial = 0; trial < 100000; ++trial) {
-            MutationList mutations = generator.generateCellMutations();
+            List<Mutation> mutations = generator.generateCellMutations();
             counts.add(mutations.size());
         }
 

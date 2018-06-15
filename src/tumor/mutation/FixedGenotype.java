@@ -20,6 +20,12 @@ public final class FixedGenotype extends Genotype {
     }
 
     /**
+     * The single fixed genotype containing the mutations responsible
+     * for the transformation to malignancy as its original mutations.
+     */
+    public static final FixedGenotype TRANSFORMER = founder(Mutation.TRANSFORMERS);
+
+    /**
      * Creates a fixed genotype for a founding carrier.
      *
      * @param original the mutations originating in the founding

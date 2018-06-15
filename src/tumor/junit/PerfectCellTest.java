@@ -25,7 +25,7 @@ public class PerfectCellTest extends NumericTestBase {
     @Test public void testDoubling() {
         GrowthRate growthRate  = GrowthRate.net(1.0);
         TumorCell  founderCell = TumorCell.founder(growthRate);
-        TumorEnv   tumorEnv    = TumorEnv.unconstrained(founderCell);
+        TumorEnv   tumorEnv    = TumorEnv.unconstrained(growthRate);
 
         List<TumorCell> population = new ArrayList<TumorCell>();
         population.add(founderCell);

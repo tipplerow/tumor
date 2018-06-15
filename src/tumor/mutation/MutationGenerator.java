@@ -1,7 +1,7 @@
 
 package tumor.mutation;
 
-import java.util.Collection;
+import java.util.List;
 
 import jam.app.JamProperties;
 import jam.lang.JamException;
@@ -55,7 +55,7 @@ public abstract class MutationGenerator {
      * @return the mutations that originated in the daughter cell
      * (or an empty list if no mutations occurred).
      */
-    public abstract MutationList generateCellMutations();
+    public abstract List<Mutation> generateCellMutations();
 
     /**
      * Generates the mutations that originate in a (well-mixed) deme
@@ -66,7 +66,7 @@ public abstract class MutationGenerator {
      *
      * @return the mutations that originated in the deme.
      */
-    public abstract MutationList generateDemeMutations(long daughterCount);
+    public abstract List<Mutation> generateDemeMutations(long daughterCount);
 
     /**
      * Generates the mutations that originate in a lineage during
@@ -82,7 +82,7 @@ public abstract class MutationGenerator {
      * @return the mutations originating in mutated daughter lineages
      * only.
      */
-    public abstract Collection<MutationList> generateLineageMutations(long daughterCount);
+    public abstract List<List<Mutation>> generateLineageMutations(long daughterCount);
 
     /**
      * Returns the global mutation generator (defined through system

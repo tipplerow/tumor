@@ -53,7 +53,7 @@ public final class MutationFrequencyMap {
             new Object2LongOpenHashMap<Mutation>();
 
         for (Carrier carrier : carriers) {
-            MutationList mutations = carrier.getAccumulatedMutations();
+            List<Mutation> mutations = carrier.getAccumulatedMutations();
 
             for (Mutation mutation : mutations)
                 counts.addTo(mutation, carrier.countCells());

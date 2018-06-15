@@ -2,14 +2,11 @@
 package tumor.lattice;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import jam.lattice.Coord;
 import jam.lattice.Lattice;
-import jam.math.JamRandom;
-import jam.util.ListUtil;
 
 import tumor.capacity.CapacityModel;
 import tumor.capacity.SingleCapacity;

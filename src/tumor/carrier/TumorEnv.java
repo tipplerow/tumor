@@ -12,7 +12,7 @@ public final class TumorEnv {
     /**
      * Creates a new local tumor environment.
      *
-     * @param growthCapacity  the net growth capacity in the local
+     * @param growthCapacity the net growth capacity in the local
      * environment: the maximum number of new tumor cells that can 
      * be accomodated.
      *
@@ -29,39 +29,15 @@ public final class TumorEnv {
     }
 
     /**
-     * Creates an constrained local environment for a given tumor
-     * component: the local growth rate and mutation generator are
-     * those intrinsic to the component, but the growth capacity is
-     * limited to a finite value.
+     * Creates an unconstrained local environment: the growth capacity
+     * is unlimited and the global mutation generator is operative.
      *
-     * @param component the tumor component in the local environment.
+     * @param growthRate the local growth rate.
      *
-     * @param growthCapacity the constrained growth capacity in the
-     * local environment.
-     *
-     * @return a constrained local environment with the specified
-     * capacity.
+     * @return an unconstrained local environment.
      */
-    public static TumorEnv constrained(TumorComponent component, int growthCapacity) {
-        return new TumorEnv(growthCapacity,
-                            component.getGrowthRate(),
-                            component.getMutationGenerator());
-    }
-
-    /**
-     * Creates an unconstrained local environment for a given tumor
-     * component: the growth capacity is unlimited, and the local
-     * growth rate and mutation generator are those intrinsic to the
-     * component.
-     *
-     * @param component the tumor component in the local environment.
-     *
-     * @return an unconstrained local environment for the component.
-     */
-    public static TumorEnv unconstrained(TumorComponent component) {
-        return new TumorEnv(Long.MAX_VALUE,
-                            component.getGrowthRate(),
-                            component.getMutationGenerator());
+    public static TumorEnv unconstrained(GrowthRate growthRate) {
+        return new TumorEnv(Long.MAX_VALUE, growthRate, MutationGenerator.global());
     }
 
     /**

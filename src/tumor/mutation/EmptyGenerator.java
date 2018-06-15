@@ -1,23 +1,23 @@
 
 package tumor.mutation;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 final class EmptyGenerator extends MutationGenerator {
     private EmptyGenerator() {}
 
     public static final EmptyGenerator INSTANCE = new EmptyGenerator();
 
-    @Override public MutationList generateCellMutations() {
-        return MutationList.EMPTY;
+    @Override public List<Mutation> generateCellMutations() {
+        return Collections.emptyList();
     }
 
-    @Override public MutationList generateDemeMutations(long daughterCount) {
-        return MutationList.EMPTY;
+    @Override public List<Mutation> generateDemeMutations(long daughterCount) {
+        return Collections.emptyList();
     }
 
-    @Override public Collection<MutationList> generateLineageMutations(long daughterCount) {
+    @Override public List<List<Mutation>> generateLineageMutations(long daughterCount) {
         return Collections.emptyList();
     }
 }

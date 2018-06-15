@@ -25,6 +25,7 @@ import tumor.growth.GrowthRate;
 import tumor.growth.LocalGrowthModel;
 import tumor.migrate.MigrationModel;
 import tumor.migrate.MigrationType;
+import tumor.mutation.Mutation;
 import tumor.mutation.MutationGenerator;
 
 /**
@@ -294,9 +295,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * lattice site is less than or equal to the capacity for that site.
      */
     public boolean satisfiesCapacityConstraint(Coord coord) {
-        if (exceedsCapacity(coord)) {
-            System.out.println(String.format("%s: CAPACITY: %d, COUNT: %d", coord, getSiteCapacity(coord), countCells(coord)));
-        }
         return !exceedsCapacity(coord);
     }
 
@@ -453,7 +451,105 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             else
                 advance(parent);
     }
+    /*
+    private void advance(E parent) {
+        // Locate the parent...
+        Coord parentCoord = locateComponent(parent);
 
+        // Compute the free capacity of the parent site...
+        long parentFreeCapacity = computeParentFreeCapacity(parent, parentCoord);
+
+        if (canExceedParentCapacity(parent, parentCoord, parentFreeCapacity))
+            advanceWithExpansion(parent, parentCoord, parentFreeCapacity);
+        else
+            advanceInPlace(parent, parentCoord, parentFreeCapacity);
+    }
+
+    private boolean canExceedParentCapacity(E parent, Coord parentCoord, long parentFreeCapacity) {
+        //
+        // This is a very loose criterion: examine the maximum
+        // possible population growth in the local environment...
+        //
+        GrowthRate localRate = getLocalGrowthRate(parent);
+        long       maxGrowth = localRate.resolveMaximumGrowth(parent.countCells());
+
+        return maxGrowth > parentFreeCapacity;
+    }
+
+    private void advanceWithExpansion(E parent, Coord parentCoord, long parentFreeCapacity) {
+        // Select an expansion site (which may be required to
+        // accomodate offspring) at random...
+        Coord expansionCoord = selectNeighbor(parentCoord);
+
+        // Compute the local growth capacity: the total number of new
+        // tumor cells that can be accomodated the parent site and the
+        // neighbor site...
+        long expansionFreeCapacity = computeExpansionFreeCapacity(expansionCoord);
+        long totalGrowthCapacity   = parentFreeCapacity + expansionFreeCapacity;
+
+        // Construct the appropriate local environment...
+        TumorEnv localEnv =
+            new TumorEnv(totalGrowthCapacity,
+                         getLocalGrowthRate(parent),
+                         getLocalMutationGenerator(parent));
+
+        // Advance the parent component within the local environment...
+        List<E> daughters = advance(parent, parentCoord, localEnv);
+
+        if (parent.isDead()) {
+            //
+            // Remove dead parents...
+            //
+            removeComponent(parent, parentCoord);
+        }
+        else if (parent.countCells() > 1) {
+            //
+            // Distribute any excess tumor cells in the parent component
+            // to the expansion site...
+            //
+            long excessOccupancy = computeExcessParentOccupancy(parentCoord);
+
+            if (excessOccupancy > 0)
+                distributeExcessOccupants(parent, parentCoord, expansionCoord, excessOccupancy);
+        }
+
+        // Place the daughters at the parent site until it reaches capacity,
+        // then place them at the expansion site...
+        for (E daughter : daughters) {
+            if (isAvailable(parentCoord, daughter))
+                addComponent(daughter, parentCoord);
+            else
+                addComponent(daughter, expansionCoord);
+        }
+
+        assert satisfiesCapacityConstraint(parentCoord);
+        assert satisfiesCapacityConstraint(expansionCoord);
+    }
+    
+    private void advanceInPlace(E parent, Coord parentCoord, long parentFreeCapacity) {
+        // Construct the appropriate local environment...
+        TumorEnv localEnv =
+            new TumorEnv(parentFreeCapacity,
+                         getLocalGrowthRate(parent),
+                         getLocalMutationGenerator(parent));
+
+        // Advance the parent component within the local environment...
+        List<E> daughters = advance(parent, parentCoord, localEnv);
+
+        if (parent.isDead()) {
+            //
+            // Remove dead parents...
+            //
+            removeComponent(parent, parentCoord);
+        }
+
+        // All daughters should be accomodated on the parent site...
+        for (E daughter : daughters)
+            addComponent(daughter, parentCoord);
+
+        assert satisfiesCapacityConstraint(parentCoord);
+    }
+    */
     private void migrate() {
         if (migrationModel.getType() == MigrationType.PINNED)
             return;

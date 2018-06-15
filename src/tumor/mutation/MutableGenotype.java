@@ -48,6 +48,16 @@ public final class MutableGenotype extends Genotype {
     }
 
     /**
+     * Returns a mutable genotype containing the mutations responsible
+     * for the transformation to malignancy as its original mutations.
+     *
+     * @return a transforming genotype.
+     */
+    public static MutableGenotype transformer() {
+        return founder(Mutation.TRANSFORMERS);
+    }
+
+    /**
      * Appends newly acquired mutations to this genotype.
      *
      * @param mutations the mutations to append.

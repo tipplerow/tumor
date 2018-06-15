@@ -2,26 +2,26 @@
 package tumor.carrier;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
-import tumor.mutation.MutationList;
+import tumor.mutation.FixedGenotype;
+import tumor.mutation.Genotype;
+import tumor.mutation.Mutation;
 
 /**
  * Represents a well-mixed population of genetically identical cells
  * where any new mutation spawns a new distinct daughter lineage.
  */
-public final class Lineage extends FixedComponent {
-    //
-    // The number of identical cells in this lineage...
-    //
-    private long cellCount;
+public final class Lineage extends MultiCellularComponent {
+    // Since the genotype is fixed, the growth rate is fixed...
+    private final GrowthRate growthRate;
 
-    private Lineage(Lineage parent, GrowthRate growthRate, MutationList originalMut, long cellCount) {
-        super(parent, growthRate, originalMut);
+    private Lineage(Lineage parent, Genotype genotype, GrowthRate growthRate, long cellCount) {
+        super(parent, genotype, cellCount);
+        this.growthRate = growthRate;
     }
 
     /**
@@ -42,40 +42,15 @@ public final class Lineage extends FixedComponent {
      * @return the founding lineage.
      */
     public static Lineage founder(GrowthRate growthRate, long cellCount) {
-        return new Lineage(null, growthRate, MutationList.TRANSFORMERS, cellCount);
+        return new Lineage(null, FixedGenotype.TRANSFORMER, growthRate, cellCount);
     }
 
-    /**
-     * Creates a new genetically identical lineage (a clone).
-     *
-     * @param cloneCellCount the number of cells to transfer to
-     * the new clone.
-     *
-     * @return the new clone lineage.
-     *
-     * @throws IllegalArgumentException if the clone cell count
-     * exceeds the size of this lineage.
-     */
-    public Lineage divide(long cloneCellCount) {
-        if (cellCount >= cloneCellCount)
-            cellCount -= cloneCellCount;
-        else
-            throw new IllegalArgumentException("Clone cannot exceed the size of the parent.");
-
-        return new Lineage(this, this.growthRate, MutationList.EMPTY, cloneCellCount);
+    @Override public Lineage divide(long cloneCellCount) {
+        return (Lineage) super.divide(cloneCellCount);
     }
 
-    /**
-     * Determines whether another lineage is genetically identical to
-     * this lineage.
-     *
-     * @param lineage the lineage to compare to this.
-     *
-     * @return {@code true} iff the input lineage has a genome that is
-     * identical to this lineage.
-     */
-    public boolean isClone(Lineage lineage) {
-        return super.isClone(lineage);
+    @Override protected Lineage newClone(long cloneCellCount) {
+        return new Lineage(this, genotype.forClone(), growthRate, cloneCellCount);
     }
 
     /**
@@ -92,15 +67,14 @@ public final class Lineage extends FixedComponent {
      * is greater than the current cell count of this lineage.
      */
     public void transfer(Lineage clone, long transferCount) {
-        assert isClone(clone);
+        if (!isClone(clone))
+            throw new IllegalArgumentException("Input lineage is not a clone.");
 
-        if (transferCount > cellCount)
+        if (transferCount >= countCells())
             throw new IllegalArgumentException("Transfer count exceeds this lineage size.");
 
-        this.cellCount  -= transferCount;
-        clone.cellCount += transferCount;
-
-        assert this.cellCount >= 0;
+        clone.addCells(transferCount);
+        this.removeCells(transferCount);
     }
 
     /**
@@ -119,44 +93,38 @@ public final class Lineage extends FixedComponent {
         if (isDead())
             return Collections.emptyList();
 
-        // Update the cell count for the number of birth and death
-        // events...
-        GrowthCount growthCount = resolveGrowthCount(tumorEnv);
-        cellCount += growthCount.getNetChange();
-
-        // Each birth event creates two daughter cells... 
-        long daughterCount = growthCount.getDaughterCount();
-        assert daughterCount <= cellCount;
+        // Sample the number of birth and death events...
+        GrowthCount growthCount   = resolveGrowthCount(tumorEnv);
+        long        daughterCount = growthCount.getDaughterCount();
 
         // Obtain the new mutations for each mutated daughter cell...
-        Collection<MutationList> daughterMutLists =
+        List<List<Mutation>> daughterMutLists =
             tumorEnv.getMutationGenerator().generateLineageMutations(daughterCount);
 
         // Store each mutated daughter cell as a new single-cell
         // lineage...
-        List<Lineage> daughters = new ArrayList<Lineage>();
+        List<Lineage> daughters = new ArrayList<Lineage>(daughterMutLists.size());
 
-        for (MutationList daughterMut : daughterMutLists) {
-            if (daughterMut.isEmpty())
-                continue;
+        for (List<Mutation> daughterMut : daughterMutLists)
+            if (!daughterMut.isEmpty())
+                daughters.add(newDaughter(daughterMut));
 
-            // Spawn a new lineage for this mutated daughter cell...
-            Lineage daughter = newDaughter(daughterMut);
+        // Compute the net change in lineage population after the
+        // creation of the daughter lineages...
+        addCells(growthCount.getNetChange() - DAUGHTER_CELL_COUNT * daughters.size());
 
-            daughters.add(daughter);
-            cellCount -= daughter.countCells();
-        }
-
-        assert cellCount >= 0;
         return daughters;
     }
 
-    private Lineage newDaughter(MutationList daughterMut) {
-        return new Lineage(this, daughterMut.apply(this.growthRate), daughterMut, DAUGHTER_CELL_COUNT);
+    private Lineage newDaughter(List<Mutation> daughterMut) {
+        Genotype   daughterType = genotype.forDaughter(daughterMut);
+        GrowthRate daughterRate = Mutation.apply(growthRate, daughterMut);
+
+        return new Lineage(this, daughterType, daughterRate, DAUGHTER_CELL_COUNT);
     }
 
-    @Override public long countCells() {
-        return cellCount;
+    @Override public GrowthRate getGrowthRate() {
+        return growthRate;
     }
 
     @SuppressWarnings("unchecked")

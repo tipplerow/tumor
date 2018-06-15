@@ -38,7 +38,7 @@ public class LineageCloneTest extends NumericTestBase {
         assertEquals(35, founder.countCells());
         assertEquals(65, clone.countCells());
 
-        TumorEnv tumorEnv = TumorEnv.unconstrained(founder);
+        TumorEnv tumorEnv = TumorEnv.unconstrained(growthRate);
         
         List<Lineage> children = founder.advance(tumorEnv, 10);
         children.sort(Carrier.CELL_COUNT_COMPARATOR);
@@ -63,7 +63,7 @@ public class LineageCloneTest extends NumericTestBase {
         GrowthRate growthRate = GrowthRate.net(1.0);
 
         Lineage  founder  = Lineage.founder(growthRate, initCount);
-        TumorEnv tumorEnv = TumorEnv.unconstrained(founder);
+        TumorEnv tumorEnv = TumorEnv.unconstrained(growthRate);
         
         List<Lineage> children = founder.advance(tumorEnv);
         assertTrue(children.size() > 0);

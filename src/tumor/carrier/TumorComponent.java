@@ -10,7 +10,8 @@ import jam.lang.OrdinalIndex;
 
 import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
-import tumor.mutation.MutationGenerator;
+import tumor.mutation.Genotype;
+import tumor.mutation.Mutation;
 
 /**
  * Represents the most fundamental (non-divisible) tumor components:
@@ -20,6 +21,11 @@ import tumor.mutation.MutationGenerator;
  * well defined growth rate, and are always contained within a tumor.
  */
 public abstract class TumorComponent extends Carrier {
+    /**
+     * The genotype for this component.
+     */
+    protected final Genotype genotype;
+
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
     /**
@@ -27,9 +33,12 @@ public abstract class TumorComponent extends Carrier {
      *
      * @param parent the parent component; {@code null} for founding
      * components.
+     *
+     * @param genotype the genotype of the new component.
      */
-    protected TumorComponent(TumorComponent parent) {
+    protected TumorComponent(TumorComponent parent, Genotype genotype) {
         super(ordinalIndex.next(), parent);
+        this.genotype = genotype;
     }
 
     /**
@@ -110,6 +119,15 @@ public abstract class TumorComponent extends Carrier {
     }
 
     /**
+     * Returns the genotype of this component.
+     *
+     * @return the genotype of this component.
+     */
+    public Genotype getGenotype() {
+        return genotype;
+    }
+
+    /**
      * Returns the intrinsic growth rate of this component.
      *
      * @return the intrinsic growth rate of this component.
@@ -117,29 +135,16 @@ public abstract class TumorComponent extends Carrier {
     public abstract GrowthRate getGrowthRate();
 
     /**
-     * Returns the source of somatic mutations for this component.
-     *
-     * <p>This default implementation returns the global mutation
-     * generator defined by system properties.
-     *
-     * @return the source of somatic mutations for this component.
-     */
-    public MutationGenerator getMutationGenerator() {
-        return MutationGenerator.global();
-    }
-
-    /**
      * Determines whether another component is genetically identical
      * to this component.
      *
-     * @param component the component to compare to this.
+     * @param that the component to compare to this.
      *
-     * @return {@code true} iff the input component is the same type
-     * as this component and has accumulated identical mutations.
+     * @return {@code true} iff the input component shares the same
+     * genotype as this component.
      */
-    protected boolean isClone(TumorComponent component) {
-        return this.getClass().equals(component.getClass())
-            && this.getAccumulatedMutations().equals(component.getAccumulatedMutations());
+    public boolean isClone(TumorComponent that) {
+        return this.genotype.equals(that.genotype);
     }
 
     /**
@@ -156,6 +161,14 @@ public abstract class TumorComponent extends Carrier {
         GrowthRate growthRate = tumorEnv.getGrowthRate();
 
         return growthRate.resolveCount(countCells(), netCapacity);
+    }
+
+    @Override public List<Mutation> getAccumulatedMutations() {
+        return genotype.viewAccumulatedMutations();
+    }
+
+    @Override public List<Mutation> getOriginalMutations() {
+        return genotype.viewOriginalMutations();
     }
 
     @Override public String toString() {

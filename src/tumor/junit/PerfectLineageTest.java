@@ -24,7 +24,7 @@ public class PerfectLineageTest extends NumericTestBase {
         long       initCount  = 1000;
         GrowthRate growthRate = GrowthRate.net(0.1);
         Lineage    lineage    = Lineage.founder(growthRate, initCount);
-        TumorEnv   tumorEnv   = TumorEnv.unconstrained(lineage);
+        TumorEnv   tumorEnv   = TumorEnv.unconstrained(growthRate);
 
         for (int stepIndex = 1; stepIndex <= stepCount; ++stepIndex) {
             //

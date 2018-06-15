@@ -330,7 +330,7 @@ public final class GrowthRate {
             // In the semi-stochastic calculation, the maximum
             // possible is...
             //
-            return (long) Math.ceil(population * birthRate.doubleValue());
+            return Math.max(0, (long) Math.ceil(population * getNetRate()));
         }
     }
 

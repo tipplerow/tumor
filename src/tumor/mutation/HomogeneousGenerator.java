@@ -2,7 +2,7 @@
 package tumor.mutation;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 import jam.app.JamProperties;
 
@@ -51,13 +51,13 @@ public abstract class HomogeneousGenerator extends MutationGenerator {
      */
     protected abstract Mutation generateOne();
 
-    private MutationList generateList(long mutationCount) {
-        Mutation[] mutations = new Mutation[(int) mutationCount];
+    private List<Mutation> generateList(long mutationCount) {
+        List<Mutation> mutations = new ArrayList<Mutation>((int) mutationCount);
 
         for (int index = 0; index < mutationCount; ++index)
-            mutations[index] = generateOne();
+            mutations.add(generateOne());
 
-        return MutationList.create(mutations);
+        return mutations;
     }
 
     /**
@@ -69,11 +69,11 @@ public abstract class HomogeneousGenerator extends MutationGenerator {
         return mutationRate;
     }
 
-    @Override public MutationList generateCellMutations() {
+    @Override public List<Mutation> generateCellMutations() {
         return generateList(mutationRate.sampleMutationCount());
     }
 
-    @Override public MutationList generateDemeMutations(long daughterCount) {
+    @Override public List<Mutation> generateDemeMutations(long daughterCount) {
         return generateList(resolveDemeMutationCount(daughterCount));
     }
 
@@ -84,15 +84,15 @@ public abstract class HomogeneousGenerator extends MutationGenerator {
             return mutationRate.computeMutationCount(daughterCount);
     }
 
-    @Override public Collection<MutationList> generateLineageMutations(long daughterCount) {
+    @Override public List<List<Mutation>> generateLineageMutations(long daughterCount) {
         if (daughterCount <= samplingLimit)
             return sampleLineageMutations(daughterCount);
         else
             return computeLineageMutations(daughterCount);
     }
 
-    private Collection<MutationList> computeLineageMutations(long daughterCount) {
-        Collection<MutationList> lists = new ArrayList<MutationList>();
+    private List<List<Mutation>> computeLineageMutations(long daughterCount) {
+        List<List<Mutation>> lists = new ArrayList<List<Mutation>>();
 
         // The element countDistribution[k] contains the number of
         // mutation lists to generate with exactly "k" mutations...
@@ -109,8 +109,8 @@ public abstract class HomogeneousGenerator extends MutationGenerator {
         return lists;
     }
 
-    private Collection<MutationList> sampleLineageMutations(long daughterCount) {
-        Collection<MutationList> lists = new ArrayList<MutationList>();
+    private List<List<Mutation>> sampleLineageMutations(long daughterCount) {
+        List<List<Mutation>> lists = new ArrayList<List<Mutation>>();
 
         for (long index = 0; index < daughterCount; ++index) {
             long mutationCount = mutationRate.sampleMutationCount();

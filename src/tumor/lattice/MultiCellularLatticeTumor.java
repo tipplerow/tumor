@@ -6,7 +6,7 @@ import jam.lattice.Lattice;
 
 import tumor.capacity.CapacityModel;
 import tumor.carrier.Carrier;
-import tumor.carrier.TumorComponent;
+import tumor.carrier.MultiCellularComponent;
 import tumor.carrier.TumorEnv;
 import tumor.growth.GrowthRate;
 
@@ -16,15 +16,15 @@ import tumor.growth.GrowthRate;
  *
  * @param <E> the concrete subtype for the tumor components.
  */
-public abstract class MultiCellularLatticeTumor<E extends TumorComponent> extends LatticeTumor<E> {
-    /**
-     * A large tumor may contain millions of multi-cellular components.
-     * Computing the total number of cells in the tumor by iterating
-     * over the components is therefore very inefficient.  Instead we
-     * maintain a private cache of the total cell count and update it
-     * as necessary.
-     */
-    protected long totalCellCount = 0;
+public abstract class MultiCellularLatticeTumor<E extends MultiCellularComponent> extends LatticeTumor<E> {
+    //
+    // A large tumor may contain millions of multi-cellular components.
+    // Computing the total number of cells in the tumor by iterating
+    // over the components is therefore very inefficient.  Instead we
+    // maintain a private cache of the total cell count and update it
+    // as necessary.
+    //
+    private long totalCellCount = 0;
 
     /**
      * Creates a new (empty) tumor.
@@ -46,12 +46,65 @@ public abstract class MultiCellularLatticeTumor<E extends TumorComponent> extend
         super(parent, lattice);
     }
 
+    /**
+     * Advances a parent component and moves cells to an expansion
+     * site if necessary to honor the capacity of the parent site.
+     *
+     * @param parent the parent component to advance.
+     *
+     * @param parentCoord the location of the parent component.
+     *
+     * @param parentFreeCapacity the free capacity at the parent site.
+     */
     protected abstract void advanceWithExpansion(E parent, Coord parentCoord, long parentFreeCapacity);
 
-    protected abstract void advanceInPlace(E parent, Coord parentCoord, long growthCapacity);
+    /**
+     * Advances a parent component when the parent site is guaranteed
+     * to have sufficient capacity for any offspring.
+     *
+     * @param parent the parent component to advance.
+     *
+     * @param parentCoord the location of the parent component.
+     *
+     * @param parentFreeCapacity the free capacity at the parent site.
+     */
+    protected abstract void advanceInPlace(E parent, Coord parentCoord, long parentFreeCapacity);
 
-    protected void updateComponentCellCount(E component, Coord componentCoord, long priorCount) {
-        totalCellCount += component.countCells() - priorCount;
+    /**
+     * Computes the number of cells that can be accomodated at an
+     * expansion site (a site <em>not</em> already containing the
+     * parent component).
+     *
+     * @param expansionCoord the location of the expansion site.
+     *
+     * @return the number of cells that can be accomodated at the
+     * expansion site.
+     */
+    protected abstract long computeExpansionFreeCapacity(Coord expansionCoord);
+
+    /**
+     * Computes the number of cells that can be accomodated at the
+     * site of a parent during its advancement.
+     *
+     * @param parent the parent component to advance.
+     *
+     * @param parentCoord the location of a parent component.
+     *
+     * @return the number of cells that can be accomodated at the
+     * parent site.
+     */
+    protected abstract long computeParentFreeCapacity(E parent, Coord parentCoord);
+
+    /**
+     * Updates the private cell-count cache when the size of a
+     * component (already on the lattice) changes.
+     *
+     * @param component the component that has changed in size.
+     *
+     * @param coord the location of the changed component.
+     */
+    protected void updateComponentCellCount(E component, Coord coord) {
+        totalCellCount += component.netChange();
     }
 
     @Override public long countCells() {
@@ -82,19 +135,12 @@ public abstract class MultiCellularLatticeTumor<E extends TumorComponent> extend
         Coord parentCoord = locateComponent(parent);
 
         // Compute the free capacity of the parent site...
-        long parentFreeCapacity = getSiteCapacity(parentCoord) - parent.countCells();
-
-        // Save the prior size in order to update the total cell-count
-        // cache...
-        long priorCount = parent.countCells();
+        long parentFreeCapacity = computeParentFreeCapacity(parent, parentCoord);
 
         if (canExceedParentCapacity(parent, parentCoord, parentFreeCapacity))
             advanceWithExpansion(parent, parentCoord, parentFreeCapacity);
         else
             advanceInPlace(parent, parentCoord, parentFreeCapacity);
-
-        // Update the cached cell count for the parent component...
-        updateComponentCellCount(parent, parentCoord, priorCount);
 
         // Remove the parent if it has died...
         if (parent.isDead())

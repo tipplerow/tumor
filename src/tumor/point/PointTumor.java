@@ -73,7 +73,7 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
         Collection<E> allChildren = new ArrayList<E>();
         
         for (E parent : components) {
-            TumorEnv tumorEnv = TumorEnv.unconstrained(parent);
+            TumorEnv tumorEnv = TumorEnv.unconstrained(parent.getGrowthRate());
             
             @SuppressWarnings("unchecked")
                 Collection<E> children = (Collection<E>) parent.advance(tumorEnv);

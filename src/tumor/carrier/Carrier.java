@@ -9,7 +9,6 @@ import java.util.List;
 import jam.bio.Propagator;
 
 import tumor.mutation.Mutation;
-import tumor.mutation.MutationList;
 
 /**
  * Represents a biological entity that carries and accumulates
@@ -39,8 +38,8 @@ public abstract class Carrier extends Propagator {
     }
 
     /**
-     * Accumulates the original mutations from a collection of
-     * carriers.
+     * Accumulates the <em>original</em> mutations from a collection
+     * of carriers.
      *
      * @param carriers the carriers to aggregate.
      *
@@ -48,13 +47,13 @@ public abstract class Carrier extends Propagator {
      * contained in the input carriers in the order returned by the
      * collection iterator.
      */
-    public static MutationList accumulateMutations(Collection<? extends Carrier> carriers) {
+    public static List<Mutation> accumulateMutations(Collection<? extends Carrier> carriers) {
         List<Mutation> mutations = new ArrayList<Mutation>();
             
         for (Carrier carrier : carriers)
             mutations.addAll(carrier.getOriginalMutations());
 
-        return MutationList.create(mutations);
+        return mutations;
     }
 
     /**
@@ -110,14 +109,14 @@ public abstract class Carrier extends Propagator {
      *
      * @return all mutations that have accumulated in this carrier.
      */
-    public abstract MutationList getAccumulatedMutations();
+    public abstract List<Mutation> getAccumulatedMutations();
 
     /**
      * Returns the mutations that originated in this carrier.
      *
      * @return the mutations that originated in this carrier.
      */
-    public abstract MutationList getOriginalMutations();
+    public abstract List<Mutation> getOriginalMutations();
 
     /**
      * Identifies empty carriers.

@@ -2,6 +2,7 @@
 package tumor.mutation;
 
 import java.util.Collection;
+import java.util.List;
 
 import jam.lang.Ordinal;
 import jam.lang.OrdinalIndex;
@@ -29,6 +30,11 @@ public abstract class Mutation extends Ordinal {
      * The single mutation responsible for transformation to malignancy.
      */
     public static final Mutation TRANSFORMER = neutral();
+
+    /**
+     * The mutations responsible for transformation to malignancy.
+     */
+    public static final List<Mutation> TRANSFORMERS = List.of(neutral());
 
     /**
      * Creates a new mutation with an automatically generated index.
@@ -60,6 +66,32 @@ public abstract class Mutation extends Ordinal {
      */
     public static ScalarMutation scalar(double selectionCoeff) {
         return new ScalarMutation(selectionCoeff);
+    }
+
+    /**
+     * Evaluates the net effect of a collection of mutations on an
+     * initial growth rate.
+     *
+     * <p><b>The current implementation assumes that all mutations
+     * operate independently and thows an exception if any mutations
+     * are synergistic or antagonistic.</b>
+     *
+     * @param rate the original growth rate.
+     *
+     * @param mutations the mutations to apply.
+     *
+     * @return the new growth rate after the effects of all mutations
+     * have been applied; the original rate is unchanged.
+     */
+    public static GrowthRate apply(GrowthRate rate, Collection<Mutation> mutations) {
+        for (Mutation mutation : mutations) {
+            if (mutation.isIndependent())
+                rate = mutation.apply(rate);
+            else
+                throw new IllegalStateException("Synergistic or antagonistic mutations are not yet suppported.");
+        }
+
+        return rate;
     }
 
     /**

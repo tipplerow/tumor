@@ -9,9 +9,7 @@ import java.util.Map;
 
 import jam.lattice.Coord;
 import jam.lattice.Lattice;
-import jam.math.Probability;
 
-import tumor.capacity.CapacityModel;
 import tumor.carrier.Carrier;
 import tumor.carrier.Deme;
 import tumor.carrier.TumorEnv;
@@ -65,11 +63,6 @@ public final class DemeLatticeTumor extends MultiCellularLatticeTumor<Deme> {
     }
 
     @Override protected void advanceInPlace(Deme parent, Coord parentCoord, long growthCapacity) {
-        // ============================================================
-        // The superclass advance() method updates the cell-count cache
-        // for changes in the parent size, so we do not do that here.
-        // ============================================================
-
         // Construct the appropriate local environment...
         TumorEnv localEnv = createLocalEnv(parent, parentCoord, growthCapacity);
 
@@ -78,14 +71,12 @@ public final class DemeLatticeTumor extends MultiCellularLatticeTumor<Deme> {
 
         // Demes should never produce offspring...
         assert daughters.isEmpty();
+
+        // Update the cached cell count for the parent component...
+        updateComponentCellCount(parent, parentCoord);
     }
 
     @Override protected void advanceWithExpansion(Deme parent, Coord parentCoord, long parentFreeCapacity) {
-        // ============================================================
-        // The superclass advance() method updates the cell-count cache
-        // for changes in the parent size, so we do not do that here.
-        // ============================================================
-
         // Select a neighboring expansion site at random...
         Coord expansionCoord = selectNeighbor(parentCoord);
 
@@ -106,12 +97,13 @@ public final class DemeLatticeTumor extends MultiCellularLatticeTumor<Deme> {
             // the base class method will update the parent count...
             //
             addComponent(parent.divide(excessOccupancy), expansionCoord);
+            updateComponentCellCount(parent, parentCoord);
         }
 
         assert satisfiesCapacityConstraint(expansionCoord);
     }
 
-    private long computeExpansionFreeCapacity(Coord expansionCoord) {
+    @Override protected long computeExpansionFreeCapacity(Coord expansionCoord) {
         //
         // Only one deme per site, so the expansion capacity is zero
         // if the site is already occupied; if unoccupied, then the
@@ -121,5 +113,12 @@ public final class DemeLatticeTumor extends MultiCellularLatticeTumor<Deme> {
             return 0;
         else
             return getSiteCapacity(expansionCoord);
+    }
+
+    @Override protected long computeParentFreeCapacity(Deme parent, Coord parentCoord) {
+        //
+        // The parent deme is the only occupant of the parent site...
+        //
+        return getSiteCapacity(parentCoord) - parent.countCells();
     }
 }

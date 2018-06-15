@@ -4,7 +4,9 @@ package tumor.report;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.List;
 
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongLists;
 
@@ -16,7 +18,6 @@ import jam.util.RegexUtil;
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.mutation.Mutation;
-import tumor.mutation.MutationList;
 
 /**
  * Records the original or accumulated mutations for a tumor component.
@@ -55,12 +56,15 @@ public final class ComponentMutationRecord extends StepRecord {
         return ComponentMutationRecord.create(component, component.getOriginalMutations());
     }
 
-    private static ComponentMutationRecord create(TumorComponent component, MutationList mutationList) {
+    private static ComponentMutationRecord create(TumorComponent component, List<Mutation> mutationList) {
         int trialIndex = TumorDriver.global().getTrialIndex();
         int timeStep   = TumorDriver.global().getTimeStep();
         
         long componentIndex = component.getIndex();
-        LongList mutationIndexes = mutationList.indexList();
+        LongList mutationIndexes = new LongArrayList(mutationList.size());
+
+        for (Mutation mutation : mutationList)
+            mutationIndexes.add(mutation.getIndex());
 
         return new ComponentMutationRecord(trialIndex, timeStep, componentIndex, mutationIndexes);
     }

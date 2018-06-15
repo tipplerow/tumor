@@ -14,7 +14,6 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
 import jam.lang.OrdinalIndex;
-import jam.lang.OrdinalIndex;
 import jam.lattice.Coord;
 import jam.math.VectorMoment;
 
@@ -23,7 +22,6 @@ import tumor.mutation.Mutation;
 import tumor.mutation.MutationFrequency;
 import tumor.mutation.MutationFrequencyMap;
 import tumor.mutation.MutationGenerator;
-import tumor.mutation.MutationList;
 
 /**
  * Represents a single solid tumor.
@@ -179,21 +177,22 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
         return countCells(viewComponents());
     }
 
-    @Override public MutationList getAccumulatedMutations() {
+    @Override public List<Mutation> getAccumulatedMutations() {
         return accumulateMutations(traceLineage());
     }
 
-    @Override public MutationList getOriginalMutations() {
+    @Override public List<Mutation> getOriginalMutations() {
         //
-        // Order the mutations by their index...
+        // Sorting the mutations by their ordinal index places them in
+        // chronological order...
         //
         Set<Mutation> mutations = new TreeSet<Mutation>();
 
         for (E component : viewComponents())
-            for (Mutation mutation : component.getAccumulatedMutations())
+            for (Mutation mutation : component.getOriginalMutations())
                 mutations.add(mutation);
 
-        return MutationList.create(mutations);
+        return new ArrayList<Mutation>(mutations);
     }
 
     @Override public State getState() {

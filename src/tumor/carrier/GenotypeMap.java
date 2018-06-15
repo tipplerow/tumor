@@ -2,18 +2,19 @@
 package tumor.carrier;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import tumor.mutation.MutationList;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
+import tumor.mutation.Genotype;
 
 /**
- * Maps a genotype (all mutations accumulated in a lineage) to the
- * original lineage.
+ * Maps genotypes to lineages that contain them to faciliate the
+ * identification of lineage clones.
  */
 public final class GenotypeMap {
-    private final Map<MutationList, Lineage> map = new HashMap<MutationList, Lineage>();
+    private final Multimap<Genotype, Lineage> map = HashMultimap.create();
 
     /**
      * Creates an empty genotype map.
@@ -52,49 +53,34 @@ public final class GenotypeMap {
     }
 
     /**
-     * Extracts the genotype from a lineage.
+     * Adds a lineage to this map.
      *
-     * @param lineage the lineage to examine.
-     *
-     * @return all mutations that the given lineage has accumulated.
-     */
-    public static MutationList getGenotype(Lineage lineage) {
-        return lineage.getAccumulatedMutations();
-    }
-
-    /**
-     * Maps the genotype for a lineage.
-     *
-     * @param lineage the lineage to map.
-     *
-     * @throws IllegalArgumentException if this map already contains
-     * the genotype carried by the specified lineage.
+     * @param lineage the lineage to add.
      */
     public void add(Lineage lineage) {
-        MutationList genotype = getGenotype(lineage);
-        Lineage      prevLine = map.put(genotype, lineage);
-
-        if (prevLine != null) {
-            //
-            // Restore the previous state before throwing the
-            // exception...
-            //
-            map.put(genotype, prevLine);
-            throw new IllegalArgumentException("Duplicate genotype.");
-        }
+        map.put(lineage.getGenotype(), lineage);
     }
 
     /**
-     * Maps the genotypes for a collection of lineages.
+     * Adds lineages to this map.
      *
-     * @param lineages the lineages to map.
-     *
-     * @throws IllegalArgumentException if this map already contains
-     * a genotype carried by one of the lineage.
+     * @param lineages the lineages to add.
      */
     public void addAll(Collection<Lineage> lineages) {
         for (Lineage lineage: lineages)
             add(lineage);
+    }
+
+    /**
+     * Identifies genotypes contained in this map.
+     *
+     * @param genotype the genotype to search for.
+     *
+     * @return {@code true} iff this map contains the specified
+     * genotype.
+     */
+    public boolean contains(Genotype genotype) {
+        return map.containsKey(genotype);
     }
 
     /**
@@ -106,31 +92,55 @@ public final class GenotypeMap {
      * lineage.
      */
     public boolean contains(Lineage lineage) {
-        return map.containsKey(getGenotype(lineage));
+        return get(lineage.getGenotype()).contains(lineage);
     }
 
     /**
-     * Identifies genotypes contained in this map.
+     * Counts the number of lineage clones sharing the same genotype.
      *
      * @param genotype the genotype to search for.
      *
-     * @return {@code true} iff this map contains the specified
+     * @return the number of lineage clones containing the specified
      * genotype.
      */
-    public boolean contains(MutationList genotype) {
-        return map.containsKey(genotype);
+    public int count(Genotype genotype) {
+        return get(genotype).size();
     }
 
     /**
-     * Fetches a lineage by its genotype.
+     * Returns all lineages with a given genotype.
      *
      * @param genotype the genotype to search for.
      *
-     * @return the lineage with the specified genotype; {@code null}
-     * if the genotype is not mapped to a lineage.
+     * @return a collection containing all lineages in this map having
+     * the specified genotype; an empty collection if there are none.
      */
-    public Lineage lookup(MutationList genotype) {
+    public Collection<Lineage> get(Genotype genotype) {
         return map.get(genotype);
+    }
+
+    /**
+     * Attempts to fetch a unique lineage by its genotype.
+     *
+     * @param genotype the genotype to search for.
+     *
+     * @return the unique lineage with the specified genotype (if
+     * exactly one exists in this map) or {@code null} if the map does
+     * not contain the input genotype.
+     *
+     * @throws IllegalStateException if more than one lineage shares
+     * the same genotype.
+     */
+    public Lineage getUnique(Genotype genotype) {
+        Collection<Lineage> lineages = get(genotype);
+
+        if (lineages.size() == 0)
+            return null;
+
+        if (lineages.size() == 1)
+            return lineages.iterator().next();
+
+        throw new IllegalStateException("Multiple lineages share the ostensibly unique genotype.");
     }
 
     /**
@@ -138,31 +148,23 @@ public final class GenotypeMap {
      *
      * @param lineage the lineage to remove.
      *
-     * @return {@code true} iff the map was altered (the genotype was
+     * @return {@code true} iff the map was altered (the lineage was
      * present and then removed).
      */
     public boolean remove(Lineage lineage) {
-        MutationList genotype = getGenotype(lineage);
-        Lineage      mapped   = map.get(genotype);
-
-        // Only remove the mapping if the genotype maps to the input
-        // lineage.  Use "==" to test for physical object identity,
-        // not logical equivalence...
-        if (lineage == mapped)
-            return map.remove(genotype) != null;
-        else
-            return false;
+        return map.remove(lineage.getGenotype(), lineage);
     }
 
     /**
-     * Removes a genotype from this map (if it is present).
+     * Removes a genotype and all lineages containing it from this map
+     * (if it is present).
      *
      * @param genotype the genotype to remove.
      *
      * @return {@code true} iff the map was altered (the genotype was
      * present and then removed).
      */
-    public boolean remove(MutationList genotype) {
-        return map.remove(genotype) != null;
+    public boolean remove(Genotype genotype) {
+        return map.removeAll(genotype).size() > 0;
     }
 }

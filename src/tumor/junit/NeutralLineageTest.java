@@ -28,7 +28,7 @@ public class NeutralLineageTest extends NumericTestBase {
         GrowthRate growthRate = GrowthRate.net(0.0);
 
         Lineage  founder  = Lineage.founder(growthRate, initCount);
-        TumorEnv tumorEnv = TumorEnv.unconstrained(founder);
+        TumorEnv tumorEnv = TumorEnv.unconstrained(growthRate);
 
         List<Lineage> children = founder.advance(tumorEnv);
 
