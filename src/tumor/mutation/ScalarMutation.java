@@ -15,9 +15,14 @@ public class ScalarMutation extends Mutation {
     private final double selectionCoeff;
 
     /**
-     * The validate range of selection coefficients.
+     * The lowest valid selection coefficient.
      */
-    public static final DoubleRange COEFF_RANGE = DoubleRange.open(-1.0, 1.0);
+    public static final double MIN_COEFF = -0.5;
+
+    /**
+     * The highest valid selection coefficient.
+     */
+    public static final double MAX_COEFF = 0.5;
 
     /**
      * Creates a scalar mutation with a fixed selection coefficient.
@@ -31,7 +36,7 @@ public class ScalarMutation extends Mutation {
     }
 
     private static void validateSelectionCoeff(double selectionCoeff) {
-        if (!COEFF_RANGE.contains(selectionCoeff))
+        if (selectionCoeff < MIN_COEFF || selectionCoeff > MAX_COEFF)
             throw new IllegalArgumentException("Invalid selection coefficient.");
     }
 
