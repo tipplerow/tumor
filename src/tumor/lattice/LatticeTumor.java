@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jam.app.JamProperties;
+import jam.lang.JamException;
 import jam.lattice.Coord;
 import jam.lattice.Lattice;
 import jam.lattice.LatticeView;
@@ -80,18 +81,29 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      *
      * @param lattice the underlying lattice.
      *
-     * @throws IllegalArgumentException unless the lattice is empty.
+     * @param maxSiteCount an estimate of the maximum number of
+     * lattice sites that will be occupied by tumor components.
+     *
+     * @throws IllegalArgumentException unless the lattice is empty
+     * and large enough to safely accomodate the maximum number of
+     * components.
      */
-    protected LatticeTumor(LatticeTumor<E> parent, Lattice<E> lattice) {
+    protected LatticeTumor(LatticeTumor<E> parent, Lattice<E> lattice, long maxSiteCount) {
         super(parent);
 
-        validateLattice(lattice);
+        validateLattice(lattice, maxSiteCount);
         this.lattice = lattice;
     }
 
-    private static void validateLattice(Lattice<?> lattice) {
+    private static void validateLattice(Lattice<?> lattice, long maxSiteCount) {
         if (!lattice.isEmpty())
             throw new IllegalArgumentException("Initial lattice is not empty.");
+
+        // Require a "safety factor" of two in each spatial dimension,
+        // for a total safety factor of eight...
+        if (lattice.getPeriod().getSiteCount() < 8 * maxSiteCount)
+            throw JamException.runtime("A lattice period of [%d] cannot safely accomodate [%d] occupied sites.",
+                                       lattice.getPeriod(), maxSiteCount);
     }
 
     /**
@@ -125,14 +137,14 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * @throws IllegalArgumentException if the lattice period would
      * exceed the maximum integer value.
      */
-    public static int defaultLatticePeriod(long maxSites) {
+    public static int minimumLatticePeriod(long maxSites) {
         //
-        // Ten times the diameter of a perfectly spherical object
-        // should be sufficient to contain the tumor without any
-        // chance of conflict with periodic images.
+        // Two times the diameter of a perfect sphere should be
+        // sufficient to contain the tumor without any chance of
+        // conflict with periodic images.
         //
-        long radius = estimateRadius(maxSites);
-        long period = 2 * 10 * radius;
+        long diameter = 2 * estimateRadius(maxSites);
+        long period   = 2 * diameter;
 
         // Lattice periods are specified with an "int", not a "long".
         // We will never simulate tumors that require a lattice with a
@@ -157,7 +169,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         // Return the radius of a sphere with volume equal to the
         // number of components...
         //
-        return Math.round(Math.cbrt(0.75 * ((double) siteCount) / Math.PI));
+        return (long) Math.ceil(Math.cbrt(0.75 * siteCount / Math.PI));
     }
 
     /**

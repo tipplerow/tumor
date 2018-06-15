@@ -12,6 +12,7 @@ import tumor.capacity.CapacityModel;
 import tumor.capacity.SingleCapacity;
 import tumor.carrier.TumorCell;
 import tumor.carrier.TumorEnv;
+import tumor.driver.TumorDriver;
 
 /**
  * Represents a three-dimensional tumor of individual cells on a
@@ -19,11 +20,18 @@ import tumor.carrier.TumorEnv;
  */
 public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
     private CellularLatticeTumor(CellularLatticeTumor parent) {
-        super(parent, createLattice());
+        super(parent, createLattice(), getMaxSiteCount());
     }
 
     private static Lattice<TumorCell> createLattice() {
         return Lattice.sparseSO(resolvePeriodLength());
+    }
+
+    private static long getMaxSiteCount() {
+        //
+        // One cell per site...
+        //
+        return TumorDriver.global().getMaxTumorSize();
     }
 
     /**

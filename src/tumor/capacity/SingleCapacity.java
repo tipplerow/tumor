@@ -15,6 +15,10 @@ public final class SingleCapacity extends CapacityModel {
      */
     public static final CapacityModel INSTANCE = new SingleCapacity();
 
+    @Override public long getMeanCapacity() {
+        return 1L;
+    }
+
     @Override public long getSiteCapacity(Coord coord) {
         //
         // The coordinate is ignored...

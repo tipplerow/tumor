@@ -147,6 +147,6 @@ public abstract class MutationGenerator {
     }
 
     private static double resolveSelectionCoeff() {
-        return JamProperties.getRequiredDouble(SELECTION_COEFF_PROPERTY, ScalarMutation.COEFF_RANGE);
+        return JamProperties.getRequiredDouble(SELECTION_COEFF_PROPERTY);
     }
 }

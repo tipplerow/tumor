@@ -66,6 +66,15 @@ public abstract class CapacityModel {
     }
 
     /**
+     * Returns the expected site capacity when averaged through space
+     * and time.
+     *
+     * @return the expected site capacity when averaged through space
+     * and time.
+     */
+    public abstract long getMeanCapacity();
+
+    /**
      * Returns the maximum number of cells allowed at a given lattice
      * site.
      *

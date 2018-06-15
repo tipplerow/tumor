@@ -49,6 +49,10 @@ public final class UniformCapacity extends CapacityModel {
         return JamProperties.getRequiredLong(SITE_CAPACITY_PROPERTY, LongRange.POSITIVE);
     }
 
+    @Override public long getMeanCapacity() {
+        return siteCapacity;
+    }
+
     @Override public long getSiteCapacity(Coord coord) {
         //
         // The coordinate is ignored...

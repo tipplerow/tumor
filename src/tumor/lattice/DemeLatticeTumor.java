@@ -26,7 +26,7 @@ public final class DemeLatticeTumor extends MultiCellularLatticeTumor<Deme> {
     }
 
     private static Lattice<Deme> createLattice() {
-        return Lattice.sparseSO(resolvePeriodLength());
+        return Lattice.denseSO(resolvePeriodLength());
     }
 
     /**
@@ -96,7 +96,8 @@ public final class DemeLatticeTumor extends MultiCellularLatticeTumor<Deme> {
             // the cell count for the deme to the cached total, and
             // the base class method will update the parent count...
             //
-            addComponent(parent.divide(excessOccupancy), expansionCoord);
+            //addComponent(parent.divide(excessOccupancy), expansionCoord);
+            addComponent(parent.divide(jam.math.JamRandom.global().nextInt(1, (int) (excessOccupancy + 1))), expansionCoord);
             updateComponentCellCount(parent, parentCoord);
         }
 

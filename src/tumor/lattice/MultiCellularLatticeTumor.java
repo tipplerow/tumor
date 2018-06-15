@@ -8,6 +8,7 @@ import tumor.capacity.CapacityModel;
 import tumor.carrier.Carrier;
 import tumor.carrier.MultiCellularComponent;
 import tumor.carrier.TumorEnv;
+import tumor.driver.TumorDriver;
 import tumor.growth.GrowthRate;
 
 /**
@@ -43,7 +44,14 @@ public abstract class MultiCellularLatticeTumor<E extends MultiCellularComponent
      * @throws IllegalArgumentException unless the lattice is empty.
      */
     protected MultiCellularLatticeTumor(MultiCellularLatticeTumor<E> parent, Lattice<E> lattice) {
-        super(parent, lattice);
+        super(parent, lattice, getMaxSiteCount());
+    }
+
+    private static long getMaxSiteCount() {
+        long maxTumorSize = TumorDriver.global().getMaxTumorSize();
+        long siteCapcity  = CapacityModel.global().getMeanCapacity();
+
+        return maxTumorSize / siteCapcity;
     }
 
     /**
