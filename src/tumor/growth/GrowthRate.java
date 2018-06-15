@@ -44,11 +44,16 @@ public final class GrowthRate {
     private final Probability birthRate;
     private final Probability deathRate;
 
+    // Unboxing the birth and death rates actually generates a sizable
+    // performance hit, so we also store the bare double values...
+    private final double birthRateDouble;
+    private final double deathRateDouble;
+
     private static GrowthRate global = null;
 
     // Cumulative probability distribution for the set of possible
-    // events...
-    private final double[] eventCDF;
+    // events, computed on demand...
+    private double[] eventCDF = null;
 
     // Event indexes corresponding to elements in the "eventCDF" array...
     private static final int BIRTH_EVENT = 0;
@@ -106,7 +111,13 @@ public final class GrowthRate {
      * death rates exceeds one.
      */
     public GrowthRate(double birthRate, double deathRate) {
-        this(Probability.valueOf(birthRate), Probability.valueOf(deathRate));
+        this.birthRate = Probability.valueOf(birthRate);
+        this.deathRate = Probability.valueOf(deathRate);
+
+        validate(this.birthRate, this.deathRate);
+
+        this.birthRateDouble = birthRate;
+        this.deathRateDouble = deathRate;
     }
 
     /**
@@ -126,17 +137,9 @@ public final class GrowthRate {
 
         this.birthRate = birthRate;
         this.deathRate = deathRate;
-        this.eventCDF  = computeCDF(birthRate, deathRate);
-    }
 
-    private static double[] computeCDF(Probability birthRate, Probability deathRate) {
-        double[] CDF = new double[3];
-
-        CDF[BIRTH_EVENT] = birthRate.doubleValue();
-        CDF[DEATH_EVENT] = birthRate.doubleValue() + deathRate.doubleValue();
-        CDF[NO_EVENT]    = 1.0;
-
-        return CDF;
+        this.birthRateDouble = birthRate.doubleValue();
+        this.deathRateDouble = deathRate.doubleValue();
     }
 
     /**
@@ -265,8 +268,8 @@ public final class GrowthRate {
      * @return the expected number of cell divisions and deaths.
      */
     public GrowthCount computeCount(long population, long netCapacity) {
-        double eventRate = birthRate.doubleValue() + deathRate.doubleValue();
-        double deathFrac = deathRate.doubleValue() / eventRate;
+        double eventRate = birthRateDouble + deathRateDouble;
+        double deathFrac = deathRateDouble / eventRate;
 
         long eventCount = JamRandom.global().discretize(population * eventRate);
         long deathCount = JamRandom.global().discretize(eventCount * deathFrac);
@@ -312,7 +315,7 @@ public final class GrowthRate {
      * single round of cell division).
      */
     public long resolveMaximumGrowth(long population) {
-        if (birthRate.equals(Probability.ZERO)) {
+        if (birthRateDouble < 1.0E-15) {
             //
             // No increase possible...
             //
@@ -368,7 +371,7 @@ public final class GrowthRate {
         long deathCount = 0;
 
         for (long trial = 0; trial < population; ++trial) {
-            long eventIndex = JamRandom.global().selectCDF(eventCDF);
+            long eventIndex = JamRandom.global().selectCDF(getEventCDF());
 
             if (eventIndex == BIRTH_EVENT && netGrowth < netCapacity) {
                 ++netGrowth;
@@ -382,6 +385,23 @@ public final class GrowthRate {
 
         assert netGrowth <= netCapacity;
         return new GrowthCount(birthCount, deathCount);
+    }
+
+    private double[] getEventCDF() {
+        if (eventCDF == null)
+            eventCDF = computeEventCDF();
+
+        return eventCDF;
+    }
+
+    private double[] computeEventCDF() {
+        double[] CDF = new double[3];
+
+        CDF[BIRTH_EVENT] = birthRateDouble;
+        CDF[DEATH_EVENT] = birthRateDouble + deathRateDouble;
+        CDF[NO_EVENT]    = 1.0;
+
+        return CDF;
     }
 
     /**
@@ -479,7 +499,7 @@ public final class GrowthRate {
      * @return the net growth rate.
      */
     public double getNetRate() {
-        return birthRate.doubleValue() - deathRate.doubleValue();
+        return birthRateDouble - deathRateDouble;
     }
 
     /**
@@ -509,8 +529,8 @@ public final class GrowthRate {
         if (this.getGrowthFactor() <= 1.0)
             return this;
 
-        double B = birthRate.doubleValue();
-        double D = deathRate.doubleValue();
+        double B = birthRateDouble;
+        double D = deathRateDouble;
 
         double Bprime = 0.5 * (B + D);
         double Dprime = Bprime;
@@ -573,8 +593,8 @@ public final class GrowthRate {
      * {@code g} is the current growth factor.
      */
     public GrowthRate rescaleGrowthFactor(double scalar) {
-        double B = birthRate.doubleValue();
-        double D = deathRate.doubleValue();
+        double B = birthRateDouble;
+        double D = deathRateDouble;
 
         double sm1 = scalar - 1.0;
         double sp1 = scalar + 1.0;
@@ -596,6 +616,6 @@ public final class GrowthRate {
     }
 
     @Override public String toString() {
-        return "GrowthRate(B = " + birthRate.doubleValue() + ", D = " + deathRate.doubleValue() + ")";
+        return "GrowthRate(B = " + birthRateDouble + ", D = " + deathRateDouble + ")";
     }
 }
