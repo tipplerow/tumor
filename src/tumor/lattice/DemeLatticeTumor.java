@@ -26,7 +26,12 @@ public final class DemeLatticeTumor extends MultiCellularLatticeTumor<Deme> {
     }
 
     private static Lattice<Deme> createLattice() {
-        return Lattice.denseSO(resolvePeriodLength());
+        int periodLength = resolvePeriodLength();
+
+        if (periodLength > 1000)
+            throw new IllegalStateException("Deme lattice is likely too large to fit in memory.");
+
+        return Lattice.denseSO(periodLength);
     }
 
     /**

@@ -102,8 +102,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         // Require a "safety factor" of two in each spatial dimension,
         // for a total safety factor of eight...
         if (lattice.getPeriod().getSiteCount() < 8 * maxSiteCount)
-            throw JamException.runtime("A lattice period of [%d] cannot safely accomodate [%d] occupied sites.",
-                                       lattice.getPeriod(), maxSiteCount);
+            throw JamException.runtime("%s cannot safely accomodate [%d] occupied sites.", lattice.getPeriod(), maxSiteCount);
     }
 
     /**
