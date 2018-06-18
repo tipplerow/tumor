@@ -6,11 +6,24 @@ import java.util.List;
 import jam.app.JamProperties;
 import jam.lang.JamException;
 
+import tumor.driver.TumorDriver;
+
 /**
  * Generates mutations in a carrier.
  */
 public abstract class MutationGenerator {
     private static MutationGenerator global = null;
+
+    private static final int  maxMutationTime  = resolveMaxMutationTime();
+    private static final long maxMutationCount = resolveMaxMutationCount();
+
+    private static int resolveMaxMutationTime() {
+        return JamProperties.getOptionalInt(MAX_MUTATION_TIME_PROPERTY, Integer.MAX_VALUE);
+    }
+
+    private static long resolveMaxMutationCount() {
+        return JamProperties.getOptionalLong(MAX_MUTATION_COUNT_PROPERTY, Long.MAX_VALUE);
+    }
 
     /**
      * Name of the system property that defines the type for the
@@ -47,6 +60,18 @@ public abstract class MutationGenerator {
      * coefficient for the global mutation generator.
      */
     public static final String SELECTION_COEFF_PROPERTY = "tumor.mutation.selectionCoeff";
+
+    /**
+     * Name of the system property that defines the maximum number of
+     * mutations to generate in a single simulation trial.
+     */
+    public static final String MAX_MUTATION_COUNT_PROPERTY = "tumor.mutation.maxMutationCount";
+
+    /**
+     * Name of the system property that defines the latest time that
+     * mutations will be generated in a simulation trial.
+     */
+    public static final String MAX_MUTATION_TIME_PROPERTY = "tumor.mutation.maxMutationTime";
 
     /**
      * Generates the mutations that originate in a single daughter
@@ -94,10 +119,16 @@ public abstract class MutationGenerator {
      * are defined.
      */
     public static MutationGenerator global() {
-        if (global == null)
+        if (generationMustStop())
+            global = EmptyGenerator.INSTANCE;
+        else if (global == null)
             global = createGlobal();
 
         return global;
+    }
+
+    private static boolean generationMustStop() {
+        return Mutation.count() > maxMutationCount || TumorDriver.global().getTimeStep() > maxMutationTime;
     }
 
     private static MutationGenerator createGlobal() {

@@ -42,6 +42,8 @@ public class MutationTest extends NumericTestBase {
         assertEquals(4, scalar1.getIndex());
         assertEquals(5, scalar2.getIndex());
         assertEquals(6, scalar3.getIndex());
+
+        assertEquals(7, Mutation.count());
     }
 
     @Test public void testNeutral() {

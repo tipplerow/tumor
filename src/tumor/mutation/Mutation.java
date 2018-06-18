@@ -34,13 +34,22 @@ public abstract class Mutation extends Ordinal {
     /**
      * The mutations responsible for transformation to malignancy.
      */
-    public static final List<Mutation> TRANSFORMERS = List.of(neutral());
+    public static final List<Mutation> TRANSFORMERS = List.of(TRANSFORMER);
 
     /**
      * Creates a new mutation with an automatically generated index.
      */
     protected Mutation() {
         super(ordinalIndex.next());
+    }
+
+    /**
+     * Returns the total number of mutations created in this JVM session.
+     *
+     * @return the total number of mutations created in this JVM session.
+     */
+    public static long count() {
+        return ordinalIndex.peek();
     }
 
     /**
