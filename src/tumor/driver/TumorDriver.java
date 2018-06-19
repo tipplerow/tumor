@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.Collection;
+import java.util.Map;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
@@ -140,6 +141,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * mutations contained in the tumor.
      */
     public static final String WRITE_SCALAR_MUTATIONS_PROPERTY = "tumor.driver.writeScalarMutations";
+
+    /**
+     * Name of the output file containing all relevant system
+     * properties that were defined at the time of execution.
+     */
+    public static final String PROPERTY_FILE_NAME = "runtime.prop";
 
     /**
      * Name of the output file containing the tumor size (number of
@@ -558,10 +565,22 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     @Override protected void initializeSimulation() {
+        writeRuntimeProperties();
+
         if (writeCellCountTraj) {
             cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
             cellCountTrajWriter.println(ComponentCountRecord.header());
         }
+    }
+
+    private void writeRuntimeProperties() {
+        PrintWriter writer = openWriter(PROPERTY_FILE_NAME);
+        Map<String, String> properties = JamProperties.filter("jam.", "tumor.");
+
+        for (Map.Entry<String, String> entry : properties.entrySet())
+            writer.println(entry.getKey() + " = " + entry.getValue());
+
+        writer.close();
     }
 
     @Override protected void finalizeSimulation() {
