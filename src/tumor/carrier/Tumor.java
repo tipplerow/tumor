@@ -196,6 +196,6 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     @Override public State getState() {
-        return countCells() == 0 ? State.DEAD : State.ALIVE;
+        return countCells() == 0 ? State.DEAD : State.ACTIVE;
     }
 }

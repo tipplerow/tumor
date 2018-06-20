@@ -27,20 +27,22 @@ public class PerfectCellTest extends NumericTestBase {
         TumorCell  founderCell = TumorCell.founder(growthRate);
         TumorEnv   tumorEnv    = TumorEnv.unconstrained(growthRate);
 
-        List<TumorCell> population = new ArrayList<TumorCell>();
-        population.add(founderCell);
+        List<TumorCell> active = new ArrayList<TumorCell>();
+        List<TumorCell> senescent = new ArrayList<TumorCell>();
 
-        TumorComponent.advance(population, tumorEnv);
-        assertEquals(2, population.size());
+        active.add(founderCell);
 
-        TumorComponent.advance(population, tumorEnv);
-        assertEquals(4, population.size());
+        TumorComponent.advance(active, senescent, tumorEnv);
+        assertEquals(2, active.size());
 
-        TumorComponent.advance(population, tumorEnv);
-        assertEquals(8, population.size());
+        TumorComponent.advance(active, senescent, tumorEnv);
+        assertEquals(4, active.size());
 
-        TumorComponent.advance(population, tumorEnv);
-        assertEquals(16, population.size());
+        TumorComponent.advance(active, senescent, tumorEnv);
+        assertEquals(8, active.size());
+
+        TumorComponent.advance(active, senescent, tumorEnv);
+        assertEquals(16, active.size());
     }
 
     public static void main(String[] args) {

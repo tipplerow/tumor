@@ -128,10 +128,6 @@ public abstract class Carrier extends Propagator {
         return countCells() == 0;
     }
 
-    @Override public State getState() {
-        return isEmpty() ? State.DEAD : State.ALIVE;
-    }
-
     @SuppressWarnings("unchecked")
     @Override public List<? extends Carrier> traceLineage() {
         return (List<? extends Carrier>) super.traceLineage();

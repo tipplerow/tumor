@@ -62,6 +62,10 @@ public final class Deme extends MultiCellularComponent {
      * during the advancement step.
      */
     @Override public List<Deme> advance(TumorEnv tumorEnv) {
+        // Only active demes divide...
+        if (!isActive())
+            return Collections.emptyList();
+
         // Sample the number of birth and death events...
         GrowthCount growthCount   = resolveGrowthCount(tumorEnv);
         long        daughterCount = growthCount.getDaughterCount();

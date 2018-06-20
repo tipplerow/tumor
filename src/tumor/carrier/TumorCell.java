@@ -18,10 +18,6 @@ import tumor.mutation.MutationGenerator;
 public final class TumorCell extends TumorComponent {
     private final GrowthRate growthRate;
 
-    // Tumor cells are alive when created; the state becomes DEAD
-    // during the time-step advancement if a death event occurs.
-    private State state = State.ALIVE;
-
     private TumorCell(TumorCell parent, Genotype genotype, GrowthRate growthRate) {
         super(parent, genotype);
         this.growthRate = growthRate;
@@ -70,8 +66,10 @@ public final class TumorCell extends TumorComponent {
      * divide in the time step.
      */
     @Override public List<TumorCell> advance(TumorEnv tumorEnv) {
-        // Dead cells do not divide...
-        if (isDead())
+        //
+        // Only active cells divide...
+        //
+        if (!isActive())
             return Collections.emptyList();
 
         // Stochastically sample the event to occur on this step...
@@ -95,7 +93,7 @@ public final class TumorCell extends TumorComponent {
         //
         // This cell dies and is replaced by two daughters...
         //
-        state = State.DEAD;
+        die();
         return List.of(newDaughter(tumorEnv), newDaughter(tumorEnv));
     }
 
@@ -112,7 +110,7 @@ public final class TumorCell extends TumorComponent {
         //
         // This cell dies without reproducing...
         //
-        state = State.DEAD;
+        die();
         return Collections.emptyList();
     }
     
@@ -127,9 +125,5 @@ public final class TumorCell extends TumorComponent {
 
     @Override public GrowthRate getGrowthRate() {
         return growthRate;
-    }
-
-    @Override public final State getState() {
-        return state;
     }
 }

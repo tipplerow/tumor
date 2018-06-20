@@ -88,9 +88,9 @@ public final class Lineage extends MultiCellularComponent {
      */
     @Override public List<Lineage> advance(TumorEnv tumorEnv) {
         //
-        // Dead lineages do not advance further...
+        // Only active lineages divide...
         //
-        if (isDead())
+        if (!isActive())
             return Collections.emptyList();
 
         // Sample the number of birth and death events...

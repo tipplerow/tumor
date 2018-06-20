@@ -229,10 +229,6 @@ public abstract class MultiCellularComponent extends TumorComponent {
         return cloneCellCount;
     }
 
-    @Override public final State getState() {
-        return isEmpty() ? State.DEAD : State.ALIVE;
-    }
-
     @Override public final long countCells() {
         return cellCount;
     }

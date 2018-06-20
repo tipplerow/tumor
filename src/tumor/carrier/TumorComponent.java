@@ -26,6 +26,11 @@ public abstract class TumorComponent extends Carrier {
      */
     protected final Genotype genotype;
 
+    /**
+     * The replication state for this component.
+     */
+    protected State state = State.ACTIVE;
+
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
     /**
@@ -46,30 +51,39 @@ public abstract class TumorComponent extends Carrier {
      * time step.
      *
      * <p>During the time step, tumor components may produce children,
-     * die, or both.  Children will be added to the population; dead
-     * components will be removed.
+     * become senescent, or die.  Children are added to the active
+     * population; dead components are removed; senescent components
+     * are moved from the {@code active} to the {@code senescent}
+     * collection.
      *
      * @param <E> the runtime tumor component type.
      *
-     * @param components the tumor components to advance.
+     * @param active the active tumor components to advance.
+     *
+     * @param senescent the components that have become senescent.
      *
      * @param tumorEnv the local tumor environment where each member
      * of the population resides during the time step.
      */
     @SuppressWarnings("unchecked")
-    public static <E extends TumorComponent> void advance(Collection<E> components, TumorEnv tumorEnv) {
+    public static <E extends TumorComponent> void advance(Collection<E> active,
+                                                          Collection<E> senescent,
+                                                          TumorEnv      tumorEnv) {
         List<E>     children = new ArrayList<E>();
-        Iterator<E> iterator = components.iterator();
+        Iterator<E> iterator = active.iterator();
 
         while (iterator.hasNext()) {
             E parent = iterator.next();
             children.addAll((Collection<E>) parent.advance(tumorEnv));
 
-            if (parent.isDead())
+            if (!parent.isActive())
                 iterator.remove();
+
+            if (parent.isSenescent())
+                senescent.add(parent);
         }
 
-        components.addAll(children);
+        active.addAll(children);
     }
 
     /**
@@ -103,19 +117,29 @@ public abstract class TumorComponent extends Carrier {
      *
      * @param timeSteps the number of time steps to simulate.
      *
-     * @return any new components created during the time steps.
+     * @return any new active components created during the time
+     * steps.
      */
     public List<? extends TumorComponent> advance(TumorEnv tumorEnv, int timeSteps) {
-        List<TumorComponent> population = new ArrayList<TumorComponent>();
-        population.add(this);
+        List<TumorComponent> active    = new ArrayList<TumorComponent>();
+        List<TumorComponent> senescent = new ArrayList<TumorComponent>();
+
+        active.add(this);
 
         for (int stepIndex = 0; stepIndex < timeSteps; ++stepIndex)
-            advance(population, tumorEnv);
+            advance(active, senescent, tumorEnv);
 
         // Remove the original component to return only the children...
-        population.remove(this);
+        active.remove(this);
 
-        return population;
+        return active;
+    }
+
+    /**
+     * Kills this tumor component.
+     */
+    public void die() {
+        state = State.DEAD;
     }
 
     /**
@@ -161,6 +185,17 @@ public abstract class TumorComponent extends Carrier {
         GrowthRate growthRate = tumorEnv.getGrowthRate();
 
         return growthRate.resolveCount(countCells(), netCapacity);
+    }
+
+    /**
+     * Forces this tumor component into a state of senescence.
+     */
+    public void senesce() {
+        state = State.SENESCENT;
+    }
+
+    @Override public State getState() {
+        return state;
     }
 
     @Override public List<Mutation> getAccumulatedMutations() {
