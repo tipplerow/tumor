@@ -105,6 +105,24 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     /**
+     * Returns the number of active components in this tumor.
+     *
+     * @return the number of active components in this tumor.
+     */
+    public long countActive() {
+        return viewActive().size();
+    }
+
+    /**
+     * Returns the number of senescent components in this tumor.
+     *
+     * @return the number of senescent components in this tumor.
+     */
+    public long countSenescent() {
+        return viewSenescent().size();
+    }
+
+    /**
      * Returns the number of components in this tumor.
      *
      * @return the number of components in this tumor.

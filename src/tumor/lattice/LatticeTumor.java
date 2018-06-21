@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +29,7 @@ import tumor.growth.LocalGrowthModel;
 import tumor.migrate.MigrationModel;
 import tumor.migrate.MigrationType;
 import tumor.mutation.MutationGenerator;
+import tumor.senesce.SenescenceModel;
 
 /**
  * Represents a three-dimensional tumor whose components occupy sites
@@ -72,6 +74,11 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The component migration model.
      */
     protected final MigrationModel migrationModel = MigrationModel.global();
+
+    /**
+     * The cell senescence model.
+     */
+    protected final SenescenceModel senescenceModel = SenescenceModel.global();
 
     /**
      * The random number generator.
@@ -346,6 +353,44 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Returns the total capacity of the neighbors surrounding a
+     * central lattice site (excluding the capacity of the site
+     * itself).
+     *
+     * @param center the central site in the neighborhood.
+     *
+     * @return the total capacity of the neighbors surrounding the
+     * given site.
+     */
+    public long getNeighborhoodCapacity(Coord center) {
+        long result = 0;
+
+        for (Coord coord : getNeighbors(center))
+            result += getSiteCapacity(coord);
+
+        return result;
+    }
+
+    /**
+     * Returns the total number of cells occupying the neighboring
+     * sites around a central lattice site (excluding the occupancy
+     * of the site itself).
+     *
+     * @param center the central site in the neighborhood.
+     *
+     * @return the total occupancy of the neighbors surrounding the
+     * given site.
+     */
+    public long getNeighborhoodOccupancy(Coord center) {
+        long result = 0;
+
+        for (Coord coord : getNeighbors(center))
+            result += countCells(coord);
+
+        return result;
+    }
+
+    /**
      * Returns the coordinates of the nearest neighbors to a given
      * central site.
      *
@@ -541,6 +586,9 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         //
         advance(randomizeActiveComponents());
 
+        // Check for newly senescent components...
+        senesce();
+
         // Migrate after advancement...
         migrate();
 
@@ -586,6 +634,22 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
         default:
             throw new IllegalStateException("Unknown component state.");
+        }
+    }
+
+    private void senesce() {
+        //
+        // Only active cells may become senescent...
+        //
+        Iterator<E> iterator = active.iterator();
+
+        while (iterator.hasNext()) {
+            E component = iterator.next();
+
+            if (senescenceModel.senesce(this, component)) {
+                iterator.remove();
+                senescent.add(component);
+            }
         }
     }
 

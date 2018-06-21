@@ -464,20 +464,24 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         int trialIndex = getTrialIndex();
         int timeStep   = getTimeStep();
 
-        String cellCount = SIZE_FORMATTER.format(tumor.countCells());
-        String compCount = SIZE_FORMATTER.format(tumor.countComponents());
+        String cellCount      = SIZE_FORMATTER.format(tumor.countCells());
+        String activeCount    = SIZE_FORMATTER.format(tumor.countActive());
+        String senescentCount = SIZE_FORMATTER.format(tumor.countSenescent());
 
         switch (componentType) {
         case CELL:
-            JamLogger.info("TRIAL: %4d; STEP: %5d; %15s CELLS", trialIndex, timeStep, cellCount);
+            JamLogger.info("TRIAL: %4d; STEP: %5d; ACTIVE CELLS: %15s; SENESCENT CELLS: %15s ",
+                           trialIndex, timeStep, activeCount, senescentCount);
             break;
 
         case DEME:
-            JamLogger.info("TRIAL: %4d; STEP: %5d; %12s DEMES; %15s CELLS", trialIndex, timeStep, compCount, cellCount);
+            JamLogger.info("TRIAL: %4d; STEP: %5d; DEMES: %12s (A) %12s (S); CELLS: %15s",
+                           trialIndex, timeStep, activeCount, senescentCount, cellCount);
             break;
 
         case LINEAGE:
-            JamLogger.info("TRIAL: %4d; STEP: %5d; %12s LINEAGES; %15s CELLS", trialIndex, timeStep, compCount, cellCount);
+            JamLogger.info("TRIAL: %4d; STEP: %5d; LINEAGES: %12s (A) %12s (S); CELLS: %15s",
+                           trialIndex, timeStep, activeCount, senescentCount, cellCount);
             break;
 
         default:
