@@ -18,22 +18,23 @@ import tumor.driver.TumorDriver;
  */
 public final class ComponentCountRecord extends StepRecord {
     private final long cellCount;
-    private final long componentCount;
+    private final long activeCount;
+    private final long senescentCount;
 
     private ComponentCountRecord(int trialIndex,
                                  int timeStep,
                                  long cellCount,
-                                 long componentCount) {
+                                 long activeCount,
+                                 long senescentCount) {
         super(trialIndex, timeStep);
 
         LongRange.NON_NEGATIVE.validate("Cell count", cellCount);
-        LongRange.NON_NEGATIVE.validate("Component count", componentCount);
-
-        if (componentCount > cellCount)
-            throw new IllegalArgumentException("Invalid cell/component counts.");
+        LongRange.NON_NEGATIVE.validate("Active count", activeCount);
+        LongRange.NON_NEGATIVE.validate("Senescent count", senescentCount);
 
         this.cellCount = cellCount;
-        this.componentCount = componentCount;
+        this.activeCount = activeCount;
+        this.senescentCount = senescentCount;
     }
 
     /**
@@ -42,7 +43,7 @@ public final class ComponentCountRecord extends StepRecord {
      * @return the header line for component count files.
      */
     public static String header() {
-        return "trialIndex,timeStep,cellCount,componentCount";
+        return "trialIndex,timeStep,cellCount,activeCount,senescentCount";
     }
 
     /**
@@ -59,16 +60,17 @@ public final class ComponentCountRecord extends StepRecord {
     public static ComponentCountRecord parse(String s) {
         String[] fields = RegexUtil.COMMA.split(s);
 
-        if (fields.length != 4)
+        if (fields.length != 5)
             throw new IllegalArgumentException("Invalid record: [" + s + "].");
 
         int trialIndex = Integer.parseInt(fields[0]);
         int timeStep   = Integer.parseInt(fields[1]);
 
         long cellCount      = Long.parseLong(fields[2]);
-        long componentCount = Long.parseLong(fields[3]);
+        long activeCount    = Long.parseLong(fields[3]);
+        long senescentCount = Long.parseLong(fields[4]);
 
-        return new ComponentCountRecord(trialIndex, timeStep, cellCount, componentCount);
+        return new ComponentCountRecord(trialIndex, timeStep, cellCount, activeCount, senescentCount);
     }
 
     /**
@@ -85,9 +87,10 @@ public final class ComponentCountRecord extends StepRecord {
         int timeStep   = driver.getTimeStep();
 
         long cellCount      = tumor.countCells();
-        long componentCount = tumor.countComponents();
+        long activeCount    = tumor.countActive();
+        long senescentCount = tumor.countSenescent();
 
-        return new ComponentCountRecord(trialIndex, timeStep, cellCount, componentCount);
+        return new ComponentCountRecord(trialIndex, timeStep, cellCount, activeCount, senescentCount);
     }
 
     /**
@@ -113,11 +116,12 @@ public final class ComponentCountRecord extends StepRecord {
      * @return the canonical string representation for this record.
      */
     public String format() {
-        return String.format("%d,%d,%d,%d",
+        return String.format("%d,%d,%d,%d,%d",
                              getTrialIndex(),
                              getTimeStep(),
                              getCellCount(),
-                             getComponentCount());
+                             getActiveCount(),
+                             getSenescentCount());
     }
 
     /**
@@ -130,11 +134,29 @@ public final class ComponentCountRecord extends StepRecord {
     }
 
     /**
-     * Returns the number of components for this record.
+     * Returns the number of active components for this record.
      *
-     * @return the number of components for this record.
+     * @return the number of active components for this record.
+     */
+    public long getActiveCount() {
+        return activeCount;
+    }
+
+    /**
+     * Returns the number of senescent components for this record.
+     *
+     * @return the number of senescent components for this record.
+     */
+    public long getSenescentCount() {
+        return senescentCount;
+    }
+
+    /**
+     * Returns the total number of components for this record.
+     *
+     * @return the total number of components for this record.
      */
     public long getComponentCount() {
-        return componentCount;
+        return activeCount + senescentCount;
     }
 }
