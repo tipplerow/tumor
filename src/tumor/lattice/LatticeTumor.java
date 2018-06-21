@@ -267,7 +267,23 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         return sites;
     }
     */
-    private Coord findSurfaceSite(Coord start, Coord step, int consUnocc) {
+
+    /**
+     * Finds a lattice site at the surface of the tumor.
+     *
+     * @param start the location where the search will begin.
+     *
+     * @param step the direction to move away from the starting
+     * coordinate to the surface.
+     *
+     * @param consUnocc the number of consecutive unoccupied lattice
+     * sites that must be encountered along the step direction before
+     * a surface site is confirmed.
+     *
+     * @return the surface site along the specified direction from the
+     * starting coordinate.
+     */
+    public Coord findSurfaceSite(Coord start, Coord step, int consUnocc) {
         //
         // Starting at the "start" coordinate, step along the "step"
         // direction until encountering "consUnocc" consecutive sites
@@ -579,7 +595,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         lattice.vacate(component);
     }
 
-    @Override public List<Tumor<E>> advance() {
+    @Override protected List<Tumor<E>> runAdvance() {
         //
         // Advance the active tumor components in a randomized
         // order...

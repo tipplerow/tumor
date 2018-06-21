@@ -63,7 +63,7 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
         return new PointTumor<E>(founders);
     }
 
-    @Override public Collection<Tumor<E>> advance() {
+    @Override protected Collection<Tumor<E>> runAdvance() {
         //
         // Collect the parent components that die and the offspring
         // that are created so that the living component collection

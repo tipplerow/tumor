@@ -56,7 +56,24 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      *
      * @return any new tumors (metastases) created during the step.
      */
-    public abstract Collection<Tumor<E>> advance();
+    public Collection<Tumor<E>> advance() {
+        clearCache();
+        return runAdvance();
+    }
+
+    private void clearCache() {
+    }
+
+    /**
+     * Advances this tumor component through one discrete time step.
+     *
+     * <p>After calling this method, the replication state (identified
+     * by the {@code getState()} method) may be changed: all cells may
+     * die.
+     *
+     * @return any new tumors (metastases) created during the step.
+     */
+    protected abstract Collection<Tumor<E>> runAdvance();
 
     /**
      * Returns the location of a component in this tumor.
