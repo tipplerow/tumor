@@ -13,6 +13,7 @@ import java.util.TreeSet;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
+import jam.app.JamLogger;
 import jam.lang.OrdinalIndex;
 import jam.lattice.Coord;
 import jam.math.VectorMoment;
@@ -30,6 +31,9 @@ import tumor.mutation.MutationGenerator;
  */
 public abstract class Tumor<E extends TumorComponent> extends Carrier {
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
+
+    // Vector moment, computed on demand and cached...
+    private VectorMoment vectorMoment = null;
 
     /**
      * Creates a new primary tumor.
@@ -62,6 +66,7 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     private void clearCache() {
+        vectorMoment = null;
     }
 
     /**
@@ -106,22 +111,6 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     /**
-     * Computes the center of mass and gyration tensor for the cells
-     * in this tumor.
-     *
-     * @return the center of mass and gyration tensor for the cells
-     * in this tumor.
-     */
-    public VectorMoment computeVectorMoment() {
-        Multiset<Coord> coordCount = countCoords();
-
-        if (coordCount.isEmpty())
-            return VectorMoment.compute(List.of(Coord.ORIGIN));
-        else
-            return VectorMoment.compute(coordCount);
-    }
-
-    /**
      * Returns the number of active components in this tumor.
      *
      * @return the number of active components in this tumor.
@@ -162,6 +151,30 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
             counts.add(locateComponent(component), (int) component.countCells());
 
         return counts;
+    }
+
+    /**
+     * Returns the center of mass and gyration tensor for the cells
+     * in this tumor.
+     *
+     * @return the center of mass and gyration tensor for the cells
+     * in this tumor.
+     */
+    public VectorMoment getVectorMoment() {
+        if (vectorMoment == null)
+            vectorMoment = computeVectorMoment();
+
+        return vectorMoment;
+    }
+
+    private VectorMoment computeVectorMoment() {
+        JamLogger.debug("Computing vector moment...");
+        Multiset<Coord> coordCount = countCoords();
+
+        if (coordCount.isEmpty())
+            return VectorMoment.compute(List.of(Coord.ORIGIN));
+        else
+            return VectorMoment.compute(coordCount);
     }
 
     /**

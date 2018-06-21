@@ -78,7 +78,7 @@ public final class SiteDiversityRecord implements ReportRecord {
      * @return the site diversity records for the given tumor.
      */
     public static Collection<SiteDiversityRecord> compute(LineageLatticeTumor tumor) {
-        VectorMoment moment = tumor.computeVectorMoment();
+        VectorMoment moment = tumor.getVectorMoment();
         Map<Coord, Collection<Lineage>> lineageMap = tumor.mapComponents();
 
         Collection<SiteDiversityRecord> records =

@@ -44,7 +44,7 @@ public final class TumorDimensionRecord implements ReportRecord {
              timeStep,
              tumor.countCells(),
              tumor.countComponents(),
-             tumor.computeVectorMoment());
+             tumor.getVectorMoment());
     }
 
     /**

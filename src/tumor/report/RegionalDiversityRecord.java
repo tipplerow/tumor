@@ -93,7 +93,7 @@ public final class RegionalDiversityRecord implements ReportRecord {
      * region is larger than the size of the lattice neighborhood.
      */
     public static Collection<RegionalDiversityRecord> compute(LineageLatticeTumor tumor, int sitesPer) {
-        VectorMoment moment = tumor.computeVectorMoment();
+        VectorMoment moment = tumor.getVectorMoment();
         Neighborhood neighborhood = tumor.getNeighborhood();
         Map<Coord, Collection<Lineage>> lineageMap = tumor.mapComponents();
 
