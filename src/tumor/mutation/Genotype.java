@@ -92,4 +92,40 @@ public abstract class Genotype extends Ordinal {
      * @return the mutations that originated in the carrier.
      */
     public abstract List<Mutation> viewOriginalMutations();
+
+    /**
+     * Creates a canonical string representation for this genotype.
+     *
+     * <p>The string representation contains the ordinal index, a
+     * semi-colon, a comma-separated list of the inherited mutations,
+     * a semi-colon, and a comma-separated list of the original
+     * mutations.
+     *
+     * @return a canonical string representation for this genotype.
+     */
+    public String format() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(getIndex());
+        builder.append(";");
+        builder.append(format(viewInheritedMutations()));
+        builder.append(";");
+        builder.append(format(viewOriginalMutations()));
+
+        return builder.toString();
+    }
+
+    private String format(List<Mutation> mutations) {
+        StringBuilder builder = new StringBuilder();
+
+        if (mutations.size() > 0)
+            builder.append(mutations.get(0).getIndex());
+
+        for (int k = 1; k < mutations.size(); ++k) {
+            builder.append(",");
+            builder.append(mutations.get(k).getIndex());
+        }
+
+        return builder.toString();
+    }
 }

@@ -4,6 +4,9 @@ package tumor.mutation;
 import java.util.Collection;
 import java.util.List;
 
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
+
 import jam.lang.Ordinal;
 import jam.lang.OrdinalIndex;
 
@@ -101,6 +104,23 @@ public abstract class Mutation extends Ordinal {
         }
 
         return rate;
+    }
+
+    /**
+     * Maps a collection of mutations to their ordinal indexes.
+     *
+     * @param mutations the mutations to be mapped.
+     *
+     * @return the indexes of the mutations in the order traversed by
+     * the collection iterator.
+     */
+    public static LongList indexList(Collection<Mutation> mutations) {
+        LongList longList = new LongArrayList(mutations.size());
+
+        for (Mutation mutation : mutations)
+            longList.add(mutation.getIndex());
+
+        return longList;
     }
 
     /**
