@@ -105,9 +105,9 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     /**
-     * Returns the number of active (living) components in this tumor.
+     * Returns the number of components in this tumor.
      *
-     * @return the number of active (living) components in this tumor.
+     * @return the number of components in this tumor.
      */
     public long countComponents() {
         return viewComponents().size();
@@ -154,22 +154,36 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     /**
-     * Returns the active (living) components in this tumor ordered by
-     * their index.
+     * Returns the components in this tumor ordered by their index.
      *
-     * @return the active (living) components in this tumor ordered by
-     * their index.
+     * @return the components in this tumor ordered by their index.
      */
     public TreeSet<E> sortComponents() {
         return new TreeSet<E>(viewComponents());
     }
 
     /**
-     * Returns a read-only view of the active (living) components in
-     * this tumor.
+     * Returns a read-only view of the active components in this
+     * tumor.
      *
-     * @return a read-only view of the active (living) components in
-     * this tumor.
+     * @return a read-only view of the active components in this
+     * tumor.
+     */
+    public abstract Set<E> viewActive();
+
+    /**
+     * Returns a read-only view of the senescent components in this
+     * tumor.
+     *
+     * @return a read-only view of the senescent components in this
+     * tumor.
+     */
+    public abstract Set<E> viewSenescent();
+
+    /**
+     * Returns a read-only view of the components in this tumor.
+     *
+     * @return a read-only view of the components in this tumor.
      */
     public abstract Set<E> viewComponents();
 

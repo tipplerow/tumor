@@ -99,6 +99,14 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
         return Coord.ORIGIN;
     }
 
+    @Override public Set<E> viewActive() {
+        return Collections.unmodifiableSet(components);
+    }
+
+    @Override public Set<E> viewSenescent() {
+        return Collections.emptySet(); // All cells in a point tumor are active
+    }
+
     @Override public Set<E> viewComponents() {
         return Collections.unmodifiableSet(components);
     }

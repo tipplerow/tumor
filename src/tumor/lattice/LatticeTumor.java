@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +39,16 @@ import tumor.mutation.MutationGenerator;
  * defined by the following system properties:
  */
 public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
+    /**
+     * The actively dividing tumor components.
+     */
+    protected final Set<E> active = new HashSet<E>();
+
+    /**
+     * The senescent tumor components.
+     */
+    protected final Set<E> senescent = new HashSet<E>();
+
     /**
      * The underlying lattice of components.
      */
@@ -233,6 +244,71 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     public boolean exceedsCapacity(Coord coord) {
         return countCells(coord) > getSiteCapacity(coord);
     }
+    /*
+    public List<Coord> findSampleSites(int consUnocc) {
+        List<Coord> sites = new ArrayList<Coord>(8);
+
+        sites.add(findSampleSite(-1, -1, -1));
+        sites.add(findSampleSite(-1, -1,  1));
+        sites.add(findSampleSite(-1,  1, -1));
+        sites.add(findSampleSite(-1,  1,  1));
+        sites.add(findSampleSite( 1, -1, -1));
+        sites.add(findSampleSite( 1, -1,  1));
+        sites.add(findSampleSite( 1,  1, -1));
+        sites.add(findSampleSite( 1,  1,  1));
+
+        return sites;
+    }
+    */
+    private Coord findSurfaceSite(Coord start, Coord step, int consUnocc) {
+        //
+        // Starting at the "start" coordinate, step along the "step"
+        // direction until encountering "consUnocc" consecutive sites
+        // that are unoccupied; the last occupied site is the surface
+        // site.
+        //
+        int iterCount  = 0;
+        int unoccCount = 0;
+
+        Coord cursor  = start;
+        Coord lastOcc = null;
+
+        // Guard against an endless loop (which could happen if the
+        // lattice near full capacity along the step direction) by
+        // limiting the number of steps to the side length for the
+        // periodic box.
+        int maxIter = lattice.getPeriod().getMaxLength();
+
+        while (true) {
+            if (lattice.isOccupied(cursor)) {
+                //
+                // Reset the number of consecutive unoccupied sites
+                // and store the location of the last occupied site...
+                //
+                unoccCount = 0;
+                lastOcc = cursor;
+            }
+            else {
+                //
+                // Update the number of consecutive unoccupied sites...
+                //
+                ++unoccCount;
+            }
+
+            if (unoccCount >= consUnocc)
+                return lastOcc;
+
+            // Update the iteration count and guard against endless
+            // loops...
+            ++iterCount;
+
+            if (iterCount > maxIter)
+                throw new IllegalStateException("No surface site found.");
+
+            // Move to the next site...
+            cursor = cursor.plus(step);
+        }
+    }
 
     /**
      * Returns the local growth rate for a tumor component.
@@ -349,6 +425,22 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * its cell capacity after adding the component.
      */
     protected void addComponent(E component, Coord location) {
+        switch (component.getState()) {
+        case ACTIVE:
+            active.add(component);
+            break;
+
+        case SENESCENT:
+            senescent.add(component);
+            break;
+
+        case DEAD:
+            throw new IllegalStateException("Should not add a dead tumor component.");
+
+        default:
+            throw new IllegalStateException("Unknown component state.");
+        }
+
         if (isAvailable(location, component))
             lattice.occupy(component, location);
         else
@@ -433,15 +525,21 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * @param location the last site occupied by the component.
      */
     protected void removeComponent(E component, Coord location) {
+        //
+        // We do not know the previous state of the component, so just
+        // remove it from both sets...
+        //
+        active.remove(component);
+        senescent.remove(component);
         lattice.vacate(component);
     }
 
     @Override public List<Tumor<E>> advance() {
         //
-        // Advance the active (living) tumor components in a
-        // randomized order...
+        // Advance the active tumor components in a randomized
+        // order...
         //
-        advance(randomizeComponents());
+        advance(randomizeActiveComponents());
 
         // Migrate after advancement...
         migrate();
@@ -450,28 +548,54 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         return Collections.emptyList();
     }
 
-    private List<E> randomizeComponents() {
-        List<E> randomized = new ArrayList<E>(viewComponents());
+    private List<E> randomizeActiveComponents() {
+        List<E> randomized = new ArrayList<E>(active);
         ListUtil.shuffle(randomized, randomSource);
         
         return randomized;
     }
 
     private void advance(List<E> parents) {
-        for (E parent : parents)
-            if (parent.isDead())
-                throw new IllegalStateException("Cannot advance a dead parent.");
-            else
-                advance(parent);
+        for (E parent : parents) {
+            checkParentState(parent);
+            advance(parent);
+            updateParentState(parent);
+        }
+    }
+
+    private void checkParentState(E parent) {
+        if (!parent.isActive())
+            throw new IllegalStateException("Only active parents should advance.");
+    }
+
+    private void updateParentState(E parent) {
+        switch (parent.getState()) {
+        case ACTIVE:
+            // Still active, no changes necessary...
+            break;
+
+        case SENESCENT:
+            active.remove(parent);
+            senescent.add(parent);
+            break;
+
+        case DEAD:
+            // Subclasses should remove dead parents...
+            assert !lattice.contains(parent);
+            break;
+
+        default:
+            throw new IllegalStateException("Unknown component state.");
+        }
     }
 
     private void migrate() {
         if (migrationModel.getType() == MigrationType.PINNED)
             return;
 
-        // Migrate the active (living) tumor components in a
-        // randomized order...
-        List<E> randomized = randomizeComponents();
+        // Migrate the active tumor components in a randomized
+        // order...
+        List<E> randomized = randomizeActiveComponents();
 
         for (E component : randomized)
             migrate(component);
@@ -492,6 +616,14 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             throw new IllegalArgumentException("Component is not present in the tumor.");
 
         return coord;
+    }
+
+    @Override public Set<E> viewActive() {
+        return Collections.unmodifiableSet(active);
+    }
+
+    @Override public Set<E> viewSenescent() {
+        return Collections.unmodifiableSet(senescent);
     }
 
     @Override public Set<E> viewComponents() {
