@@ -648,6 +648,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
             if (senescenceModel.senesce(this, component)) {
                 iterator.remove();
+                component.senesce();
                 senescent.add(component);
             }
         }
