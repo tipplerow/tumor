@@ -20,6 +20,7 @@ import jam.lattice.Coord;
 import jam.math.VectorMoment;
 
 import tumor.growth.GrowthRate;
+import tumor.mutation.Genotype;
 import tumor.mutation.Mutation;
 import tumor.mutation.MutationFrequency;
 import tumor.mutation.MutationFrequencyMap;
@@ -46,10 +47,12 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     // --------------------------
     // Tumor characteristic cache
     // --------------------------
-    private TreeSet<E>   sortedComp;
-    private VectorMoment vectorMoment;
+    private TreeSet<Genotype> genotypes;
+    private TreeSet<E>        sortedComp;
+    private VectorMoment      vectorMoment;
 
     private void clearCache() {
+        genotypes    = null;
         sortedComp   = null;
         vectorMoment = null;
     }
@@ -183,7 +186,7 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     private VectorMoment computeVectorMoment() {
-        JamLogger.debug("Computing vector moment...");
+        JamLogger.info("Computing vector moment...");
         Multiset<Coord> coordCount = countCoords();
 
         if (coordCount.isEmpty())
@@ -217,15 +220,36 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     /**
-     * Returns the components in this tumor ordered by their index.
+     * Returns the components in this tumor sorted by their ordinal
+     * index.
      *
-     * @return the components in this tumor ordered by their index.
+     * @return the components in this tumor sorted by their ordinal
+     * index.
      */
     public Set<E> sortComponents() {
         if (sortedComp == null)
             sortedComp = new TreeSet<E>(viewComponents());
 
         return Collections.unmodifiableSet(sortedComp);
+    }
+
+    /**
+     * Returns the unique genotypes contained in this tumor sorted by
+     * their ordinal index.
+     *
+     * @return the unique genotypes contained in this tumor sorted by
+     * their ordinal index.
+     */
+    public Set<Genotype> sortGenotypes() {
+        if (genotypes == null) {
+            JamLogger.info("Sorting genotypes...");
+            genotypes = new TreeSet<Genotype>();
+
+            for (E component : viewComponents())
+                genotypes.add(component.getGenotype());
+        }
+
+        return Collections.unmodifiableSet(genotypes);
     }
 
     /**

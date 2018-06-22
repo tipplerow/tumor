@@ -18,12 +18,13 @@ import jam.sim.DiscreteTimeSimulation;
 import tumor.carrier.ComponentType;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
+import tumor.mutation.Genotype;
 import tumor.mutation.Mutation;
-import tumor.mutation.MutationList;
 import tumor.report.ComponentAncestryRecord;
 import tumor.report.ComponentCoordRecord;
 import tumor.report.ComponentCountRecord;
 import tumor.report.ComponentMutationRecord;
+import tumor.report.GenotypeDetailRecord;
 import tumor.report.ScalarMutationRecord;
 
 /**
@@ -40,6 +41,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private final boolean writeFinalCellCount;
     private final boolean writeComponentAncestry;
     private final boolean writeComponentCoord;
+    private final boolean writeGenotypeDetail;
     private final boolean writeOriginalMutations;
     private final boolean writeAccumulatedMutations;
     private final boolean writeScalarMutations;
@@ -125,6 +127,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     /**
      * Name of the system property that specifies whether or not to
+     * write the genotype detail for each trial.
+     */
+    public static final String WRITE_GENOTYPE_DETAIL_PROPERTY = "tumor.driver.writeGenotypeDetail";
+
+    /**
+     * Name of the system property that specifies whether or not to
      * write the original mutations for each tumor component.
      */
     public static final String WRITE_ORIGINAL_MUTATIONS_PROPERTY = "tumor.driver.writeOriginalMutations";
@@ -173,6 +181,12 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     public static final String COMPONENT_COORD_NAME = "component-coord.csv.gz";
 
     /**
+     * Name of the output file containing the genotype details for
+     * each trial.
+     */
+    public static final String GENOTYPE_DETAIL_NAME = "genotype-detail.csv.gz";
+
+    /**
      * Name of the output file containing the original mutations for
      * each trial.
      */
@@ -216,6 +230,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         this.writeFinalCellCount       = resolveWriteFinalCellCount();
         this.writeComponentAncestry    = resolveWriteComponentAncestry();
         this.writeComponentCoord       = resolveWriteComponentCoord();
+        this.writeGenotypeDetail       = resolveWriteGenotypeDetail();
         this.writeOriginalMutations    = resolveWriteOriginalMutations();
         this.writeAccumulatedMutations = resolveWriteAccumulatedMutations();
         this.writeScalarMutations      = resolveWriteScalarMutations();
@@ -258,6 +273,10 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
     private static boolean resolveWriteComponentCoord() {
         return JamProperties.getOptionalBoolean(WRITE_COMPONENT_COORD_PROPERTY, false);
+    }
+
+    private static boolean resolveWriteGenotypeDetail() {
+        return JamProperties.getOptionalBoolean(WRITE_GENOTYPE_DETAIL_PROPERTY, false);
     }
 
     private static boolean resolveWriteOriginalMutations() {
@@ -505,12 +524,16 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     protected void recordSnapshot(File snapshotDir) {
         JamLogger.info("Recording snapshot...");
         Collection<E> components = getTumor().sortComponents();
+        Collection<Genotype> genotypes = getTumor().sortGenotypes();
 
         if (writeComponentAncestry)
             ComponentAncestryRecord.write(snapshotDir, COMPONENT_ANCESTRY_NAME, components);
 
         if (writeComponentCoord)
             ComponentCoordRecord.write(snapshotDir, COMPONENT_COORD_NAME, tumor, components);
+
+        if (writeGenotypeDetail)
+            GenotypeDetailRecord.write(snapshotDir, GENOTYPE_DETAIL_NAME, genotypes);
 
         if (writeOriginalMutations)
             ComponentMutationRecord.writeOriginal(snapshotDir, ORIGINAL_MUTATIONS_NAME, components);

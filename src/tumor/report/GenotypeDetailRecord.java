@@ -1,9 +1,15 @@
 
 package tumor.report;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.Collection;
+
 import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongLists;
 
+import jam.app.JamLogger;
+import jam.io.IOUtil;
 import jam.sim.StepRecord;
 import jam.util.LongListUtil;
 import jam.util.RegexUtil;
@@ -78,6 +84,25 @@ public final class GenotypeDetailRecord extends StepRecord {
         LongList original  = LongListUtil.parse(fields[4], RegexUtil.COMMA);
 
         return new GenotypeDetailRecord(trialIndex, timeStep, genoIndex, inherited, original);
+    }
+
+    /**
+     * Generates a genotype detail report.
+     *
+     * @param reportDir the directory where the report file will be written.
+     *
+     * @param baseName the base name of the report file that will be written.
+     *
+     * @param genotypes the tumor genotypes to report.
+     */
+    public static void write(File reportDir, String baseName, Collection<Genotype> genotypes) {
+        JamLogger.info("Writing genotype detail...");
+        PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
+
+        for (Genotype genotype : genotypes)
+            writer.println(create(genotype).format());
+
+        writer.close();
     }
 
     /**
