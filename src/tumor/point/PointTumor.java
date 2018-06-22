@@ -23,16 +23,14 @@ import tumor.carrier.TumorEnv;
  * @param <E> the concrete type for the tumor components.
  */
 public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
-    private final Set<E> components = new HashSet<E>();
-    
     private PointTumor(E founder) {
         super();
-        this.components.add(founder);
+        this.active.add(founder);
     }
 
     private PointTumor(Collection<E> founders) {
         super();
-        this.components.addAll(founders);
+        this.active.addAll(founders);
     }
 
     /**
@@ -72,7 +70,7 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
         Collection<E> deadParents = new ArrayList<E>();
         Collection<E> allChildren = new ArrayList<E>();
         
-        for (E parent : components) {
+        for (E parent : active) {
             TumorEnv tumorEnv = TumorEnv.unconstrained(parent.getGrowthRate());
             
             @SuppressWarnings("unchecked")
@@ -84,30 +82,22 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
                 deadParents.add(parent);
         }
 
-        components.addAll(allChildren);
-        components.removeAll(deadParents);
+        active.addAll(allChildren);
+        active.removeAll(deadParents);
 
         // Point tumors never divide...
         return Collections.emptyList();
     }
 
     @Override public long countComponents() {
-        return components.size();
+        return active.size();
     }
 
     @Override public Coord locateComponent(E component) {
         return Coord.ORIGIN;
     }
 
-    @Override public Set<E> viewActive() {
-        return Collections.unmodifiableSet(components);
-    }
-
-    @Override public Set<E> viewSenescent() {
-        return Collections.emptySet(); // All cells in a point tumor are active
-    }
-
     @Override public Set<E> viewComponents() {
-        return Collections.unmodifiableSet(components);
+        return Collections.unmodifiableSet(active);
     }
 }

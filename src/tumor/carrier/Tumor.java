@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,10 +31,28 @@ import tumor.mutation.MutationGenerator;
  * @param <E> the concrete tumor component type.
  */
 public abstract class Tumor<E extends TumorComponent> extends Carrier {
+    /**
+     * The actively dividing tumor components.
+     */
+    protected final Set<E> active = new HashSet<E>();
+
+    /**
+     * The senescent tumor components.
+     */
+    protected final Set<E> senescent = new HashSet<E>();
+
     private static OrdinalIndex ordinalIndex = OrdinalIndex.create();
 
-    // Vector moment, computed on demand and cached...
-    private VectorMoment vectorMoment = null;
+    // --------------------------
+    // Tumor characteristic cache
+    // --------------------------
+    private TreeSet<E>   sortedComp;
+    private VectorMoment vectorMoment;
+
+    private void clearCache() {
+        sortedComp   = null;
+        vectorMoment = null;
+    }
 
     /**
      * Creates a new primary tumor.
@@ -63,10 +82,6 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     public Collection<Tumor<E>> advance() {
         clearCache();
         return runAdvance();
-    }
-
-    private void clearCache() {
-        vectorMoment = null;
     }
 
     /**
@@ -116,7 +131,7 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      * @return the number of active components in this tumor.
      */
     public long countActive() {
-        return viewActive().size();
+        return active.size();
     }
 
     /**
@@ -125,7 +140,7 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      * @return the number of senescent components in this tumor.
      */
     public long countSenescent() {
-        return viewSenescent().size();
+        return senescent.size();
     }
 
     /**
@@ -206,8 +221,11 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      *
      * @return the components in this tumor ordered by their index.
      */
-    public TreeSet<E> sortComponents() {
-        return new TreeSet<E>(viewComponents());
+    public Set<E> sortComponents() {
+        if (sortedComp == null)
+            sortedComp = new TreeSet<E>(viewComponents());
+
+        return Collections.unmodifiableSet(sortedComp);
     }
 
     /**
@@ -217,7 +235,9 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      * @return a read-only view of the active components in this
      * tumor.
      */
-    public abstract Set<E> viewActive();
+    public Set<E> viewActive() {
+        return Collections.unmodifiableSet(active);
+    }
 
     /**
      * Returns a read-only view of the senescent components in this
@@ -226,7 +246,9 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      * @return a read-only view of the senescent components in this
      * tumor.
      */
-    public abstract Set<E> viewSenescent();
+    public Set<E> viewSenescent() {
+        return Collections.unmodifiableSet(senescent);
+    }
 
     /**
      * Returns a read-only view of the components in this tumor.

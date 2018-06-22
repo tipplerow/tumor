@@ -42,16 +42,6 @@ import tumor.senesce.SenescenceModel;
  */
 public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     /**
-     * The actively dividing tumor components.
-     */
-    protected final Set<E> active = new HashSet<E>();
-
-    /**
-     * The senescent tumor components.
-     */
-    protected final Set<E> senescent = new HashSet<E>();
-
-    /**
      * The underlying lattice of components.
      */
     protected final Lattice<E> lattice;
@@ -697,14 +687,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             throw new IllegalArgumentException("Component is not present in the tumor.");
 
         return coord;
-    }
-
-    @Override public Set<E> viewActive() {
-        return Collections.unmodifiableSet(active);
-    }
-
-    @Override public Set<E> viewSenescent() {
-        return Collections.unmodifiableSet(senescent);
     }
 
     @Override public Set<E> viewComponents() {
