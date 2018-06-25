@@ -3,7 +3,6 @@ package tumor.report;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.Collection;
 
 import jam.io.IOUtil;
 import jam.lattice.Coord;
@@ -112,16 +111,13 @@ public final class ComponentCoordRecord extends StepRecord {
      *
      * @param baseName the base name of the report file that will be written.
      *
-     * @param tumor the tumor where the component resides.
-     *
-     * @param components the tumor components to report.
+     * @param tumor the active tumor in the simulation.
      */
-    public static <E extends TumorComponent> void write(File reportDir, String baseName,
-                                                        Tumor<E> tumor, Collection<E> components) {
+    public static <E extends TumorComponent> void write(File reportDir, String baseName, Tumor<E> tumor) {
         PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
         writer.println(header());
 
-        for (E component : components)
+        for (E component : tumor.sortComponents())
             writer.println(create(tumor, component).format());
 
         writer.close();

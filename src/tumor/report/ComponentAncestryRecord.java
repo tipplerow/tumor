@@ -3,13 +3,13 @@ package tumor.report;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.Collection;
 
 import jam.bio.AncestryRecord;
 import jam.io.IOUtil;
 import jam.sim.StepRecord;
 import jam.util.RegexUtil;
 
+import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 
@@ -62,16 +62,18 @@ public final class ComponentAncestryRecord extends StepRecord {
     /**
      * Generates a component ancestry report.
      *
+     * @param <E> the runtime tumor comonent type.
+     *
      * @param reportDir the directory where the report file will be written.
      *
      * @param baseName the base name of the report file that will be written.
      *
-     * @param components the tumor components to report.
+     * @param tumor the active tumor in the simulation.
      */
-    public static void write(File reportDir, String baseName, Collection<? extends TumorComponent> components) {
+    public static <E extends TumorComponent> void write(File reportDir, String baseName, Tumor<E> tumor) {
         PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
 
-        for (TumorComponent component : components)
+        for (E component : tumor.sortComponents())
             writer.println(create(component).format());
 
         writer.close();

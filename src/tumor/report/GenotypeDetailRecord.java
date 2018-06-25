@@ -3,7 +3,6 @@ package tumor.report;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.Collection;
 
 import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongLists;
@@ -14,6 +13,8 @@ import jam.sim.StepRecord;
 import jam.util.LongListUtil;
 import jam.util.RegexUtil;
 
+import tumor.carrier.Tumor;
+import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.mutation.Genotype;
 import tumor.mutation.Mutation;
@@ -89,17 +90,19 @@ public final class GenotypeDetailRecord extends StepRecord {
     /**
      * Generates a genotype detail report.
      *
+     * @param <E> the tumor component type.
+     *
      * @param reportDir the directory where the report file will be written.
      *
      * @param baseName the base name of the report file that will be written.
      *
-     * @param genotypes the tumor genotypes to report.
+     * @param tumor the active tumor in the simulation.
      */
-    public static void write(File reportDir, String baseName, Collection<Genotype> genotypes) {
+    public static <E extends TumorComponent> void write(File reportDir, String baseName, Tumor<E> tumor) {
         JamLogger.info("Writing genotype detail...");
         PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
 
-        for (Genotype genotype : genotypes)
+        for (Genotype genotype : tumor.sortGenotypes())
             writer.println(create(genotype).format());
 
         writer.close();

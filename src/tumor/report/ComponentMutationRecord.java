@@ -3,7 +3,6 @@ package tumor.report;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.List;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -15,6 +14,7 @@ import jam.sim.StepRecord;
 import jam.util.LongListUtil;
 import jam.util.RegexUtil;
 
+import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.mutation.Mutation;
@@ -98,16 +98,18 @@ public final class ComponentMutationRecord extends StepRecord {
     /**
      * Generates an accumulated mutation report.
      *
+     * @param <E> the tumor component type.
+     *
      * @param reportDir the directory where the report file will be written.
      *
      * @param baseName the base name of the report file that will be written.
      *
-     * @param components the tumor components to report.
+     * @param tumor the active tumor in the simulation.
      */
-    public static void writeAccumulated(File reportDir, String baseName, Collection<? extends TumorComponent> components) {
+    public static <E extends TumorComponent> void writeAccumulated(File reportDir, String baseName, Tumor<E> tumor) {
         PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
 
-        for (TumorComponent component : components)
+        for (E component : tumor.sortComponents())
             writer.println(accumulated(component).format());
 
         writer.close();
@@ -116,16 +118,18 @@ public final class ComponentMutationRecord extends StepRecord {
     /**
      * Generates an original mutation report.
      *
+     * @param <E> the tumor component type.
+     *
      * @param reportDir the directory where the report file will be written.
      *
      * @param baseName the base name of the report file that will be written.
      *
-     * @param components the tumor components to report.
+     * @param tumor the active tumor in the simulation.
      */
-    public static void writeOriginal(File reportDir, String baseName, Collection<? extends TumorComponent> components) {
+    public static <E extends TumorComponent> void writeOriginal(File reportDir, String baseName, Tumor<E> tumor) {
         PrintWriter writer = IOUtil.openWriter(reportDir, baseName);
 
-        for (TumorComponent component : components)
+        for (E component : tumor.sortComponents())
             writer.println(original(component).format());
 
         writer.close();

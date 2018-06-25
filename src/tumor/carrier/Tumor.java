@@ -227,8 +227,10 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      * index.
      */
     public Set<E> sortComponents() {
-        if (sortedComp == null)
+        if (sortedComp == null) {
+            JamLogger.info("Sorting components...");
             sortedComp = new TreeSet<E>(viewComponents());
+        }
 
         return Collections.unmodifiableSet(sortedComp);
     }

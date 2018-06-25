@@ -523,23 +523,21 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      */
     protected void recordSnapshot(File snapshotDir) {
         JamLogger.info("Recording snapshot...");
-        Collection<E> components = getTumor().sortComponents();
-        Collection<Genotype> genotypes = getTumor().sortGenotypes();
 
         if (writeComponentAncestry)
-            ComponentAncestryRecord.write(snapshotDir, COMPONENT_ANCESTRY_NAME, components);
+            ComponentAncestryRecord.write(snapshotDir, COMPONENT_ANCESTRY_NAME, getTumor());
 
         if (writeComponentCoord)
-            ComponentCoordRecord.write(snapshotDir, COMPONENT_COORD_NAME, tumor, components);
+            ComponentCoordRecord.write(snapshotDir, COMPONENT_COORD_NAME, getTumor());
 
         if (writeGenotypeDetail)
-            GenotypeDetailRecord.write(snapshotDir, GENOTYPE_DETAIL_NAME, genotypes);
+            GenotypeDetailRecord.write(snapshotDir, GENOTYPE_DETAIL_NAME, getTumor());
 
         if (writeOriginalMutations)
-            ComponentMutationRecord.writeOriginal(snapshotDir, ORIGINAL_MUTATIONS_NAME, components);
+            ComponentMutationRecord.writeOriginal(snapshotDir, ORIGINAL_MUTATIONS_NAME, getTumor());
 
         if (writeAccumulatedMutations)
-            ComponentMutationRecord.writeAccumulated(snapshotDir, ACCUMULATED_MUTATIONS_NAME, components);
+            ComponentMutationRecord.writeAccumulated(snapshotDir, ACCUMULATED_MUTATIONS_NAME, getTumor());
 
         if (writeScalarMutations)
             ScalarMutationRecord.write(snapshotDir, SCALAR_MUTATIONS_NAME, getTumor().getAccumulatedMutations());
