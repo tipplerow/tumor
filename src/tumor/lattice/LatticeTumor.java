@@ -11,9 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jam.app.JamLogger;
 import jam.app.JamProperties;
 import jam.lang.JamException;
 import jam.lattice.Coord;
+import jam.lattice.DistanceComparator;
 import jam.lattice.Lattice;
 import jam.lattice.LatticeView;
 import jam.lattice.Neighborhood;
@@ -228,6 +230,53 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * specified site without exceeding the capacity of that site.
      */
     public abstract boolean isAvailable(Coord coord, E component);
+
+    /**
+     * Collects the tumor components that constitute a bulk sample.
+     *
+     * <p>The sampled components are obtained by sorting the occupied
+     * lattice sites by their distance from the specified center site
+     * and adding the site contents to the sample until the specified
+     * size is accumulated.
+     *
+     * @param centerSite the site at the center of the bulk sample
+     * (may be a surface site).
+     *
+     * @param targetSize the minimum number of <em>cells</em> to
+     * include in the sample.
+     *
+     * @return the components in the bulk sample.
+     *
+     * @throws IllegalArgumentException if the sample size exceeds the
+     * number of cells in this tumor.
+     */
+    public Set<E> collectBulkSample(Coord centerSite, long targetSize) {
+        JamLogger.info("Collecting bulk sample...");
+
+        if (targetSize > countCells())
+            throw new IllegalArgumentException("Target size exceeds tumor size.");
+
+        List<Coord> occupiedCoord = new ArrayList<Coord>(getOccupiedCoord());
+        Collections.sort(occupiedCoord, new DistanceComparator(centerSite));
+
+        long   sampleSize = 0;
+        Set<E> sampleComp = new HashSet<E>();
+
+        for (Coord coord : occupiedCoord) {
+            Collection<E> occupants = lattice.viewOccupants(coord);
+
+            for (E occupant : occupants) {
+                sampleComp.add(occupant);
+                sampleSize += occupant.countCells();
+
+                if (sampleSize >= targetSize)
+                    return sampleComp;
+            }
+        }
+
+        // Should never get here...
+        throw new IllegalStateException("Failed to meet target sample size.");
+    }
 
     /**
      * Determines whether the number of tumor cells at a given lattice

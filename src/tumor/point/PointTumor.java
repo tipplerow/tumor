@@ -93,6 +93,13 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
         return active.size();
     }
 
+    @Override public Set<Coord> getOccupiedCoord() {
+        if (countCells() > 0)
+            return Set.of(Coord.ORIGIN);
+        else
+            return Collections.emptySet();
+    }
+
     @Override public Coord locateComponent(E component) {
         return Coord.ORIGIN;
     }

@@ -172,6 +172,21 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     /**
+     * Identifies all lattice sites occupied by one or more tumor
+     * cells.
+     *
+     * @return a set containing all occupied lattice sites.
+     */
+    public Set<Coord> getOccupiedCoord() {
+        Set<Coord> sites = new HashSet<Coord>();
+
+        for (E component : viewComponents())
+            sites.add(locateComponent(component));
+
+        return sites;
+    }
+
+    /**
      * Returns the center of mass and gyration tensor for the cells
      * in this tumor.
      *
