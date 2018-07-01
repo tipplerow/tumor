@@ -1,8 +1,12 @@
 
 package tumor.mutation;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import jam.lang.Ordinal;
 import jam.lang.OrdinalIndex;
@@ -92,6 +96,37 @@ public abstract class Genotype extends Ordinal {
      * @return the mutations that originated in the carrier.
      */
     public abstract List<Mutation> viewOriginalMutations();
+
+    /**
+     * Finds the mutations that are shared by all genotypes in a
+     * collection.
+     *
+     * @param genotypes the genotypes to analyze.
+     *
+     * @return a new set containing the mutations that are shared by
+     * all of the genotypes in the input collection.
+     */
+    public static Set<Mutation> findCommon(Collection<Genotype> genotypes) {
+        if (genotypes.isEmpty())
+            return Collections.emptySet();
+
+        // Start with the accumulated mutations from the first genotype...
+        Iterator<Genotype> iterator = genotypes.iterator();
+
+        Set<Mutation> common =
+            new HashSet<Mutation>(iterator.next().viewAccumulatedMutations());
+
+        while (iterator.hasNext() && !common.isEmpty()) {
+            //
+            // Now iterate over the remaining genotypes and keep only
+            // the mutations in each genotype.  Stop early if the set
+            // of common mutations becomes empty...
+            //
+            common.retainAll(iterator.next().viewAccumulatedMutations());
+        }
+
+        return common;
+    }
 
     /**
      * Creates a canonical string representation for this genotype.
