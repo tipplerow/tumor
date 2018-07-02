@@ -21,6 +21,8 @@ import jam.lattice.LatticeView;
 import jam.lattice.Neighborhood;
 import jam.math.JamRandom;
 import jam.util.ListUtil;
+import jam.vector.JamVector;
+import jam.vector.VectorView;
 
 import tumor.capacity.CapacityModel;
 import tumor.carrier.Tumor;
@@ -290,22 +292,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     public boolean exceedsCapacity(Coord coord) {
         return countCells(coord) > getSiteCapacity(coord);
     }
-    /*
-    public List<Coord> findSampleSites(int consUnocc) {
-        List<Coord> sites = new ArrayList<Coord>(8);
-
-        sites.add(findSampleSite(-1, -1, -1));
-        sites.add(findSampleSite(-1, -1,  1));
-        sites.add(findSampleSite(-1,  1, -1));
-        sites.add(findSampleSite(-1,  1,  1));
-        sites.add(findSampleSite( 1, -1, -1));
-        sites.add(findSampleSite( 1, -1,  1));
-        sites.add(findSampleSite( 1,  1, -1));
-        sites.add(findSampleSite( 1,  1,  1));
-
-        return sites;
-    }
-    */
 
     /**
      * Finds a lattice site at the surface of the tumor.
@@ -370,6 +356,80 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             // Move to the next site...
             cursor = cursor.plus(step);
         }
+    }
+
+    /**
+     * Finds a lattice site at the surface of the tumor.
+     *
+     * @param start the location where the search will begin.
+     *
+     * @param step the direction to move away from the starting
+     * coordinate to the surface.
+     *
+     * @param unoccDist the radial distance that must be traversed
+     * without encountering another component before declaring the
+     * last encountered component as a surface component.
+     *
+     * @return the surface site along the specified direction from the
+     * starting location.
+     *
+     * @throws IllegalArgumentException unless the starting location
+     * and step direction are three-dimensional vectors.
+     *
+     * @throws IllegalStateException if a surface site cannot be found.
+     */
+    public Coord findSurfaceSite(VectorView start, VectorView step, double unoccDist) {
+        //
+        // Starting at the "start" coordinate, step along the "step"
+        // direction with unit length until traversing a distance of
+        // at least "unoccDist" without encountering a component; the
+        // last occupied site is then the surface site.
+        //
+        JamVector unitStep  = JamVector.unit(step);
+        JamVector cursorLoc = JamVector.copyOf(start);
+
+        Coord cursorSite  = Coord.nearest(cursorLoc);
+        Coord lastOccSite = null;
+
+        // Guard against an endless loop (which could happen if the
+        // lattice near full capacity along the step direction) by
+        // limiting the number of steps to the side length for the
+        // periodic box.
+        int iterCount = 0;
+        int maxIter   = 2 * lattice.getPeriod().getMaxLength();
+
+        while (true) {
+            ++iterCount;
+
+            if (lattice.isOccupied(cursorSite)) {
+                //
+                // Store the location of the last occupied site...
+                //
+                lastOccSite = cursorSite;
+            }
+            else if (foundSurfaceSite(cursorSite, lastOccSite, unoccDist)) {
+                //
+                // The last occupied site is the surface site...
+                //
+                return lastOccSite;
+            }
+            else if (iterCount > maxIter) {
+                //
+                // Should never really happen if the lattice is large
+                // enough...
+                //
+                throw new IllegalStateException("No surface site found.");
+            }
+
+            // Move the cursor along the search direction...
+            cursorLoc  = cursorLoc.plus(unitStep);
+            cursorSite = Coord.nearest(cursorLoc);
+        }
+    }
+
+    private static boolean foundSurfaceSite(Coord cursorSite, Coord lastOccSite, double unoccDist) {
+        return lastOccSite != null
+            && Coord.computeSquaredDistance(cursorSite, lastOccSite) > unoccDist * unoccDist;
     }
 
     /**
@@ -740,5 +800,9 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
     @Override public Set<E> viewComponents() {
         return lattice.viewOccupants();
+    }
+
+    @Override public Set<E> viewComponents(Coord location) {
+        return lattice.viewOccupants(location);
     }
 }

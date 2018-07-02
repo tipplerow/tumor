@@ -298,6 +298,17 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
      */
     public abstract Set<E> viewComponents();
 
+    /**
+     * Returns a read-only view of the components at a specified
+     * location.
+     *
+     * @param location the location to search.
+     *
+     * @return a read-only view of the components in the specified
+     * location.
+     */
+    public abstract Set<E> viewComponents(Coord location);
+
     @Override public long countCells() {
         return countCells(viewComponents());
     }

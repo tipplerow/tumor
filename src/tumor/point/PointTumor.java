@@ -107,4 +107,11 @@ public final class PointTumor<E extends TumorComponent> extends Tumor<E> {
     @Override public Set<E> viewComponents() {
         return Collections.unmodifiableSet(active);
     }
+
+    @Override public Set<E> viewComponents(Coord location) {
+        if (location.equals(Coord.ORIGIN))
+            return viewComponents();
+        else
+            return Collections.emptySet();
+    }
 }
