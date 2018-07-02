@@ -56,7 +56,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     private PrintWriter cellCountTrajWriter;
 
     // The single global instance...
-    private static TumorDriver global = null;
+    private static TumorDriver<? extends TumorComponent> global = null;
 
     /**
      * Name of the system property that defines the tumor component
@@ -307,7 +307,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * @throws IllegalStateException unless the global instance has
      * been initialized (or a simulation is in progress).
      */
-    public static TumorDriver global() {
+    public static TumorDriver<? extends TumorComponent> global() {
         if (global == null)
             throw new IllegalStateException("The global driver has not been initialized.");
 
@@ -356,7 +356,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         System.exit(0);
     }
 
-    private static TumorDriver createGlobal() {
+    private static TumorDriver<? extends TumorComponent> createGlobal() {
         DriverType driverType = resolveDriverType();
 
         switch (driverType) {
