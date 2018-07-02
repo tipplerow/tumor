@@ -395,7 +395,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      *
      * @return the active tumor for the current simulation trial.
      */
-    protected Tumor<E> getTumor() {
+    public Tumor<E> getTumor() {
         return tumor;
     }
 
