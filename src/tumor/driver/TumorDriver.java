@@ -25,6 +25,7 @@ import tumor.report.ComponentCoordRecord;
 import tumor.report.ComponentCountRecord;
 import tumor.report.ComponentMutationRecord;
 import tumor.report.GenotypeDetailRecord;
+import tumor.report.ReportManager;
 import tumor.report.ScalarMutationRecord;
 
 /**
@@ -615,6 +616,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     @Override protected void initializeTrial() {
         tumor = createTumor();
         recordStep();
+        ReportManager.global().initializeTrial();
     }
 
     @Override protected boolean continueTrial() {
@@ -629,6 +631,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     @Override protected void advanceTrial() {
         tumor.advance();
         recordStep();
+        ReportManager.global().reportStep();
     }
 
     @Override protected void finalizeTrial() {
@@ -639,6 +642,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
             writeFinalCellCount();
 
         recordSnapshot(getReportDir());
+        ReportManager.global().reportTrial();
     }
 
     private void writeFinalCellCount() {
