@@ -7,6 +7,9 @@ import java.util.Comparator;
 import java.util.List;
 
 import jam.bio.Propagator;
+import jam.math.DoubleUtil;
+import jam.math.JamRandom;
+import jam.util.CollectionUtil;
 
 import tumor.mutation.Mutation;
 
@@ -70,6 +73,52 @@ public abstract class Carrier extends Propagator {
             total += carrier.countCells();
 
         return total;
+    }
+
+    /**
+     * Computes the fractional share of the total cell count for each
+     * carrier in a population.
+     *
+     * @param carriers the carriers to analyze.
+     *
+     * @return an array {@code frac} where element {@code frac[k]}
+     * is the fraction of the total cell count contained in carrier
+     * {@code carriers.get(k)}.
+     */
+    public static double[] computeCellFraction(List<? extends Carrier> carriers) {
+        long cellTotal = countCells(carriers);
+        double[] cellFraction = new double[carriers.size()];
+
+        for (int k = 0; k < cellFraction.length; ++k)
+            cellFraction[k] = DoubleUtil.ratio(carriers.get(k).countCells(), cellTotal);
+
+        return cellFraction;
+    }
+
+    /**
+     * Selects a carrier at random with a probability equal to its
+     * fractional share of the total cell population.
+     *
+     * @param <E> the concrete carrier type.
+     *
+     * @param carriers the carriers to select from.
+     *
+     * @return a carrier selected at random (or {@code null} if the
+     * carrier list is empty).
+     */
+    public static <E extends Carrier> E random(List<E> carriers) {
+        int carrierCount = carriers.size();
+
+        if (carrierCount == 0)
+            return null;
+
+        if (carrierCount == 1)
+            return CollectionUtil.peek(carriers);
+
+        int carrierIndex =
+            JamRandom.global().selectPDF(computeCellFraction(carriers));
+
+        return carriers.get(carrierIndex);
     }
 
     /**
