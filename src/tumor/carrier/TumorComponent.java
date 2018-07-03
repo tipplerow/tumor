@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import jam.lang.OrdinalIndex;
+import jam.util.ListUtil;
 
 import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
@@ -149,6 +150,19 @@ public abstract class TumorComponent extends Carrier {
      */
     public Genotype getGenotype() {
         return genotype;
+    }
+
+    /**
+     * Extracts the genotype from each component in a collection.
+     *
+     * @param components the components to process.
+     *
+     * @return a list containing the genotype for each component in
+     * the input collection (in the order returned by the collection
+     * iterator).
+     */
+    public static List<Genotype> getGenotypes(Collection<? extends TumorComponent> components) {
+        return ListUtil.apply(components, x -> x.getGenotype());
     }
 
     /**
