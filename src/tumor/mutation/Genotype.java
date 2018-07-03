@@ -1,6 +1,7 @@
 
 package tumor.mutation;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -96,6 +97,28 @@ public abstract class Genotype extends Ordinal {
      * @return the mutations that originated in the carrier.
      */
     public abstract List<Mutation> viewOriginalMutations();
+
+    /**
+     * Finds the ancestral genotype containing all mutations that are
+     * shared by all genotypes in a collection.
+     *
+     * @param genotypes the genotypes to analyze.
+     *
+     * @return a new {@code FixedGenotype} containing mutations that
+     * are shared by every input genotype; those common mutations are
+     * classified as original mutations in the ancestor and it has no
+     * original mutations.
+     */
+    public static Genotype ancestor(Collection<Genotype> genotypes) {
+        //
+        // Sort the mutations by their ordinal index, which should
+        // reflect the temporal order of appearance...
+        //
+        List<Mutation> mutations = new ArrayList<Mutation>(findCommon(genotypes));
+        Collections.sort(mutations);
+
+        return FixedGenotype.founder(mutations);
+    }
 
     /**
      * Finds the mutations that are shared by all genotypes in a
