@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jam.app.JamLogger;
 import jam.app.JamProperties;
+import jam.dist.HypersphericalDistribution;
 import jam.lang.JamException;
 import jam.lattice.Coord;
 import jam.lattice.DistanceComparator;
@@ -20,11 +20,14 @@ import jam.lattice.Lattice;
 import jam.lattice.LatticeView;
 import jam.lattice.Neighborhood;
 import jam.math.JamRandom;
+import jam.math.VectorMoment;
+import jam.util.CollectionUtil;
 import jam.util.ListUtil;
 import jam.vector.JamVector;
 import jam.vector.VectorView;
 
 import tumor.capacity.CapacityModel;
+import tumor.carrier.Carrier;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.carrier.TumorEnv;
@@ -78,6 +81,21 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The random number generator.
      */
     protected final JamRandom randomSource = JamRandom.global();
+
+    // Distribution of vectors randomly located on the surface of a
+    // sphere, used to generate random search directions for surface
+    // sites...
+    private static final HypersphericalDistribution HYPER_DISTRIB =
+        new HypersphericalDistribution(3, 1.0);
+
+    // In order to classify a lattice site as a surface site for this
+    // tumor, the surface-search algorithm must find no occupied sites
+    // over a distance equal to the product of the radius of gyration
+    // of the tumor and this fraction...
+    private static final double UNOCC_DIST_RG_FRAC = 0.25;
+
+    // Or at least this distance (in units of lattice sites)...
+    private static final double MIN_UNOCC_DIST = 5.0;
 
     /**
      * Creates a new (empty) tumor.
@@ -241,7 +259,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * and adding the site contents to the sample until the specified
      * size is accumulated.
      *
-     * @param centerSite the site at the center of the bulk sample
+     * @param sampleSite the site at the center of the bulk sample
      * (may be a surface site).
      *
      * @param targetSize the minimum number of <em>cells</em> to
@@ -252,14 +270,12 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * @throws IllegalArgumentException if the sample size exceeds the
      * number of cells in this tumor.
      */
-    public Set<E> collectBulkSample(Coord centerSite, long targetSize) {
-        JamLogger.info("Collecting bulk sample...");
-
+    public Set<E> collectBulkSample(Coord sampleSite, long targetSize) {
         if (targetSize > countCells())
             throw new IllegalArgumentException("Target size exceeds tumor size.");
 
         List<Coord> occupiedCoord = new ArrayList<Coord>(getOccupiedCoord());
-        Collections.sort(occupiedCoord, new DistanceComparator(centerSite));
+        Collections.sort(occupiedCoord, new DistanceComparator(sampleSite));
 
         long   sampleSize = 0;
         Set<E> sampleComp = new HashSet<E>();
@@ -281,6 +297,31 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Collects a single component from a specified sample site.
+     *
+     * <p>If the site contains more than one component, one component
+     * is chosen at random with a probability equal to its fractional
+     * share of the total cell count at the site.
+     *
+     * @param sampleSite the tumor site to sample.
+     *
+     * @return a component selected from the specified sample site.
+     *
+     * @throws IllegalStateException if the sample site is empty.
+     */
+    public E collectSingleSample(Coord sampleSite) {
+        Collection<E> components = viewComponents(sampleSite);
+
+        if (components.isEmpty())
+            throw new IllegalStateException("Empty sample site.");
+
+        if (components.size() == 1)
+            return CollectionUtil.peek(components);
+
+        return Carrier.random(new ArrayList<E>(components));
+    }
+
+    /**
      * Determines whether the number of tumor cells at a given lattice
      * site exceeds the capacity for that site.
      *
@@ -296,89 +337,35 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     /**
      * Finds a lattice site at the surface of the tumor.
      *
-     * @param start the location where the search will begin.
+     * <p>The search algorithm starts at the center of mass of this
+     * tumor and steps along the specified search direction until it
+     * has traversed a threshold distance D without encountering any
+     * occupied lattice sites.  The last occupied site on the search
+     * path is then identified as a surface site.  The distance D is
+     * taken as {@code max(5, 0.25 * RG)}, where {@code RG} is the
+     * scalar radius of gyration of the tumor, in lattice units.
      *
-     * @param step the direction to move away from the starting
-     * coordinate to the surface.
-     *
-     * @param consUnocc the number of consecutive unoccupied lattice
-     * sites that must be encountered along the step direction before
-     * a surface site is confirmed.
-     *
-     * @return the surface site along the specified direction from the
-     * starting coordinate.
-     */
-    public Coord findSurfaceSite(Coord start, Coord step, int consUnocc) {
-        //
-        // Starting at the "start" coordinate, step along the "step"
-        // direction until encountering "consUnocc" consecutive sites
-        // that are unoccupied; the last occupied site is the surface
-        // site.
-        //
-        int iterCount  = 0;
-        int unoccCount = 0;
-
-        Coord cursor  = start;
-        Coord lastOcc = null;
-
-        // Guard against an endless loop (which could happen if the
-        // lattice near full capacity along the step direction) by
-        // limiting the number of steps to the side length for the
-        // periodic box.
-        int maxIter = lattice.getPeriod().getMaxLength();
-
-        while (true) {
-            if (lattice.isOccupied(cursor)) {
-                //
-                // Reset the number of consecutive unoccupied sites
-                // and store the location of the last occupied site...
-                //
-                unoccCount = 0;
-                lastOcc = cursor;
-            }
-            else {
-                //
-                // Update the number of consecutive unoccupied sites...
-                //
-                ++unoccCount;
-            }
-
-            if (unoccCount >= consUnocc)
-                return lastOcc;
-
-            // Update the iteration count and guard against endless
-            // loops...
-            ++iterCount;
-
-            if (iterCount > maxIter)
-                throw new IllegalStateException("No surface site found.");
-
-            // Move to the next site...
-            cursor = cursor.plus(step);
-        }
-    }
-
-    /**
-     * Finds a lattice site at the surface of the tumor.
-     *
-     * @param start the location where the search will begin.
-     *
-     * @param step the direction to move away from the starting
-     * coordinate to the surface.
-     *
-     * @param unoccDist the radial distance that must be traversed
-     * without encountering another component before declaring the
-     * last encountered component as a surface component.
+     * @param step the direction to move away from the center of mass
+     * and toward the surface.
      *
      * @return the surface site along the specified direction from the
-     * starting location.
+     * center of mass.
      *
-     * @throws IllegalArgumentException unless the starting location
-     * and step direction are three-dimensional vectors.
+     * @throws IllegalArgumentException unless the step direction is a
+     * three-dimensional vector.
      *
      * @throws IllegalStateException if a surface site cannot be found.
      */
-    public Coord findSurfaceSite(VectorView start, VectorView step, double unoccDist) {
+    public Coord findSurfaceSite(VectorView step) {
+        VectorMoment moment = getVectorMoment();
+
+        VectorView start = moment.getCM();
+        double     udist = Math.max(MIN_UNOCC_DIST, UNOCC_DIST_RG_FRAC * moment.scalar());
+
+        return findSurfaceSite(start, step, udist);
+    }
+
+    private Coord findSurfaceSite(VectorView start, VectorView step, double unoccDist) {
         //
         // Starting at the "start" coordinate, step along the "step"
         // direction with unit length until traversing a distance of
@@ -558,6 +545,21 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public Coord selectNeighbor(Coord center) {
         return neighborhood.randomNeighbor(center, randomSource);
+    }
+
+    /**
+     * Selects a lattice site on the surface of this tumor at random
+     * (with a uniform distribution along the surface of the tumor).
+     *
+     * @return a randomly selected site on the surface of this tumor.
+     *
+     * @throws IllegalStateException if a surface site cannot be found.
+     */
+    public Coord selectSurfaceSite() {
+        //
+        // Conduct a search with a randomly generated step direction...
+        //
+        return findSurfaceSite(HYPER_DISTRIB.sample(randomSource));
     }
 
     /**
