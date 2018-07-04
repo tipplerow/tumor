@@ -28,17 +28,23 @@ public class MutableGenotypeTest {
                    List.of(neutral1),
                    List.of(neutral1));
 
+        assertEquals(neutral1, founder.getLatestMutation());
+
         founder.append(neutral2);
         checkLists(founder,
                    List.of(),
                    List.of(neutral1, neutral2),
                    List.of(neutral1, neutral2));
 
+        assertEquals(neutral2, founder.getLatestMutation());
+
         MutableGenotype clone1 = founder.forClone();
         checkLists(clone1,
                    List.of(neutral1, neutral2),
                    List.of(),
                    List.of(neutral1, neutral2));
+
+        assertEquals(neutral2, clone1.getLatestMutation());
 
         clone1.append(neutral3);
         founder.append(neutral4);
@@ -52,6 +58,9 @@ public class MutableGenotypeTest {
                    List.of(neutral1, neutral2),
                    List.of(neutral3),
                    List.of(neutral1, neutral2, neutral3));
+
+        assertEquals(neutral3, clone1.getLatestMutation());
+        assertEquals(neutral4, founder.getLatestMutation());
 
         MutableGenotype clone2 = clone1.forClone();
         clone2.append(neutral5);

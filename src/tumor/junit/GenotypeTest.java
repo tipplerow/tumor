@@ -33,9 +33,9 @@ public class GenotypeTest {
         MutableGenotype clone2 = founder.forClone();
         clone2.append(neutral5);
 
-        assertAncestor(Genotype.ancestor(List.of(founder, clone1, clone2)));
-        assertAncestor(Genotype.ancestor(List.of(clone1, clone2, founder)));
-        assertAncestor(Genotype.ancestor(List.of(clone2, founder, clone1)));
+        assertAncestor(Genotype.ancestor(founder, clone1, clone2));
+        assertAncestor(Genotype.ancestor(clone1, clone2, founder));
+        assertAncestor(Genotype.ancestor(clone2, founder, clone1));
     }
 
     private void assertAncestor(Genotype ancestor) {

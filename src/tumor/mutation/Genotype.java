@@ -11,6 +11,7 @@ import java.util.Set;
 
 import jam.lang.Ordinal;
 import jam.lang.OrdinalIndex;
+import jam.util.ListUtil;
 
 /**
  * Encapsulates the mutations that originate within a carrier and the
@@ -100,6 +101,21 @@ public abstract class Genotype extends Ordinal {
 
     /**
      * Finds the ancestral genotype containing all mutations that are
+     * shared by all genotypes in a group.
+     *
+     * @param genotypes the genotypes to analyze.
+     *
+     * @return a new {@code FixedGenotype} containing mutations that
+     * are shared by every input genotype; those common mutations are
+     * classified as original mutations in the ancestor and it has no
+     * original mutations.
+     */
+    public static Genotype ancestor(Genotype... genotypes) {
+        return ancestor(List.of(genotypes));
+    }
+
+    /**
+     * Finds the ancestral genotype containing all mutations that are
      * shared by all genotypes in a collection.
      *
      * @param genotypes the genotypes to analyze.
@@ -152,6 +168,37 @@ public abstract class Genotype extends Ordinal {
     }
 
     /**
+     * Returns the total number of mutations that have accumulated in
+     * the carrier (traced back to its founder).
+     *
+     * @return the total number of mutations that have accumulated in
+     * the carrier.
+     */
+    public int countAccumulatedMutations() {
+        return viewAccumulatedMutations().size();
+    }
+
+    /**
+     * Returns the number of mutations that the carrier inherited from
+     * its parent.
+     *
+     * @return the number of mutations that the carrier inherited from
+     * its parent.
+     */
+    public int countInheritedMutations() {
+        return viewInheritedMutations().size();
+    }
+
+    /**
+     * Returns the number of mutations that originated in the carrier.
+     *
+     * @return the number of mutations that originated in the carrier.
+     */
+    public int countOriginalMutations() {
+        return viewOriginalMutations().size();
+    }
+
+    /**
      * Creates a canonical string representation for this genotype.
      *
      * <p>The string representation contains the ordinal index, a
@@ -185,5 +232,21 @@ public abstract class Genotype extends Ordinal {
         }
 
         return builder.toString();
+    }
+
+    /**
+     * Returns the last mutation to arise in this genotype.
+     *
+     * @return the last mutation to arise in this genotype (or
+     * {@code null} if this genotype is empty).
+     */
+    public Mutation getLatestMutation() {
+        if (!viewOriginalMutations().isEmpty())
+            return ListUtil.last(viewOriginalMutations());
+
+        if (!viewInheritedMutations().isEmpty())
+            return ListUtil.last(viewInheritedMutations());
+
+        return null;
     }
 }
