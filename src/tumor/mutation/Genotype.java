@@ -235,6 +235,22 @@ public abstract class Genotype extends Ordinal {
     }
 
     /**
+     * Returns the first mutation to arise in this genotype.
+     *
+     * @return the first mutation to arise in this genotype (or
+     * {@code null} if this genotype is empty).
+     */
+    public Mutation getEarliestMutation() {
+        if (!viewInheritedMutations().isEmpty())
+            return ListUtil.first(viewInheritedMutations());
+
+        if (!viewOriginalMutations().isEmpty())
+            return ListUtil.first(viewOriginalMutations());
+
+        return null;
+    }
+
+    /**
      * Returns the last mutation to arise in this genotype.
      *
      * @return the last mutation to arise in this genotype (or

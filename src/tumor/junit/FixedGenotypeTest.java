@@ -47,6 +47,10 @@ public class FixedGenotypeTest {
                    List.of(neutral5),
                    List.of(neutral1, neutral2, neutral3, neutral4, neutral5));
 
+        assertEquals(neutral1, daughter1.getEarliestMutation());
+        assertEquals(neutral1, daughter2.getEarliestMutation());
+        assertEquals(neutral1, daughter3.getEarliestMutation());
+
         assertEquals(neutral3, daughter1.getLatestMutation());
         assertEquals(neutral4, daughter2.getLatestMutation());
         assertEquals(neutral5, daughter3.getLatestMutation());
@@ -63,6 +67,8 @@ public class FixedGenotypeTest {
 
     @Test public void testFounder() {
         checkLists(founder, List.of(), List.of(neutral1, neutral2), List.of(neutral1, neutral2));
+
+        assertEquals(neutral1, founder.getEarliestMutation());
         assertEquals(neutral2, founder.getLatestMutation());
     }
 
