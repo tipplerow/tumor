@@ -597,6 +597,8 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
             cellCountTrajWriter = openWriter(CELL_COUNT_TRAJ_FILE_NAME);
             cellCountTrajWriter.println(ComponentCountRecord.header());
         }
+
+        ReportManager.global().initializeSimulation();
     }
 
     private void writeRuntimeProperties() {
@@ -610,6 +612,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     @Override protected void finalizeSimulation() {
+        ReportManager.global().finalizeSimulation();
         autoClose();
     }
 
@@ -631,7 +634,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     @Override protected void advanceTrial() {
         tumor.advance();
         recordStep();
-        ReportManager.global().reportStep();
+        ReportManager.global().processStep();
     }
 
     @Override protected void finalizeTrial() {
@@ -642,7 +645,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
             writeFinalCellCount();
 
         recordSnapshot(getReportDir());
-        ReportManager.global().reportTrial();
+        ReportManager.global().finalizeTrial();
     }
 
     private void writeFinalCellCount() {

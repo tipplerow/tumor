@@ -100,6 +100,43 @@ public abstract class Genotype extends Ordinal {
     public abstract List<Mutation> viewOriginalMutations();
 
     /**
+     * Assembles the aggregate genotype containing every unique
+     * mutation from a group of genotypes.
+     *
+     * @param genotypes the genotypes to analyze.
+     *
+     * @return a new {@code FixedGenotype} containing every unique
+     * mutation from the input genotypes; the mutations are classified
+     * as original mutations in the aggregate and it has no original
+     * mutations.
+     */
+    public static Genotype aggregate(Genotype... genotypes) {
+        return aggregate(List.of(genotypes));
+    }
+
+    /**
+     * Assembles the aggregate genotype containing every unique
+     * mutation from a group of genotypes.
+     *
+     * @param genotypes the genotypes to analyze.
+     *
+     * @return a new {@code FixedGenotype} containing every unique
+     * mutation from the input genotypes; the mutations are classified
+     * as original mutations in the aggregate and it has no original
+     * mutations.
+     */
+    public static Genotype aggregate(Collection<Genotype> genotypes) {
+        //
+        // Sort the mutations by their ordinal index, which should
+        // reflect the temporal order of appearance...
+        //
+        List<Mutation> mutations = new ArrayList<Mutation>(allUnique(genotypes));
+        Collections.sort(mutations);
+
+        return FixedGenotype.founder(mutations);
+    }
+
+    /**
      * Finds the ancestral genotype containing all mutations that are
      * shared by all genotypes in a group.
      *
@@ -134,6 +171,23 @@ public abstract class Genotype extends Ordinal {
         Collections.sort(mutations);
 
         return FixedGenotype.founder(mutations);
+    }
+
+    /**
+     * Assembles every unique mutation from a collection of genotypes.
+     *
+     * @param genotypes the genotypes to analyze.
+     *
+     * @return a new set containing every unique mutation present in
+     * the input collection of genotypes.
+     */
+    public static Set<Mutation> allUnique(Collection<Genotype> genotypes) {
+        Set<Mutation> unique = new HashSet<Mutation>();
+
+        for (Genotype genotype : genotypes)
+            unique.addAll(genotype.viewAccumulatedMutations());
+
+        return unique;
     }
 
     /**

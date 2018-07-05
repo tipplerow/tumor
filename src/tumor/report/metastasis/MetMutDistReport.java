@@ -7,20 +7,18 @@ import java.util.List;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
-import jam.dist.HypersphericalDistribution;
 import jam.lattice.Coord;
 import jam.math.IntRange;
-import jam.math.JamRandom;
-import jam.math.VectorMoment;
+import jam.report.ReportWriter;
 import jam.util.CollectionUtil;
 import jam.vector.VectorView;
 
-import tumor.carrier.Carrier;
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
-import tumor.lattice.LatticeTumor;
 import tumor.mutation.Genotype;
 import tumor.report.TumorReport;
+import tumor.report.bulk.BulkSample;
+import tumor.report.bulk.BulkSampleSpace;
 
 /**
  * Computes the mutational distance between tumor components that have
@@ -33,36 +31,55 @@ import tumor.report.TumorReport;
 public final class MetMutDistReport extends TumorReport {
     private final int metSampleCount;
     private final int metSampleInterval;
-    private final List<MetSampleRecord> metSamples = new ArrayList<MetSampleRecord>();
 
-    // Distribution of vectors randomly located on the surface of a
-    // sphere, used to generate random search directions for sampling
-    // metastases...
-    private final HypersphericalDistribution hyperDist = new HypersphericalDistribution(3, 1.0);
+    private final int bulkSampleSize;
+    private final BulkSampleSpace bulkSampleSpace;
 
-    // The surface-search algorithm must find no occupied lattice
-    // sites for this minimum distance in order to classify a site
-    // as a surface site.
-    private final double unoccDist = 3.0;
+    // Metastatis samples taken from the growing primary tumor at
+    // regular intervals during the current simulation trial...
+    private List<MetSample> metSamples;
+
+    // Bulk samples taken from the final primary tumor at the end of
+    // the current simulation trial...
+    private List<BulkSample> bulkSamples;
+
+    // Writes the report records after each completed simulation
+    // trial...
+    private ReportWriter<MetMutDistRecord> reportWriter;
 
     private MetMutDistReport() {
         this.metSampleCount    = resolveMetSampleCount();
         this.metSampleInterval = resolveMetSampleInterval();
+
+        this.bulkSampleSize  = resolveBulkSampleSize();
+        this.bulkSampleSpace = resolveBulkSampleSpace();
     }
 
     private static int resolveMetSampleCount() {
         return JamProperties.getRequiredInt(MET_SAMPLE_COUNT_PROPERTY, IntRange.POSITIVE);
     }
 
-
     private static int resolveMetSampleInterval() {
         return JamProperties.getRequiredInt(MET_SAMPLE_INTERVAL_PROPERTY, IntRange.POSITIVE);
+    }
+
+    private static int resolveBulkSampleSize() {
+        return JamProperties.getRequiredInt(BULK_SAMPLE_SIZE_PROPERTY, IntRange.POSITIVE);
+    }
+
+    private static BulkSampleSpace resolveBulkSampleSpace() {
+        return JamProperties.getRequiredEnum(BULK_SAMPLE_SPACE_PROPERTY, BulkSampleSpace.class);
     }
 
     /**
      * The single global report instance.
      */
     public static final MetMutDistReport INSTANCE = new MetMutDistReport();
+
+    /**
+     * Base name of the report file.
+     */
+    public static final String BASE_NAME = "met-mut-dist.csv";
 
     /**
      * Name of the system property that specifies whether this report
@@ -83,6 +100,19 @@ public final class MetMutDistReport extends TumorReport {
     public static final String MET_SAMPLE_INTERVAL_PROPERTY = "tumor.report.metastasis.metSampleInterval";
 
     /**
+     * Name of the system property that specifies the minimum number
+     * of cells to include in each bulk sample.
+     */
+    public static final String BULK_SAMPLE_SIZE_PROPERTY = "tumor.report.metastasis.bulkSampleSize";
+
+    /**
+     * Name of the system property that specifies the spatial
+     * distribution of bulk samples to be taken from the final
+     * primary tumor.
+     */
+    public static final String BULK_SAMPLE_SPACE_PROPERTY = "tumor.report.metastasis.bulkSampleSpace";
+
+    /**
      * Determines whether the metastasis mutational distance report
      * will be executed.
      *
@@ -93,13 +123,19 @@ public final class MetMutDistReport extends TumorReport {
         return JamProperties.getOptionalBoolean(RUN_MET_MUT_DIST_REPORT_PROPERTY, false);
     }
 
-    @Override public void initializeTrial() {
-        //
-        // No initialization necessary...
-        //
+    @Override public void initializeSimulation() {
+        reportWriter = ReportWriter.create(getDriver().getReportDir());
     }
 
-    @Override public void reportStep() {
+    @Override public void initializeTrial() {
+        //
+        // New records for the next trial...
+        //
+        metSamples = new ArrayList<MetSample>();
+        bulkSamples = null;
+    }
+
+    @Override public void processStep() {
         if (isSampleStep(metSampleInterval))
             collectMetSamples();
     }
@@ -107,45 +143,35 @@ public final class MetMutDistReport extends TumorReport {
     private void collectMetSamples() {
         JamLogger.info("Collecting [%d] metastasis samples...", metSampleCount);
 
-        VectorMoment moment  = getTumor().getVectorMoment();
-        VectorView   tumorCM = moment.getCM();
-
         for (int k = 0; k < metSampleCount; ++k)
-            collectMetSample(tumorCM);
+            collectMetSample();
     }
 
-    private void collectMetSample(VectorView tumorCM) {
-        Coord          sampleSite = selectSampleSite(tumorCM);
-        TumorComponent sampleMet  = selectSampleMet(sampleSite);
-        Genotype       sampleGeno = sampleMet.getGenotype();
-
-        metSamples.add(new MetSampleRecord(sampleSite, sampleGeno));
+    private void collectMetSample() {
+        metSamples.add(MetSample.collect(getLatticeTumor()));
     }
 
-    private Coord selectSampleSite(VectorView tumorCM) {
-        //
-        // Search for a surface site by starting at the center of mass
-        // and moving outward in a randomly generated direction...
-        //
-        VectorView start = tumorCM;
-        VectorView step  = hyperDist.sample(JamRandom.global());
-
-        return getLatticeTumor().findSurfaceSite(start, step, unoccDist);
+    @Override public void finalizeTrial() {
+        collectBulkSamples();
+        writeReportRecords();
     }
 
-    private TumorComponent selectSampleMet(Coord sampleSite) {
-        Collection<? extends TumorComponent> components =
-            getLatticeTumor().viewComponents(sampleSite);
-
-        if (components.isEmpty())
-            throw new IllegalStateException("Failed to find a surface component.");
-
-        if (components.size() == 1)
-            return CollectionUtil.peek(components);
-
-        return Carrier.random(new ArrayList<TumorComponent>(components));
+    @Override public void finalizeSimulation() {
+        reportWriter.close();
     }
 
-    @Override public void reportTrial() {
+    private void collectBulkSamples() {
+        JamLogger.info("Collecting [%d] bulk tumor samples...", bulkSampleSpace.viewBasis().size());
+        bulkSamples = bulkSampleSpace.collect(getLatticeTumor(), bulkSampleSize);
+    }
+
+    private void writeReportRecords() {
+        JamLogger.info("Writing metastasis mutational distance records...");
+
+        for (MetSample metSample : metSamples)
+            for (BulkSample bulkSample : bulkSamples)
+                reportWriter.write(MetMutDistRecord.compute(metSample, bulkSample));
+
+        reportWriter.flush();
     }
 }

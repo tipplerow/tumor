@@ -12,19 +12,29 @@ import tumor.lattice.LatticeTumor;
  */
 public abstract class TumorReport {
     /**
+     * Initializes the report at the start of a new simulation.
+     */
+    public abstract void initializeSimulation();
+
+    /**
      * Initializes the report at the start of a new simulation trial.
      */
     public abstract void initializeTrial();
 
     /**
-     * Reports the results of the latest completed time step.
+     * Processes the results of the latest completed time step.
      */
-    public abstract void reportStep();
+    public abstract void processStep();
 
     /**
      * Reports the results of the latest completed simulation trial.
      */
-    public abstract void reportTrial();
+    public abstract void finalizeTrial();
+
+    /**
+     * Reports the results of the completed simulation.
+     */
+    public abstract void finalizeSimulation();
 
     /**
      * Returns the global driver application.

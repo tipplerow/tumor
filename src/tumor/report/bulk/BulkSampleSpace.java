@@ -54,8 +54,6 @@ public enum BulkSampleSpace {
      * Collects bulk samples with the spatial distribution defined by
      * this enum value.
      *
-     * @param <E> the concrete tumor component type.
-     *
      * @param tumor the tumor from which to sample.
      *
      * @param targetSize the minimum number of cells to include in
@@ -64,15 +62,11 @@ public enum BulkSampleSpace {
      * @return a list of bulk samples corresponding to the basis
      * vectors in this enum.
      */
-    public <E extends TumorComponent> List<BulkSample<E>> collect(LatticeTumor<E> tumor, long targetSize) {
-        List<BulkSample<E>> samples = new ArrayList<BulkSample<E>>();
+    public List<BulkSample> collect(LatticeTumor<? extends TumorComponent> tumor, long targetSize) {
+        List<BulkSample> samples = new ArrayList<BulkSample>(basis.size());
 
-        for (VectorView vector : basis) {
-            Coord  surfaceSite = tumor.findSurfaceSite(vector);
-            Set<E> sampleComp  = tumor.collectBulkSample(surfaceSite, targetSize);
-
-            samples.add(new BulkSample<E>(sampleComp));
-        }
+        for (VectorView vector : basis)
+            samples.add(BulkSample.collect(tumor, vector, targetSize));
 
         return samples;
     }

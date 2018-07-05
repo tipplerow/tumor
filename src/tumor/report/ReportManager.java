@@ -39,6 +39,15 @@ public final class ReportManager {
 
     /**
      * Initializes all requested reports at the start of a new
+     * simulation.
+     */
+    public void initializeSimulation() {
+        for (TumorReport report : reports)
+            report.initializeSimulation();
+    }
+
+    /**
+     * Initializes all requested reports at the start of a new
      * simulation trial.
      */
     public void initializeTrial() {
@@ -47,20 +56,29 @@ public final class ReportManager {
     }
 
     /**
-     * Reports the results of the latest completed time step for all
+     * Processes the results of the latest completed time step for all
      * requested reports.
      */
-    public void reportStep() {
+    public void processStep() {
         for (TumorReport report : reports)
-            report.reportStep();
+            report.processStep();
     }
 
     /**
      * Reports the results of the latest completed simulation trial
      * for all requested reports.
      */
-    public void reportTrial() {
+    public void finalizeTrial() {
         for (TumorReport report : reports)
-            report.reportTrial();
+            report.finalizeTrial();
+    }
+
+    /**
+     * Reports the results of the fully completed simulation for all
+     * requested reports.
+     */
+    public void finalizeSimulation() {
+        for (TumorReport report : reports)
+            report.finalizeSimulation();
     }
 }
