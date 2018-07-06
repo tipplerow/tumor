@@ -5,6 +5,7 @@ import java.util.List;
 
 import jam.app.JamProperties;
 import jam.lang.JamException;
+import jam.math.LongRange;
 
 import tumor.driver.TumorDriver;
 
@@ -18,11 +19,11 @@ public abstract class MutationGenerator {
     private static final long maxMutationCount = resolveMaxMutationCount();
 
     private static int resolveMaxMutationTime() {
-        return JamProperties.getOptionalInt(MAX_MUTATION_TIME_PROPERTY, Integer.MAX_VALUE);
+        return JamProperties.getOptionalInt(MAX_MUTATION_TIME_PROPERTY, TumorDriver.global().getMaxStepCount());
     }
 
     private static long resolveMaxMutationCount() {
-        return JamProperties.getOptionalLong(MAX_MUTATION_COUNT_PROPERTY, Long.MAX_VALUE);
+        return JamProperties.getRequiredLong(MAX_MUTATION_COUNT_PROPERTY, LongRange.POSITIVE);
     }
 
     /**
@@ -179,5 +180,27 @@ public abstract class MutationGenerator {
 
     private static double resolveSelectionCoeff() {
         return JamProperties.getRequiredDouble(SELECTION_COEFF_PROPERTY);
+    }
+
+    /**
+     * Returns the maximum number of mutations to generate in a single
+     * simulation trial.
+     *
+     * @return the maximum number of mutations to generate in a single
+     * simulation trial.
+     */
+    public static long getMaxMutationCount() {
+        return maxMutationCount;
+    }
+
+    /**
+     * Returns the latest time that mutations will be generated in a
+     * simulation trial.
+     *
+     * @return the latest time that mutations will be generated in a
+     * simulation trial.
+     */
+    public static int getMaxMutationTime() {
+        return maxMutationTime;
     }
 }
