@@ -9,6 +9,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+
 import jam.lang.Ordinal;
 import jam.lang.OrdinalIndex;
 import jam.util.ListUtil;
@@ -200,23 +203,16 @@ public abstract class Genotype extends Ordinal {
      * all of the genotypes in the input collection.
      */
     public static Set<Mutation> findCommon(Collection<Genotype> genotypes) {
-        if (genotypes.isEmpty())
-            return Collections.emptySet();
+        Multiset<Mutation> counts = HashMultiset.create();
 
-        // Start with the accumulated mutations from the first genotype...
-        Iterator<Genotype> iterator = genotypes.iterator();
+        for (Genotype genotype : genotypes)
+            counts.addAll(genotype.viewAccumulatedMutations());
 
-        Set<Mutation> common =
-            new HashSet<Mutation>(iterator.next().viewAccumulatedMutations());
+        Set<Mutation> common = new HashSet<Mutation>();
 
-        while (iterator.hasNext() && !common.isEmpty()) {
-            //
-            // Now iterate over the remaining genotypes and keep only
-            // the mutations in each genotype.  Stop early if the set
-            // of common mutations becomes empty...
-            //
-            common.retainAll(iterator.next().viewAccumulatedMutations());
-        }
+        for (Mutation mutation : counts.elementSet())
+            if (counts.count(mutation) == genotypes.size())
+                common.add(mutation);
 
         return common;
     }
