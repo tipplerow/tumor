@@ -5,8 +5,8 @@ import jam.lattice.Coord;
 import jam.math.DoubleUtil;
 import jam.report.ReportRecord;
 
+import tumor.driver.TumorDriver;
 import tumor.mutation.MutationGenerator;
-
 import tumor.report.bulk.BulkSample;
 import tumor.report.vaf.VAF;
 
@@ -15,6 +15,9 @@ import tumor.report.vaf.VAF;
  * sample as a function of the mutation generator cutoff threshold.
  */
 public final class MutGenThresholdRecord implements ReportRecord {
+    // Simulation trial index...
+    private final int trialIndex;
+
     // Latest time allowed for mutation generation...
     private final int maxMutationTime;
 
@@ -43,6 +46,8 @@ public final class MutGenThresholdRecord implements ReportRecord {
                                   double vafThreshold,
                                   int    aboveThresholdCount,
                                   double aboveThresholdFrac) {
+        this.trialIndex = TumorDriver.global().getTrialIndex();
+
         this.maxMutationTime  = maxMutationTime;
         this.maxMutationCount = maxMutationCount;
 
@@ -86,7 +91,8 @@ public final class MutGenThresholdRecord implements ReportRecord {
         }
 
     @Override public String formatLine() {
-        return String.format("%d,%d,%d,%d,%d,%d,%.2f,%d,%.4f",
+        return String.format("%d,%d,%d,%d,%d,%d,%d,%.2f,%d,%.4f",
+                             trialIndex,
                              maxMutationTime,
                              maxMutationCount,
                              sampleSite.x,
@@ -103,7 +109,8 @@ public final class MutGenThresholdRecord implements ReportRecord {
     }
 
     @Override public String getHeaderLine() {
-        return "maxMutationTime"
+        return "trialIndex"
+            + ",maxMutationTime"
             + ",maxMutationCount"
             + ",sampleSiteX"
             + ",sampleSiteY"
