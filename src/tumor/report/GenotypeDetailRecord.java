@@ -53,7 +53,7 @@ public final class GenotypeDetailRecord extends StepRecord {
 
         long genoIndex = genotype.getIndex();
 
-        LongList inherited = Mutation.indexList(genotype.viewInheritedMutations());
+        LongList inherited = Mutation.indexList(genotype.scanInheritedMutations());
         LongList original  = Mutation.indexList(genotype.viewOriginalMutations());
 
         return new GenotypeDetailRecord(trialIndex, timeStep, genoIndex, inherited, original);

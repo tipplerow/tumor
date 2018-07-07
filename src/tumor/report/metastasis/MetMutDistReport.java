@@ -47,6 +47,9 @@ public final class MetMutDistReport extends TumorReport {
     // trial...
     private ReportWriter<MetMutDistRecord> reportWriter;
 
+    // The single global instance, created on demand...
+    private static MetMutDistReport instance = null;
+
     private MetMutDistReport() {
         this.metSampleCount    = resolveMetSampleCount();
         this.metSampleInterval = resolveMetSampleInterval();
@@ -70,11 +73,6 @@ public final class MetMutDistReport extends TumorReport {
     private static BulkSampleSpace resolveBulkSampleSpace() {
         return JamProperties.getRequiredEnum(BULK_SAMPLE_SPACE_PROPERTY, BulkSampleSpace.class);
     }
-
-    /**
-     * The single global report instance.
-     */
-    public static final MetMutDistReport INSTANCE = new MetMutDistReport();
 
     /**
      * Base name of the report file.
@@ -111,6 +109,18 @@ public final class MetMutDistReport extends TumorReport {
      * primary tumor.
      */
     public static final String BULK_SAMPLE_SPACE_PROPERTY = "tumor.report.metastasis.bulkSampleSpace";
+
+    /**
+     * Returns the single global report instance.
+     *
+     * @return the single global report instance.
+     */
+    public static MetMutDistReport instance() {
+        if (instance == null)
+            instance = new MetMutDistReport();
+
+        return instance;
+    }
 
     /**
      * Determines whether the metastasis mutational distance report
@@ -152,17 +162,12 @@ public final class MetMutDistReport extends TumorReport {
     }
 
     @Override public void finalizeTrial() {
-        collectBulkSamples();
+        collectBulkSamples(bulkSampleSpace, bulkSampleSize);
         writeReportRecords();
     }
 
     @Override public void finalizeSimulation() {
         reportWriter.close();
-    }
-
-    private void collectBulkSamples() {
-        JamLogger.info("Collecting [%d] bulk tumor samples...", bulkSampleSpace.viewBasis().size());
-        bulkSamples = bulkSampleSpace.collect(getLatticeTumor(), bulkSampleSize);
     }
 
     private void writeReportRecords() {

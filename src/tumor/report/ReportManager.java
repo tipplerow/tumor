@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tumor.report.metastasis.MetMutDistReport;
+import tumor.report.mutgen.MutGenThresholdReport;
 
 /**
  * Runs each requested report after every completed time step and
@@ -22,7 +23,10 @@ public final class ReportManager {
 
     private void registerReports() {
         if (MetMutDistReport.reportRequested())
-            reports.add(MetMutDistReport.INSTANCE);
+            reports.add(MetMutDistReport.instance());
+
+        if (MutGenThresholdReport.reportRequested())
+            reports.add(MutGenThresholdReport.instance());
     }
 
     /**

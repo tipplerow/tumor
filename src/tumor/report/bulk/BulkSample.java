@@ -15,6 +15,7 @@ import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.lattice.LatticeTumor;
 import tumor.mutation.Genotype;
+import tumor.report.vaf.VAF;
 
 /**
  * Represents a collection of tumor components collected as a single
@@ -34,6 +35,9 @@ public final class BulkSample extends StepRecord {
     // The aggregate genotype containing all unique mutations,
     // computed on demand...
     private Genotype aggregateGenotype = null;
+
+    // Variant allele frequency distribution, computed on demand...
+    private VAF vaf = null;
 
     private BulkSample(int trialIndex, int timeStep,
                        long tumorSize, Coord sampleSite,
@@ -150,6 +154,20 @@ public final class BulkSample extends StepRecord {
      */
     public long getTumorSize() {
         return tumorSize;
+    }
+
+    /**
+     * Returns the variant allele frequency distribution for the
+     * components in this sample.
+     *
+     * @return the variant allele frequency distribution for the
+     * components in this sample.
+     */
+    public VAF getVAF() {
+        if (vaf == null)
+            vaf = VAF.compute(components);
+
+        return vaf;
     }
 
     /**

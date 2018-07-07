@@ -5,9 +5,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import jam.lang.OrdinalIndex;
-import jam.util.ListUtil;
+import jam.util.SetUtil;
 
 import tumor.growth.GrowthCount;
 import tumor.growth.GrowthRate;
@@ -161,8 +162,8 @@ public abstract class TumorComponent extends Carrier {
      * the input collection (in the order returned by the collection
      * iterator).
      */
-    public static List<Genotype> getGenotypes(Collection<? extends TumorComponent> components) {
-        return ListUtil.apply(components, x -> x.getGenotype());
+    public static Set<Genotype> getGenotypes(Collection<? extends TumorComponent> components) {
+        return SetUtil.newHashSet(components, x -> x.getGenotype());
     }
 
     /**
@@ -213,7 +214,8 @@ public abstract class TumorComponent extends Carrier {
     }
 
     @Override public List<Mutation> getAccumulatedMutations() {
-        return genotype.viewAccumulatedMutations();
+        throw new UnsupportedOperationException("In transition...");
+        //return genotype.viewAccumulatedMutations();
     }
 
     @Override public List<Mutation> getOriginalMutations() {

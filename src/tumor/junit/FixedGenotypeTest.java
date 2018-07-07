@@ -4,6 +4,7 @@ package tumor.junit;
 import java.util.List;
 
 import tumor.mutation.FixedGenotype;
+import tumor.mutation.Genotype;
 import tumor.mutation.Mutation;
 import tumor.driver.TumorDriver;
 
@@ -15,61 +16,51 @@ public class FixedGenotypeTest {
         TumorDriver.junit();
     }
 
-    private static final Mutation neutral1 = Mutation.neutral();
-    private static final Mutation neutral2 = Mutation.neutral();
-    private static final Mutation neutral3 = Mutation.neutral();
-    private static final Mutation neutral4 = Mutation.neutral();
-    private static final Mutation neutral5 = Mutation.neutral();
+    private static final Mutation M1 = Mutation.neutral();
+    private static final Mutation M2 = Mutation.neutral();
+    private static final Mutation M3 = Mutation.neutral();
+    private static final Mutation M4 = Mutation.neutral();
+    private static final Mutation M5 = Mutation.neutral();
 
-    private static final FixedGenotype founder = FixedGenotype.founder(neutral1, neutral2);
+    private static final FixedGenotype founder = FixedGenotype.founder(M1, M2);
 
     @Test public void testClone() {
         assertEquals(founder, founder.forClone());
     }
 
     @Test public void testDaughter() {
-        FixedGenotype daughter1 = founder.forDaughter(List.of(neutral3));
-        FixedGenotype daughter2 = daughter1.forDaughter(List.of(neutral4));
-        FixedGenotype daughter3 = daughter2.forDaughter(List.of(neutral5));
+        FixedGenotype daughter1 = founder.forDaughter(List.of(M3));
+        FixedGenotype daughter2 = daughter1.forDaughter(List.of(M4));
+        FixedGenotype daughter3 = daughter2.forDaughter(List.of(M5));
 
-        checkLists(daughter1,
-                   List.of(neutral1, neutral2),
-                   List.of(neutral3),
-                   List.of(neutral1, neutral2, neutral3));
+        checkMutations(daughter1, M1, M3, List.of(M1, M2),         List.of(M3), List.of(M1, M2, M3));
+        checkMutations(daughter2, M1, M4, List.of(M1, M2, M3),     List.of(M4), List.of(M1, M2, M3, M4));
+        checkMutations(daughter3, M1, M5, List.of(M1, M2, M3, M4), List.of(M5), List.of(M1, M2, M3, M4, M5));
 
-        checkLists(daughter2,
-                   List.of(neutral1, neutral2, neutral3),
-                   List.of(neutral4),
-                   List.of(neutral1, neutral2, neutral3, neutral4));
-
-        checkLists(daughter3,
-                   List.of(neutral1, neutral2, neutral3, neutral4),
-                   List.of(neutral5),
-                   List.of(neutral1, neutral2, neutral3, neutral4, neutral5));
-
-        assertEquals(neutral1, daughter1.getEarliestMutation());
-        assertEquals(neutral1, daughter2.getEarliestMutation());
-        assertEquals(neutral1, daughter3.getEarliestMutation());
-
-        assertEquals(neutral3, daughter1.getLatestMutation());
-        assertEquals(neutral4, daughter2.getLatestMutation());
-        assertEquals(neutral5, daughter3.getLatestMutation());
+        checkLineage(daughter1, List.of(founder, daughter1));
+        checkLineage(daughter2, List.of(founder, daughter1, daughter2));
+        checkLineage(daughter3, List.of(founder, daughter1, daughter2, daughter3));
     }
 
-    private void checkLists(FixedGenotype  genotype,
-                            List<Mutation> expectedInherited,
-                            List<Mutation> expectedOriginal,
-                            List<Mutation> expectedAccumulated) {
+    private void checkLineage(Genotype genotype, List<Genotype> expectedLineage) {
+        assertEquals(expectedLineage, genotype.traceLineage());
+    }
+
+    private void checkMutations(Genotype genotype,
+                                Mutation expectedEarliest,
+                                Mutation expectedLatest,
+                                List<Mutation> expectedInherited,
+                                List<Mutation> expectedOriginal,
+                                List<Mutation> expectedAccumulated) {
+        assertEquals(expectedEarliest,    genotype.getEarliestMutation());
+        assertEquals(expectedLatest,      genotype.getLatestMutation());
         assertEquals(expectedInherited,   genotype.viewInheritedMutations());
         assertEquals(expectedOriginal,    genotype.viewOriginalMutations());
         assertEquals(expectedAccumulated, genotype.viewAccumulatedMutations());
     }
 
     @Test public void testFounder() {
-        checkLists(founder, List.of(), List.of(neutral1, neutral2), List.of(neutral1, neutral2));
-
-        assertEquals(neutral1, founder.getEarliestMutation());
-        assertEquals(neutral2, founder.getLatestMutation());
+        checkMutations(founder, M1, M2, List.of(), List.of(M1, M2), List.of(M1, M2));
     }
 
     public static void main(String[] args) {

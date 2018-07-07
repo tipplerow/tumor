@@ -3,19 +3,40 @@ package tumor.mutation;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+
+import jam.util.ConcatIterator;
 
 /**
  * Represents mutations that accumulate over time in a single carrier
  * (a deme).
  */
 public final class MutableGenotype extends Genotype {
-    private final List<Mutation> original;
-    private final List<Mutation> inherited;
+    //
+    // A clone or daughter inherits all of the inherited mutations in
+    // the parent and a SUBSET [0, parentOriginalEnd) of the original
+    // mutations in the parent, where "parentOriginalEnd" is the size
+    // of the parent's original mutation list at the time the clone or
+    // daughter is created.  It is necessary to store that index with
+    // the clone or daughter because the parent may continue to mutate
+    // after the clone or daughter has been created (and the clone or
+    // daughter obviously does not inherit those mutations)...
+    //
+    private final int parentOriginalEnd;
 
-    private MutableGenotype(List<Mutation> original, List<Mutation> inherited) {
-        this.original  = original;
-        this.inherited = inherited;
+    private MutableGenotype(MutableGenotype parent, List<Mutation> original) {
+        //
+        // We must create a copy of the input mutations and store them
+        // in a list that may grow with the addition of new mutations...
+        //
+        super(parent, new ArrayList<Mutation>(original));
+
+        if (parent != null)
+            this.parentOriginalEnd = parent.original.size();
+        else
+            this.parentOriginalEnd = 0;
     }
 
     /**
@@ -41,10 +62,7 @@ public final class MutableGenotype extends Genotype {
      * mutations and no inherited mutations.
      */
     public static MutableGenotype founder(List<Mutation> original) {
-        List<Mutation> founderOriginal  = new ArrayList<Mutation>(original);
-        List<Mutation> founderInherited = Collections.emptyList();
-
-        return new MutableGenotype(founderOriginal, founderInherited);
+        return new MutableGenotype(null, original);
     }
 
     /**
@@ -73,43 +91,17 @@ public final class MutableGenotype extends Genotype {
      */
     public void append(List<Mutation> mutations) {
         original.addAll(mutations);
-
-        if (accumulated != null)
-            accumulated.addAll(mutations);
     }
 
     @Override public MutableGenotype forClone() {
-        List<Mutation> cloneOriginal  = new ArrayList<Mutation>();
-        List<Mutation> cloneInherited = fromParent();
-
-        return new MutableGenotype(cloneOriginal, cloneInherited);
+        return new MutableGenotype(this, Collections.emptyList());
     }
 
-    private List<Mutation> fromParent() {
-        return Collections.unmodifiableList(viewAccumulatedMutations());
+    @Override public Genotype forDaughter(List<Mutation> daughterMut) {
+        return new MutableGenotype(this, daughterMut);
     }
 
-    @Override public Genotype forDaughter(List<Mutation> mutations) {
-        List<Mutation> daughterOriginal  = new ArrayList<Mutation>(mutations);
-        List<Mutation> daughterInherited = fromParent();
-
-        return new MutableGenotype(daughterOriginal, daughterInherited);
-    }
-
-    @Override protected List<Mutation> computeAccumulatedMutations() {
-        List<Mutation> accumulated = new ArrayList<Mutation>(inherited.size() + original.size());
-
-        accumulated.addAll(inherited);
-        accumulated.addAll(original);
-
-        return accumulated;
-    }
-
-    @Override public List<Mutation> viewInheritedMutations() {
-        return inherited; // Already wrapped in an unmodifiable list...
-    }
-
-    @Override public List<Mutation> viewOriginalMutations() {
-        return Collections.unmodifiableList(original);
+    @Override protected List<Mutation> fromParentOriginal() {
+        return parent.original.subList(0, parentOriginalEnd);
     }
 }

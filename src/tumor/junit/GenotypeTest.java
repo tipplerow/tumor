@@ -17,51 +17,47 @@ public class GenotypeTest {
         TumorDriver.junit();
     }
 
-    private static final Mutation neutral1 = Mutation.neutral();
-    private static final Mutation neutral2 = Mutation.neutral();
-    private static final Mutation neutral3 = Mutation.neutral();
-    private static final Mutation neutral4 = Mutation.neutral();
-    private static final Mutation neutral5 = Mutation.neutral();
-
-    @Test public void testAncestor() {
-        MutableGenotype founder = MutableGenotype.founder(neutral1, neutral2);
-        MutableGenotype clone1  = founder.forClone();
-
-        founder.append(neutral3);
-        clone1.append(neutral4);
-
-        MutableGenotype clone2 = founder.forClone();
-        clone2.append(neutral5);
-
-        assertAncestor(Genotype.ancestor(founder, clone1, clone2));
-        assertAncestor(Genotype.ancestor(clone1, clone2, founder));
-        assertAncestor(Genotype.ancestor(clone2, founder, clone1));
-    }
-
-    private void assertAncestor(Genotype ancestor) {
-        assertTrue(ancestor.viewInheritedMutations().isEmpty());
-        assertEquals(List.of(neutral1, neutral2), ancestor.viewOriginalMutations());
-    }
+    private static final Mutation M1 = Mutation.neutral();
+    private static final Mutation M2 = Mutation.neutral();
+    private static final Mutation M3 = Mutation.neutral();
+    private static final Mutation M4 = Mutation.neutral();
+    private static final Mutation M5 = Mutation.neutral();
+    private static final Mutation M6 = Mutation.neutral();
 
     @Test public void testCommon() {
-        MutableGenotype founder = MutableGenotype.founder(neutral1, neutral2);
+        MutableGenotype founder = MutableGenotype.founder(M1, M2);
         MutableGenotype clone1  = founder.forClone();
 
-        founder.append(neutral3);
-        clone1.append(neutral4);
+        founder.append(M3);
+        clone1.append(M4);
 
         MutableGenotype clone2 = founder.forClone();
-        clone2.append(neutral5);
+        clone2.append(M5);
 
-        assertCommon(Genotype.findCommon(List.of(founder, clone1, clone2)));
-        assertCommon(Genotype.findCommon(List.of(clone1, clone2, founder)));
-        assertCommon(Genotype.findCommon(List.of(clone2, founder, clone1)));
+        assertEquals(Set.of(M1, M2), Genotype.findCommon(List.of(clone1, clone2)));
+        assertEquals(Set.of(M1, M2), Genotype.findCommon(List.of(clone2, clone1)));
+
+        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(founder, clone1, clone2)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(founder, clone2, clone1)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(clone1, founder, clone2)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(clone1, clone2, founder)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(clone2, founder, clone1)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(clone2, clone1, founder)));
     }
 
-    private void assertCommon(Set<Mutation> common) {
-        assertEquals(2, common.size());
-        assertTrue(common.contains(neutral1));
-        assertTrue(common.contains(neutral2));
+    @Test public void testUnique() {
+        MutableGenotype founder = MutableGenotype.founder(M1, M2);
+        MutableGenotype clone1  = founder.forClone();
+
+        founder.append(M3);
+        clone1.append(M4);
+
+        MutableGenotype clone2 = founder.forClone();
+        clone2.append(M5);
+        founder.append(M6);
+
+        assertEquals(Set.of(M1, M2, M3, M4, M5), Genotype.findUnique(List.of(clone1, clone2)));
+        assertEquals(Set.of(M1, M2, M3, M4, M5), Genotype.findUnique(List.of(clone2, clone1)));
     }
 
     public static void main(String[] args) {

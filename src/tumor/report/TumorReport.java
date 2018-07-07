@@ -1,10 +1,17 @@
 
 package tumor.report;
 
+import java.util.List;
+
+import jam.app.JamLogger;
+
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.lattice.LatticeTumor;
+
+import tumor.report.bulk.BulkSample;
+import tumor.report.bulk.BulkSampleSpace;
 
 /**
  * Provides a base class for simulation reports that may process data
@@ -35,6 +42,21 @@ public abstract class TumorReport {
      * Reports the results of the completed simulation.
      */
     public abstract void finalizeSimulation();
+
+    /**
+     * Collects bulk samples from the primary tumor.
+     *
+     * @param sampleSpace the spatial distribution of the bulk samples.
+     *
+     * @param sampleSize the minumum number of tumor cells to include
+     * in each bulk sample.
+     *
+     * @return a list containing the bulk samples.
+     */
+    public List<BulkSample> collectBulkSamples(BulkSampleSpace sampleSpace, long sampleSize) {
+        JamLogger.info("Collecting [%d] bulk tumor samples...", sampleSpace.viewBasis().size());
+        return sampleSpace.collect(getLatticeTumor(), sampleSize);
+    }
 
     /**
      * Returns the global driver application.
