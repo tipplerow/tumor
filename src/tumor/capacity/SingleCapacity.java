@@ -2,6 +2,7 @@
 package tumor.capacity;
 
 import jam.lattice.Coord;
+import jam.lattice.Neighborhood;
 
 /**
  * Implements a capacity model that enforces single occupancy: at most
@@ -24,6 +25,13 @@ public final class SingleCapacity extends CapacityModel {
         // The coordinate is ignored...
         //
         return 1L;
+    }
+
+    @Override public long getNeighborhoodCapacity(Coord coord, Neighborhood neighborhood) {
+        //
+        // The coordinate is ignored...
+        //
+        return neighborhood.size();
     }
 
     @Override public CapacityType getType() {

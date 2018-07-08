@@ -4,6 +4,7 @@ package tumor.capacity;
 import jam.app.JamProperties;
 import jam.lang.JamException;
 import jam.lattice.Coord;
+import jam.lattice.Neighborhood;
 
 /**
  * Quantifies the capacity of the lattice to support tumor cells: 
@@ -84,6 +85,27 @@ public abstract class CapacityModel {
      * lattice site.
      */
     public abstract long getSiteCapacity(Coord coord);
+
+    /**
+     * Returns the maximum number of cells allowed in the neighborhood
+     * surrounding a given lattice site (excluding the central lattice
+     * site itself).
+     *
+     * @param center the center of the neighborhood.
+     *
+     * @param neighborhood the neighborhood surrounding the central
+     * site.
+     *
+     * @return the maximum number of cells allowed in the neighborhood.
+     */
+    public long getNeighborhoodCapacity(Coord center, Neighborhood neighborhood) {
+        long result = 0;
+
+        for (Coord coord : neighborhood.getNeighbors(center))
+            result += getSiteCapacity(coord);
+
+        return result;
+    }
 
     /**
      * Returns the enumerated model type.

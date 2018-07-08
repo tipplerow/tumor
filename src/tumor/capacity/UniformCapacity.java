@@ -3,6 +3,7 @@ package tumor.capacity;
 
 import jam.app.JamProperties;
 import jam.lattice.Coord;
+import jam.lattice.Neighborhood;
 import jam.math.LongRange;
 
 /**
@@ -58,6 +59,13 @@ public final class UniformCapacity extends CapacityModel {
         // The coordinate is ignored...
         //
         return siteCapacity;
+    }
+
+    @Override public long getNeighborhoodCapacity(Coord coord, Neighborhood neighborhood) {
+        //
+        // The coordinate is ignored...
+        //
+        return siteCapacity * neighborhood.size();
     }
 
     @Override public CapacityType getType() {

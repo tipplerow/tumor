@@ -465,12 +465,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * given site.
      */
     public long getNeighborhoodCapacity(Coord center) {
-        long result = 0;
-
-        for (Coord coord : getNeighbors(center))
-            result += getSiteCapacity(coord);
-
-        return result;
+        return getCapacityModel().getNeighborhoodCapacity(center, neighborhood);
     }
 
     /**
