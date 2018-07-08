@@ -42,7 +42,7 @@ public final class MutationSet extends AbstractSet<Mutation> {
      * @return a mutation set containing the specified mutations.
      */
     public static MutationSet create(Mutation... mutations) {
-        return new MutationSet(SetUtil.fixed(mutations));
+        return new MutationSet(Set.of(mutations));
     }
 
     /**
