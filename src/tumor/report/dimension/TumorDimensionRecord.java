@@ -1,12 +1,17 @@
 
-package tumor.report;
+package tumor.report.dimension;
 
 import jam.math.PrincipalMoments;
 import jam.math.VectorMoment;
 import jam.report.ReportRecord;
 
+import tumor.driver.TumorDriver;
 import tumor.lattice.LatticeTumor;
 
+/**
+ * Encapsulates the tumor dimensions and characteristic values for the
+ * gyration tensor.
+ */
 public final class TumorDimensionRecord implements ReportRecord {
     private final int trialIndex;
     private final int timeStep;
@@ -25,51 +30,11 @@ public final class TumorDimensionRecord implements ReportRecord {
     private final double acylindricity;
     private final double anisotropy;
 
-    /**
-     * Base name for the tumor dimension report.
-     */
-    public static final String BASE_NAME = "tumor-dimension.csv";
-
-    /**
-     * Creates a new tumor dimension record.
-     *
-     * @param trialIndex the index of the current simulation trial.
-     *
-     * @param timeStep the time step in the current simulation trial.
-     *
-     * @param tumor the active tumor in the simulation trial.
-     */
-    public TumorDimensionRecord(int trialIndex, int timeStep, LatticeTumor tumor) {
-        this(trialIndex,
-             timeStep,
-             tumor.countCells(),
-             tumor.countComponents(),
-             tumor.getVectorMoment());
-    }
-
-    /**
-     * Creates a new tumor dimension record.
-     *
-     * @param trialIndex the index of the simulation trial.
-     *
-     * @param timeStep the time step when the dimensions were
-     * measured.
-     *
-     * @param cellCount the total number of cells in the tumor.
-     *
-     * @param componentCount the total number of basic components
-     * (cells, demes, or lineages) in the tumor.
-     *
-     * @param moment the vector moment describing the spatial
-     * distribution of cells within the tumor.
-     */
-    public TumorDimensionRecord(int trialIndex,
-                                int timeStep,
-                                long cellCount,
-                                long componentCount,
-                                VectorMoment moment) {
-        this.trialIndex = trialIndex;
-        this.timeStep   = timeStep;
+    private TumorDimensionRecord(long cellCount,
+                                 long componentCount,
+                                 VectorMoment moment) {
+        this.trialIndex = TumorDriver.global().getTrialIndex();
+        this.timeStep   = TumorDriver.global().getTimeStep();
 
         this.cellCount      = cellCount;
         this.componentCount = componentCount;
@@ -87,6 +52,19 @@ public final class TumorDimensionRecord implements ReportRecord {
         this.asphericity   = moment.asphericity();
         this.acylindricity = moment.acylindricity();
         this.anisotropy    = moment.anisotropy();
+    }
+
+    /**
+     * Computes the dimension record for a given tumor.
+     *
+     * @param tumor the tumor under simulation.
+     *
+     * @return the dimension record describing the input tumor.
+     */
+    public static TumorDimensionRecord compute(LatticeTumor<?> tumor) {
+        return new TumorDimensionRecord(tumor.countCells(),
+                                        tumor.countComponents(),
+                                        tumor.getVectorMoment());
     }
 
     /**
@@ -145,7 +123,7 @@ public final class TumorDimensionRecord implements ReportRecord {
     }
 
     @Override public String getBaseName() {
-        return BASE_NAME;
+        return TumorDimensionReport.BASE_NAME;
     }
 
     @Override public String getHeaderLine() {

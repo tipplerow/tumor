@@ -4,6 +4,7 @@ package tumor.report;
 import java.util.ArrayList;
 import java.util.List;
 
+import tumor.report.dimension.TumorDimensionReport;
 import tumor.report.metastasis.MetMutDistReport;
 import tumor.report.mutgen.MutGenThresholdReport;
 
@@ -22,6 +23,9 @@ public final class ReportManager {
     }
 
     private void registerReports() {
+        if (TumorDimensionReport.reportRequested())
+            reports.add(TumorDimensionReport.instance());
+
         if (MetMutDistReport.reportRequested())
             reports.add(MetMutDistReport.instance());
 

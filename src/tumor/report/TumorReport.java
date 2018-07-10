@@ -116,6 +116,6 @@ public abstract class TumorReport {
      * latest completed time step.
      */
     public boolean isSampleStep(int sampleInterval) {
-        return (getTimeStep() > 0) && (getTimeStep() % sampleInterval == 0);
+        return (sampleInterval > 0) && (getTimeStep() > 0) && (getTimeStep() % sampleInterval == 0);
     }
 }
