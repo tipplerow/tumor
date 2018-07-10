@@ -11,8 +11,8 @@ import tumor.lattice.LatticeTumor;
 
 /**
  * Implements a senescence model where cells become senescent when the
- * total occupancy of their lattice neighborhood exceeds a fraction of
- * the capacity.
+ * occupancy of their site and the total occupancy of their lattice
+ * neighborhood exceeds a fraction of the capacity.
  */
 public final class NOFSenescence extends SenescenceModel {
     private final double occupancyThreshold;
@@ -57,8 +57,12 @@ public final class NOFSenescence extends SenescenceModel {
     @Override public <E extends TumorComponent> boolean senesce(LatticeTumor<E> tumor, E component) {
         Coord coord = tumor.locateComponent(component);
 
-        long centerCapacity = tumor.getSiteCapacity(coord);
-        long centerOccupancy = tumor.countCells(coord);
+        long   centerCapacity  = tumor.getSiteCapacity(coord);
+        long   centerOccupancy = tumor.countCells(coord);
+        double centerFraction  = DoubleUtil.ratio(centerOccupancy, centerCapacity);
+
+        if (centerFraction < occupancyThreshold)
+            return false;
 
         long neighborCapacity = tumor.getNeighborhoodCapacity(coord);
         long neighborOccupancy = tumor.getNeighborhoodOccupancy(coord);
