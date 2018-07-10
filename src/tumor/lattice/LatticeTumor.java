@@ -731,6 +731,9 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     private void updateParentState(E parent) {
         switch (parent.getState()) {
         case ACTIVE:
+            // Active components should never be empty...
+            assert parent.countCells() > 0;
+
             // Still active, no changes necessary...
             break;
 

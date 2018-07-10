@@ -113,6 +113,9 @@ public final class Lineage extends MultiCellularComponent {
         // creation of the daughter lineages...
         addCells(growthCount.getNetChange() - DAUGHTER_CELL_COUNT * daughters.size());
 
+        if (countCells() == 0)
+            die();
+
         return daughters;
     }
 

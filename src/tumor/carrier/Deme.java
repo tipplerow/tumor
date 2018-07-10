@@ -73,6 +73,14 @@ public final class Deme extends MultiCellularComponent {
         // Update the cell count to reflect the net population change...
         addCells(growthCount.getNetChange());
 
+        if (countCells() == 0) {
+            //
+            // Mark as dead...
+            //
+            die();
+            return Collections.emptyList();
+        }
+
         // Each birth event creates two opportunities for mutations to
         // occur, so generate them...
         MutationGenerator mutGenerator = tumorEnv.getMutationGenerator();
