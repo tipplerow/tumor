@@ -83,9 +83,16 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     protected final JamRandom randomSource = JamRandom.global();
 
     // Distribution of vectors randomly located on the surface of a
-    // sphere, used to generate random search directions for surface
-    // sites...
-    private static final HypersphericalDistribution HYPER_DISTRIB =
+    // sphere with radius equal to one-half the square root of three,
+    // used to select expansion sites while favoring spherical tumor
+    // shapes...
+    private static final HypersphericalDistribution EXPANSION_DISTRIB =
+        new HypersphericalDistribution(3, Math.sqrt(3.0) / 2.0);
+
+    // Distribution of vectors randomly located on the surface of a
+    // unit sphere, used to generate random search directions for
+    // surface sites...
+    private static final HypersphericalDistribution SURFACE_DISTRIB =
         new HypersphericalDistribution(3, 1.0);
 
     // In order to classify a lattice site as a surface site for this
@@ -550,7 +557,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * found.
      */
     public Coord selectExpansionSite(Coord parentCoord) {
-        return parentCoord.plus(Coord.nearest(HYPER_DISTRIB.sample(randomSource).times(0.866)));
+        return parentCoord.plus(Coord.nearest(EXPANSION_DISTRIB.sample(randomSource)));
     }
 
     /**
@@ -565,7 +572,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
         //
         // Conduct a search with a randomly generated step direction...
         //
-        return findSurfaceSite(HYPER_DISTRIB.sample(randomSource));
+        return findSurfaceSite(SURFACE_DISTRIB.sample(randomSource));
     }
 
     /**
