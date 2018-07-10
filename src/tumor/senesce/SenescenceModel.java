@@ -38,6 +38,9 @@ public abstract class SenescenceModel {
         case NEIGHBORHOOD_OCCUPANCY_FRACTION:
             return NOFSenescence.createGlobal();
 
+        case NONE:
+            return NoSenescence.INSTANCE;
+
         default:
             throw JamException.runtime("Unknown senescence model [%s].", modelType);
         }

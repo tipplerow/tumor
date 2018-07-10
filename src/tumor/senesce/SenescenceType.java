@@ -10,5 +10,10 @@ public enum SenescenceType {
      * lattice neighborhood exceeds a threshold fraction of the
      * total capacity.
      */
-    NEIGHBORHOOD_OCCUPANCY_FRACTION;
+    NEIGHBORHOOD_OCCUPANCY_FRACTION,
+
+    /**
+     * Cells always remain active.
+     */
+    NONE;
 }
