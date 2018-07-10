@@ -130,13 +130,13 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         // Locate the parent and choose a neighboring site at random
         // where a daughter cell will be placed...
         //
-        Coord parentCoord   = locateComponent(parent);
-        Coord neighborCoord = selectNeighbor(parentCoord);
+        Coord parentCoord    = locateComponent(parent);
+        Coord expansionCoord = selectExpansionSite(parentCoord);
 
         // The growth capacity depends on the availability of the
         // neighbor site...
         long growthCapacity =
-            lattice.isAvailable(neighborCoord) ? 1 : 0;
+            lattice.isAvailable(expansionCoord) ? 1 : 0;
 
         // Construct the appropriate local environment...
         TumorEnv localEnv = createLocalEnv(parent, parentCoord, growthCapacity);
@@ -156,7 +156,7 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
             removeComponent(parent, parentCoord);
 
             addComponent(daughters.get(0), parentCoord);
-            addComponent(daughters.get(1), neighborCoord);
+            addComponent(daughters.get(1), expansionCoord);
         }
         else if (parent.isDead()) {
             //

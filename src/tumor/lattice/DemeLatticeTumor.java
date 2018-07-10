@@ -83,7 +83,7 @@ public final class DemeLatticeTumor extends MultiCellularLatticeTumor<Deme> {
 
     @Override protected void advanceWithExpansion(Deme parent, Coord parentCoord, long parentFreeCapacity) {
         // Select a neighboring expansion site at random...
-        Coord expansionCoord = selectNeighbor(parentCoord);
+        Coord expansionCoord = selectExpansionSite(parentCoord);
 
         // Compute the total growth capacity...
         long growthCapacity = parentFreeCapacity + computeExpansionFreeCapacity(expansionCoord);
