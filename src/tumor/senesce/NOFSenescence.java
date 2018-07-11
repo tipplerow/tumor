@@ -3,9 +3,11 @@ package tumor.senesce;
 
 import jam.app.JamProperties;
 import jam.lattice.Coord;
+import jam.lattice.Neighborhood;
 import jam.math.DoubleRange;
 import jam.math.DoubleUtil;
 
+import tumor.capacity.CapacityModel;
 import tumor.carrier.TumorComponent;
 import tumor.lattice.LatticeTumor;
 
@@ -15,7 +17,14 @@ import tumor.lattice.LatticeTumor;
  * neighborhood exceeds a fraction of the capacity.
  */
 public final class NOFSenescence extends SenescenceModel {
+    private final Neighborhood neighborhood;
     private final double occupancyThreshold;
+
+    /**
+     * Name of the system property that defines the nearest neighbors
+     * on the lattice.
+     */
+    public static final String NEIGHBORHOOD_PROPERTY = "tumor.senesce.neighborhood";
 
     /**
      * Name of the system property that defines the occupancy fraction
@@ -31,12 +40,16 @@ public final class NOFSenescence extends SenescenceModel {
     /**
      * Creates a senescence model with a fixed occupancy threshold.
      *
+     * @param neighborhood the lattice neighborhood of available
+     * capacity.
+     *
      * @param occupancyThreshold the fixed occupancy threshold.
      *
      * @throws IllegalArgumentException unless the threshold is within
      * the valid range.
      */
-    public NOFSenescence(double occupancyThreshold) {
+    public NOFSenescence(Neighborhood neighborhood, double occupancyThreshold) {
+        this.neighborhood = neighborhood;
         this.occupancyThreshold = occupancyThreshold;
         THRESHOLD_RANGE.validate("Occupancy threshold", occupancyThreshold);
     }
@@ -47,7 +60,11 @@ public final class NOFSenescence extends SenescenceModel {
      * @return the global model defined by system properties.
      */
     public static NOFSenescence createGlobal() {
-        return new NOFSenescence(resolveOccupancyThreshold());
+        return new NOFSenescence(resolveNeighborhood(), resolveOccupancyThreshold());
+    }
+
+    private static Neighborhood resolveNeighborhood() {
+        return JamProperties.getRequiredEnum(NEIGHBORHOOD_PROPERTY, Neighborhood.class);
     }
 
     private static double resolveOccupancyThreshold() {
@@ -64,8 +81,8 @@ public final class NOFSenescence extends SenescenceModel {
         if (centerFraction < occupancyThreshold)
             return false;
 
-        long neighborCapacity = tumor.getNeighborhoodCapacity(coord);
-        long neighborOccupancy = tumor.getNeighborhoodOccupancy(coord);
+        long neighborCapacity = getNeighborhoodCapacity(coord);
+        long neighborOccupancy = getNeighborhoodOccupancy(tumor, coord);
 
         long totalCapacity  = centerCapacity  + neighborCapacity;
         long totalOccupancy = centerOccupancy + neighborOccupancy;
@@ -74,6 +91,19 @@ public final class NOFSenescence extends SenescenceModel {
         assert occupancyFraction <= 1.0;
 
         return occupancyFraction >= occupancyThreshold;
+    }
+
+    private long getNeighborhoodCapacity(Coord center) {
+        return CapacityModel.global().getNeighborhoodCapacity(center, neighborhood);
+    }
+
+    public long getNeighborhoodOccupancy(LatticeTumor<?> tumor, Coord center) {
+        long result = 0;
+
+        for (Coord coord : neighborhood.getNeighbors(center))
+            result += tumor.countCells(coord);
+
+        return result;
     }
 
     /**

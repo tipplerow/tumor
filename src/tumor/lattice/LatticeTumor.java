@@ -18,7 +18,6 @@ import jam.lattice.Coord;
 import jam.lattice.DistanceComparator;
 import jam.lattice.Lattice;
 import jam.lattice.LatticeView;
-import jam.lattice.Neighborhood;
 import jam.math.JamRandom;
 import jam.math.VectorMoment;
 import jam.util.CollectionUtil;
@@ -52,15 +51,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The underlying lattice of components.
      */
     protected final Lattice<E> lattice;
-
-    /**
-     * The nearest neighbors on the lattice.
-     */
-    protected final Neighborhood neighborhood = resolveNeighborhood();
-
-    private static Neighborhood resolveNeighborhood() {
-        return JamProperties.getRequiredEnum(NEIGHBORHOOD_PROPERTY, Neighborhood.class);
-    }
 
     /**
      * The local growth rate model.
@@ -146,12 +136,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The coordinate of the founding component.
      */
     public static final Coord FOUNDER_COORD = Coord.ORIGIN;
-
-    /**
-     * Name of the system property that defines the nearest neighbors
-     * on the lattice.
-     */
-    public static final String NEIGHBORHOOD_PROPERTY = "tumor.lattice.neighborhood";
 
     /**
      * Name of the system property that defines the edge length of the
@@ -450,61 +434,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public MutationGenerator getLocalMutationGenerator(TumorComponent component) {
         return MutationGenerator.global();
-    }
-
-    /**
-     * Returns the nearest-neighbor type.
-     *
-     * @return the nearest-neighbor type.
-     */
-    public Neighborhood getNeighborhood() {
-        return neighborhood;
-    }
-
-    /**
-     * Returns the total capacity of the neighbors surrounding a
-     * central lattice site (excluding the capacity of the site
-     * itself).
-     *
-     * @param center the central site in the neighborhood.
-     *
-     * @return the total capacity of the neighbors surrounding the
-     * given site.
-     */
-    public long getNeighborhoodCapacity(Coord center) {
-        return getCapacityModel().getNeighborhoodCapacity(center, neighborhood);
-    }
-
-    /**
-     * Returns the total number of cells occupying the neighboring
-     * sites around a central lattice site (excluding the occupancy
-     * of the site itself).
-     *
-     * @param center the central site in the neighborhood.
-     *
-     * @return the total occupancy of the neighbors surrounding the
-     * given site.
-     */
-    public long getNeighborhoodOccupancy(Coord center) {
-        long result = 0;
-
-        for (Coord coord : getNeighbors(center))
-            result += countCells(coord);
-
-        return result;
-    }
-
-    /**
-     * Returns the coordinates of the nearest neighbors to a given
-     * central site.
-     *
-     * @param center the site in the center of the neighborhood.
-     *
-     * @return the coordinates of the nearest neighbors to the
-     * central site.
-     */
-    public List<Coord> getNeighbors(Coord center) {
-        return neighborhood.getNeighbors(center);
     }
 
     /**

@@ -82,23 +82,11 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         TumorCell nextFounder = founders.get(index);
 
         while (true) {
-            Coord nextCoord = neighborhood.randomNeighbor(prevCoord, randomSource);
+            Coord nextCoord = selectExpansionSite(prevCoord);
 
             if (lattice.isAvailable(nextCoord))
                 return nextCoord;
         }
-        /*
-        // Shuffle the neighboring sites into a random order and place
-        // the next founder on the first available (empty) site...
-        List<Coord> neighbors = neighborhood.getNeighbors(prevCoord);
-        ListUtil.shuffle(neighbors, randomSource);
-
-        for (Coord neighbor : neighbors)
-            if (lattice.isAvailable(neighbor))
-                return neighbor;
-
-        throw new IllegalStateException("Could not place founder cell.");
-        */
     }
 
     @Override public long countCells() {
