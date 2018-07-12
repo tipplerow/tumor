@@ -162,7 +162,7 @@ public final class MetMutDistReport extends TumorReport {
     }
 
     @Override public void finalizeTrial() {
-        collectBulkSamples(bulkSampleSpace, bulkSampleSize);
+        bulkSamples = collectBulkSamples(bulkSampleSpace, bulkSampleSize);
         writeReportRecords();
     }
 
@@ -171,11 +171,16 @@ public final class MetMutDistReport extends TumorReport {
     }
 
     private void writeReportRecords() {
-        JamLogger.info("Writing metastasis mutational distance records...");
+        int recordIndex = 1;
+        int recordCount = metSamples.size() * bulkSamples.size();
 
-        for (MetSample metSample : metSamples)
-            for (BulkSample bulkSample : bulkSamples)
+        for (MetSample metSample : metSamples) {
+            for (BulkSample bulkSample : bulkSamples) {
+                JamLogger.info("Generating metastasis mutational distance record [%d] of [%d]...", recordIndex, recordCount);
                 reportWriter.write(MetMutDistRecord.compute(metSample, bulkSample));
+                ++recordIndex;
+            }
+        }
 
         reportWriter.flush();
     }

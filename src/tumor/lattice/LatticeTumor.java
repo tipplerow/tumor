@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
+
 import jam.app.JamProperties;
 import jam.dist.HypersphericalDistribution;
 import jam.lang.JamException;
@@ -261,25 +264,25 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * @throws IllegalArgumentException if the sample size exceeds the
      * number of cells in this tumor.
      */
-    public Set<E> collectBulkSample(Coord sampleSite, long targetSize) {
+    public Multimap<Coord, E> collectBulkSample(Coord sampleSite, long targetSize) {
         if (targetSize > countCells())
             throw new IllegalArgumentException("Target size exceeds tumor size.");
 
         List<Coord> occupiedCoord = new ArrayList<Coord>(getOccupiedCoord());
         Collections.sort(occupiedCoord, new DistanceComparator(sampleSite));
 
-        long   sampleSize = 0;
-        Set<E> sampleComp = new HashSet<E>();
+        long sampleSize = 0;
+        Multimap<Coord, E> sampleMap = LinkedHashMultimap.create();
 
         for (Coord coord : occupiedCoord) {
             Collection<E> occupants = lattice.viewOccupants(coord);
 
             for (E occupant : occupants) {
-                sampleComp.add(occupant);
+                sampleMap.put(coord, occupant);
                 sampleSize += occupant.countCells();
 
                 if (sampleSize >= targetSize)
-                    return sampleComp;
+                    return sampleMap;
             }
         }
 

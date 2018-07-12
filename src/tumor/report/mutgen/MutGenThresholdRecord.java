@@ -71,7 +71,7 @@ public final class MutGenThresholdRecord implements ReportRecord {
         int  maxMutationTime  = MutationGenerator.getMaxMutationTime();
         long maxMutationCount = MutationGenerator.getMaxMutationCount();
 
-        Coord sampleSite = bulkSample.getSampleSite();
+        Coord sampleSite = bulkSample.getCenterSite();
 
         int    mrcaMutCount = bulkSample.getAncestorGenotype().countAccumulatedMutations();
         double vafThreshold = MutGenThresholdReport.instance().getVAFThreshold();

@@ -33,6 +33,39 @@ public enum BulkSampleSpace {
                  VectorView.wrap( 0,  0, -1))),
 
     /**
+     * One sample from each direction vector in the Moore neighborhood
+     * (26 in total).
+     */
+    MOORE(List.of(VectorView.wrap( 0,  0, -1),
+                  VectorView.wrap( 0, -1,  0),
+                  VectorView.wrap(-1,  0,  0),
+                  VectorView.wrap( 0,  1,  0),
+                  VectorView.wrap( 1,  0,  0),
+                  VectorView.wrap( 0,  0,  1),
+
+                  VectorView.wrap( 0, -1, -1),
+                  VectorView.wrap(-1,  0, -1),
+                  VectorView.wrap( 0,  1, -1),
+                  VectorView.wrap( 1,  0, -1),
+                  VectorView.wrap(-1, -1,  0),
+                  VectorView.wrap(-1,  1,  0),
+                  VectorView.wrap( 1,  1,  0),
+                  VectorView.wrap( 1, -1,  0),
+                  VectorView.wrap( 0, -1,  1),
+                  VectorView.wrap(-1,  0,  1),
+                  VectorView.wrap( 0,  1,  1),
+                  VectorView.wrap( 1,  0,  1),
+
+                  VectorView.wrap(-1, -1, -1),
+                  VectorView.wrap(-1,  1, -1),
+                  VectorView.wrap( 1,  1, -1),
+                  VectorView.wrap( 1, -1, -1),
+                  VectorView.wrap(-1, -1,  1),
+                  VectorView.wrap(-1,  1,  1),
+                  VectorView.wrap( 1,  1,  1),
+                  VectorView.wrap( 1, -1,  1))),
+
+    /**
      * One sample from each three-dimensional octant (eight in total).
      */
     OCTANTS(List.of(VectorView.wrap( 1,  1,  1),

@@ -100,11 +100,10 @@ public final class MetMutDistRecord implements ReportRecord {
 
         double physicalDist =
             Math.sqrt(Coord.computeSquaredDistance(metSample.getSampleSite(),
-                                                   bulkSample.getSampleSite()));
+                                                   bulkSample.getCenterSite()));
 
         int metClonalMutCount  = metSample.getGenotype().countAccumulatedMutations();
-        //int bulkTotalMutCount  = bulkSample.getAggregateGenotype().countAccumulatedMutations();
-        int bulkTotalMutCount  = 0;
+        int bulkTotalMutCount  = bulkSample.getAggregateGenotype().countAccumulatedMutations();
         int bulkClonalMutCount = bulkSample.getAncestorGenotype().countAccumulatedMutations();
 
         Genotype ancestor = Genotype.ancestor(metSample.getGenotype(), bulkSample.getAncestorGenotype());

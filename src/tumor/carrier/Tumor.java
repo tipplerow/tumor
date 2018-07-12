@@ -201,7 +201,6 @@ public abstract class Tumor<E extends TumorComponent> extends Carrier {
     }
 
     private VectorMoment computeVectorMoment() {
-        JamLogger.info("Computing vector moment...");
         Multiset<Coord> coordCount = countCoords();
 
         if (coordCount.isEmpty())
