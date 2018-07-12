@@ -18,6 +18,7 @@ import tumor.driver.TumorDriver;
 import tumor.mutation.Genotype;
 import tumor.report.TumorReport;
 import tumor.report.bulk.BulkSample;
+import tumor.report.bulk.BulkSampleCollector;
 import tumor.report.bulk.BulkSampleSpace;
 
 /**
@@ -162,7 +163,7 @@ public final class MetMutDistReport extends TumorReport {
     }
 
     @Override public void finalizeTrial() {
-        bulkSamples = collectBulkSamples(bulkSampleSpace, bulkSampleSize);
+        bulkSamples = BulkSampleCollector.collect(bulkSampleSpace, bulkSampleSize);
         writeReportRecords();
     }
 

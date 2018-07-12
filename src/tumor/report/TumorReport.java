@@ -44,21 +44,6 @@ public abstract class TumorReport {
     public abstract void finalizeSimulation();
 
     /**
-     * Collects bulk samples from the primary tumor.
-     *
-     * @param sampleSpace the spatial distribution of the bulk samples.
-     *
-     * @param sampleSize the minumum number of tumor cells to include
-     * in each bulk sample.
-     *
-     * @return a list containing the bulk samples.
-     */
-    public List<BulkSample> collectBulkSamples(BulkSampleSpace sampleSpace, long sampleSize) {
-        JamLogger.info("Collecting [%d] bulk tumor samples...", sampleSpace.viewBasis().size());
-        return sampleSpace.collect(getLatticeTumor(), sampleSize);
-    }
-
-    /**
      * Returns the global driver application.
      *
      * @return the global driver application.

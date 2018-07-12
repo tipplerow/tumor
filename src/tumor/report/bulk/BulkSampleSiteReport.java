@@ -117,7 +117,8 @@ public final class BulkSampleSiteReport extends TumorReport {
     }
 
     private void writeSampleSiteRecords() {
-        Collection<BulkSample> bulkSamples = collectBulkSamples(sampleSpace, sampleSize);
+        Collection<BulkSample> bulkSamples =
+            BulkSampleCollector.collect(sampleSpace, sampleSize);
 
         for (BulkSample bulkSample : bulkSamples)
             reportWriter.write(BulkSampleSiteRecord.split(bulkSample));
