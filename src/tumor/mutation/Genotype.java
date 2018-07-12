@@ -346,12 +346,25 @@ public abstract class Genotype extends Ordinal {
      * {@code null} if this genotype is empty).
      */
     public Mutation getLatestMutation() {
-        Genotype genotype = this;
+        Mutation latest   = tryLatestOriginal(this);
+        Genotype nextGeno = this.parent;
 
-        while (genotype.original.isEmpty() && genotype.parent != null)
-            genotype = genotype.parent;
+        while (latest == null && nextGeno != null) {
+            latest   = tryLatestOriginal(nextGeno);
+            nextGeno = nextGeno.parent;
+        }
 
-        return ListUtil.last(genotype.original);
+        return latest;
+    }
+
+    private Mutation tryLatestOriginal(Genotype genotype) {
+        if (!genotype.original.isEmpty())
+            return ListUtil.last(genotype.original);
+
+        if (parent != null && !fromParentOriginal().isEmpty())
+            return ListUtil.last(fromParentOriginal());
+
+        return null;
     }
 
     /**
