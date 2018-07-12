@@ -5,6 +5,10 @@
 
 cd `dirname $0`
 
+./test-driver.sh BulkSampleSite/bulk-sample-site-test.prop bulk-sample-site.csv
+
+exit 0
+
 BASE_FILES="cell-count-traj.csv component-ancestry.csv.gz final-cell-count.csv"
 COORD_FILES="component-coord.csv.gz"
 MUTATION_FILES="accumulated-mutations.csv.gz original-mutations.csv.gz scalar-mutations.csv.gz"
@@ -16,6 +20,10 @@ MUTATION_FILES="accumulated-mutations.csv.gz original-mutations.csv.gz scalar-mu
 ./test-driver.sh driver/point/neutral/cell    $BASE_FILES $MUTATION_FILES || exit $?
 ./test-driver.sh driver/point/neutral/deme    $BASE_FILES $MUTATION_FILES || exit $?
 ./test-driver.sh driver/point/neutral/lineage $BASE_FILES $MUTATION_FILES || exit $?
+
+./test-driver.sh driver/lattice/neutral/cell    $BASE_FILES $COORD_FILES || exit $?
+./test-driver.sh driver/lattice/neutral/deme    $BASE_FILES $COORD_FILES || exit $?
+./test-driver.sh driver/lattice/neutral/lineage $BASE_FILES $COORD_FILES || exit $?
 
 ./test-driver.sh driver/lattice/perfect/cell    $BASE_FILES $COORD_FILES || exit $?
 ./test-driver.sh driver/lattice/perfect/deme    $BASE_FILES $COORD_FILES || exit $?
