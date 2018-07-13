@@ -24,7 +24,7 @@ public class GenotypeTest {
     private static final Mutation M5 = Mutation.neutral();
     private static final Mutation M6 = Mutation.neutral();
 
-    @Test public void testCommon() {
+    @Test public void testShared() {
         MutableGenotype founder = MutableGenotype.founder(M1, M2);
         MutableGenotype clone1  = founder.forClone();
 
@@ -34,15 +34,15 @@ public class GenotypeTest {
         MutableGenotype clone2 = founder.forClone();
         clone2.append(M5);
 
-        assertEquals(Set.of(M1, M2), Genotype.findCommon(List.of(clone1, clone2)));
-        assertEquals(Set.of(M1, M2), Genotype.findCommon(List.of(clone2, clone1)));
+        assertEquals(Set.of(M1, M2), Genotype.findShared(List.of(clone1, clone2)));
+        assertEquals(Set.of(M1, M2), Genotype.findShared(List.of(clone2, clone1)));
 
-        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(founder, clone1, clone2)));
-        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(founder, clone2, clone1)));
-        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(clone1, founder, clone2)));
-        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(clone1, clone2, founder)));
-        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(clone2, founder, clone1)));
-        assertEquals(Set.of(M1, M2, M3), Genotype.findCommon(List.of(clone2, clone1, founder)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findShared(List.of(founder, clone1, clone2)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findShared(List.of(founder, clone2, clone1)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findShared(List.of(clone1, founder, clone2)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findShared(List.of(clone1, clone2, founder)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findShared(List.of(clone2, founder, clone1)));
+        assertEquals(Set.of(M1, M2, M3), Genotype.findShared(List.of(clone2, clone1, founder)));
     }
 
     @Test public void testUnique() {

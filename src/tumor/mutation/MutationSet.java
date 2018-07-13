@@ -3,13 +3,14 @@ package tumor.mutation;
 
 import java.util.AbstractSet;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
 
 import jam.util.ReadOnlyIterator;
-import jam.util.SetUtil;
 
 /**
  * Maintains an immutable set of mutations with no specific ordering.
@@ -46,14 +47,45 @@ public final class MutationSet extends AbstractSet<Mutation> {
     }
 
     /**
-     * Wraps a collection of mutations in a {@code MutationSet}.
+     * Collects mutations into a {@code MutationSet}.
      *
      * @param mutations the mutations that have occurred.
      *
      * @return a mutation set containing the specified mutations.
      */
     public static MutationSet create(Collection<Mutation> mutations) {
-        return new MutationSet(SetUtil.fixed(mutations));
+        return wrap(new HashSet<Mutation>(mutations));
+    }
+
+    /**
+     * Collects mutations into a {@code MutationSet}.
+     *
+     * @param iterator an iterator over a collection of mutations.
+     *
+     * @return a mutation set containing the mutations returned by
+     * the iterator.
+     */
+    public static MutationSet create(Iterator<Mutation> iterator) {
+        Set<Mutation> mutations = new HashSet<Mutation>();
+
+        while (iterator.hasNext())
+            mutations.add(iterator.next());
+
+        return wrap(mutations);
+    }
+
+    /**
+     * Wraps an existing set of mutations in a {@code MutationSet}.
+     *
+     * <p><em>The caller transfers ownership of the input set to the
+     * new instance.</em>
+     *
+     * @param mutations the mutations that have occurred.
+     *
+     * @return a mutation set containing the specified mutations.
+     */
+    public static MutationSet wrap(Set<Mutation> mutations) {
+        return new MutationSet(Collections.unmodifiableSet(mutations));
     }
 
     /**
@@ -114,25 +146,7 @@ public final class MutationSet extends AbstractSet<Mutation> {
      * @return the mutational distance between the two sets.
      */
     public int distance(MutationSet set1, MutationSet set2) {
-        //
-        // Explicitly iterating may be more efficient than the concise
-        // expression:
-        //
-        //     set1.size() + set2.size() - 2 * intersection(set1, set2).size()
-        //
-        // because we do not require the intersection to be created.
-        //
-        int result = 0;
-
-        for (Mutation mutation : set1)
-            if (!set2.contains(mutation))
-                ++result;
-
-        for (Mutation mutation : set2)
-            if (!set1.contains(mutation))
-                ++result;
-
-        return result;
+        return MutationalDistance.compute(set1, set2).intDistance();
     }
 
     /**

@@ -7,7 +7,7 @@ import jam.sim.StepRecord;
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.lattice.LatticeTumor;
-import tumor.mutation.Genotype;
+import tumor.mutation.MutationSet;
 
 /**
  * Represents a single metastasis seed sampled from a growing tumor.
@@ -15,14 +15,14 @@ import tumor.mutation.Genotype;
 public final class MetSample extends StepRecord {
     private final long tumorSize;
     private final Coord sampleSite;
-    private final Genotype genotype;
+    private final MutationSet mutationSet;
 
-    private MetSample(int trialIndex, int timeStep, long tumorSize, Coord sampleSite, Genotype genotype) {
+    private MetSample(int trialIndex, int timeStep, long tumorSize, Coord sampleSite, MutationSet mutationSet) {
         super(trialIndex, timeStep);
 
-        this.genotype   = genotype;
-        this.tumorSize  = tumorSize;
-        this.sampleSite = sampleSite;
+        this.tumorSize   = tumorSize;
+        this.sampleSite  = sampleSite;
+        this.mutationSet = mutationSet;
     }
 
     /**
@@ -42,10 +42,10 @@ public final class MetSample extends StepRecord {
 
         // We must clone the genotype from the sampled component,
         // because it will continue to evolve...
-        TumorComponent sampleMet  = tumor.collectSingleSample(sampleSite);
-        Genotype       sampleGeno = sampleMet.getGenotype().forClone();
+        TumorComponent sampleMet   = tumor.collectSingleSample(sampleSite);
+        MutationSet    mutationSet = MutationSet.create(sampleMet.getGenotype().scanAccumulatedMutations());
 
-        return new MetSample(trialIndex, timeStep, tumorSize, sampleSite, sampleGeno);
+        return new MetSample(trialIndex, timeStep, tumorSize, sampleSite, mutationSet);
     }
 
     /**
@@ -80,11 +80,13 @@ public final class MetSample extends StepRecord {
     }
 
     /**
-     * Returns the genotype of the metastatic tumor component.
+     * Returns the mutations that accumulated in the metastatic tumor
+     * component.
      *
-     * @return the genotype of the metastatic tumor component.
+     * @return the mutations that accumulated in the metastatic tumor
+     * component.
      */
-    public Genotype getGenotype() {
-        return genotype;
+    public MutationSet getMutationSet() {
+        return mutationSet;
     }
 }

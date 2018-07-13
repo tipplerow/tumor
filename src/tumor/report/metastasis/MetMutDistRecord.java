@@ -1,11 +1,9 @@
 
 package tumor.report.metastasis;
 
-import jam.lattice.Coord;
-import jam.math.DoubleUtil;
 import jam.report.ReportRecord;
 
-import tumor.mutation.Genotype;
+import tumor.mutation.MutationalDistance;
 import tumor.report.bulk.BulkSample;
 
 /**
@@ -14,69 +12,58 @@ import tumor.report.bulk.BulkSample;
  */
 public final class MetMutDistRecord implements ReportRecord {
     // The time of dissemination...
-    private final int dissemTime;
-
-    // The time when the last mutation arose in the metastasis seed...
-    private final int metLastMutTime;
+    private final int disseminationTime;
 
     // The size of the primary tumor at the time of dissemination...
-    private final long dissemSize;
+    private final long disseminationSize;
 
     // The time of bulk sampling in the primary tumor...
     private final int bulkSamplingTime;
 
-    // The time when the last mutation arose in the common ancestor
-    // from the bulk sample...
-    private final int bulkLastMutTime;
-
     // The size of the primary tumor at the time of bulk sampling...
     private final long primaryTumorSize;
 
-    // The physical distance between the site of dissemination and the
-    // central surface site of the bulk sample (in lattice units)...
-    private final double physicalDist;
-
     // Number of clonal mutations in the metastatis...
-    private final int metClonalMutCount;
+    private final long metClonalMutCount;
 
     // Total number of unique mutations in the primary bulk sample...
-    private final int bulkTotalMutCount;
+    private final long bulkTotalMutCount;
 
     // Number of clonal mutations in the primary bulk sample...
-    private final int bulkClonalMutCount;
+    private final long bulkClonalMutCount;
 
     // Number of mutations shared between the metastasis and bulk
     // sample...
-    private final int sharedMutCount;
+    private final long sharedMutCount;
 
-    // Fractional overlap between the metastasis and primary tumor:
-    // sharedMutCount / min(metClonalMutCount, bulkClonalMutCount)
-    private final double overlapFrac;
+    // Integral mutational distance between the metastasis and primary
+    // tumor...
+    private final int intMutDistance;
 
-    private MetMutDistRecord(int    dissemTime,
-                             int    metLastMutTime,
-                             long   dissemSize,
+    // Fractional mutational distance between the metastasis and
+    // primary tumor...
+    private final double fracMutDistance;
+
+    private MetMutDistRecord(int    disseminationTime,
+                             long   disseminationSize,
                              int    bulkSamplingTime,
-                             int    bulkLastMutTime,
                              long   primaryTumorSize,
-                             double physicalDist,
-                             int    metClonalMutCount,
-                             int    bulkTotalMutCount,
-                             int    bulkClonalMutCount,
-                             int    sharedMutCount,
-                             double overlapFrac) {
-        this.dissemTime         = dissemTime;
-        this.metLastMutTime     = metLastMutTime;
-        this.dissemSize         = dissemSize;
+                             long   metClonalMutCount,
+                             long   bulkTotalMutCount,
+                             long   bulkClonalMutCount,
+                             long   sharedMutCount,
+                             int    intMutDistance,
+                             double fracMutDistance) {
+        this.disseminationTime  = disseminationTime;
+        this.disseminationSize  = disseminationSize;
         this.bulkSamplingTime   = bulkSamplingTime;
-        this.bulkLastMutTime    = bulkLastMutTime;
         this.primaryTumorSize   = primaryTumorSize;
-        this.physicalDist       = physicalDist;
         this.metClonalMutCount  = metClonalMutCount;
         this.bulkTotalMutCount  = bulkTotalMutCount;
         this.bulkClonalMutCount = bulkClonalMutCount;
         this.sharedMutCount     = sharedMutCount;
-        this.overlapFrac        = overlapFrac;
+        this.intMutDistance     = intMutDistance;
+        this.fracMutDistance    = fracMutDistance;
     }
 
     /**
@@ -90,55 +77,48 @@ public final class MetMutDistRecord implements ReportRecord {
      * @return the mutation distance record for the two samples.
      */
     public static MetMutDistRecord compute(MetSample metSample, BulkSample bulkSample) {
-        int  dissemTime     = metSample.getDisseminationTime();
-        int  metLastMutTime = metSample.getGenotype().getLatestMutation().getOriginationTime();
-        long dissemSize     = metSample.getTumorSize();
+        int  disseminationTime = metSample.getDisseminationTime();
+        long disseminationSize = metSample.getTumorSize();
 
         int  bulkSamplingTime = bulkSample.getCollectionTime();
-        int  bulkLastMutTime  = bulkSample.getAncestorGenotype().getLatestMutation().getOriginationTime();
         long primaryTumorSize = bulkSample.getTumorSize();
 
-        double physicalDist =
-            Math.sqrt(Coord.computeSquaredDistance(metSample.getSampleSite(),
-                                                   bulkSample.getCenterSite()));
+        long metClonalMutCount  = metSample.getMutationSet().size();
+        long bulkTotalMutCount  = bulkSample.getUniqueMutations().size();
+        long bulkClonalMutCount = bulkSample.getSharedMutations().size();
 
-        int metClonalMutCount  = metSample.getGenotype().countAccumulatedMutations();
-        int bulkTotalMutCount  = bulkSample.getAggregateGenotype().countAccumulatedMutations();
-        int bulkClonalMutCount = bulkSample.getAncestorGenotype().countAccumulatedMutations();
+        MutationalDistance mutDist =
+            MutationalDistance.compute(metSample.getMutationSet(),
+                                       bulkSample.getSharedMutations());
 
-        Genotype ancestor = Genotype.ancestor(metSample.getGenotype(), bulkSample.getAncestorGenotype());
-        int sharedMutCount = ancestor.countAccumulatedMutations();
+        long   sharedMutCount  = mutDist.countShared();
+        int    intMutDistance  = mutDist.intDistance();
+        double fracMutDistance = mutDist.fracDistance();
 
-        double overlapFrac = DoubleUtil.ratio(sharedMutCount, Math.min(metClonalMutCount, bulkClonalMutCount));
-
-        return new MetMutDistRecord(dissemTime,
-                                    metLastMutTime,
-                                    dissemSize,
+        return new MetMutDistRecord(disseminationTime,
+                                    disseminationSize,
                                     bulkSamplingTime,
-                                    bulkLastMutTime,
                                     primaryTumorSize,
-                                    physicalDist,
                                     metClonalMutCount,
                                     bulkTotalMutCount,
                                     bulkClonalMutCount,
                                     sharedMutCount,
-                                    overlapFrac);
+                                    intMutDistance,
+                                    fracMutDistance);
     }
 
     @Override public String formatLine() {
-        return String.format("%d,%d,%d,%d,%d,%d,%.2f,%d,%d,%d,%d,%.4f",
-                             dissemTime,
-                             metLastMutTime,
-                             dissemSize,
+        return String.format("%d,%d,%d,%d,%d,%d,%d,%d,%d,%.8f",
+                             disseminationTime,
+                             disseminationSize,
                              bulkSamplingTime,
-                             bulkLastMutTime,
                              primaryTumorSize,
-                             physicalDist,
                              metClonalMutCount,
                              bulkTotalMutCount,
                              bulkClonalMutCount,
                              sharedMutCount,
-                             overlapFrac);
+                             intMutDistance,
+                             fracMutDistance);
     }
 
     @Override public String getBaseName() {
@@ -146,17 +126,15 @@ public final class MetMutDistRecord implements ReportRecord {
     }
 
     @Override public String getHeaderLine() {
-        return "dissemTime"
-            + ",metLastMutTime"
-            + ",dissemSize"
+        return "disseminationTime"
+            + ",disseminationSize"
             + ",bulkSamplingTime"
-            + ",bulkLastMutTime"
             + ",primaryTumorSize"
-            + ",physicalDist"
             + ",metClonalMutCount"
             + ",bulkTotalMutCount"
             + ",bulkClonalMutCount"
             + ",sharedMutCount"
-            + ",overlapFrac";
+            + ",intMutDistance"
+            + ",fracMutDistance";
     }
 }

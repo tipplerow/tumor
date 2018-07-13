@@ -19,6 +19,7 @@ import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.lattice.LatticeTumor;
 import tumor.mutation.Genotype;
+import tumor.mutation.MutationSet;
 import tumor.report.vaf.VAF;
 
 /**
@@ -38,12 +39,13 @@ public final class BulkSample extends Ordinal {
     // Total number of cells, computed on demand...
     private long cellCount = -1;
 
-    // The common ancestral genotype, computed on demand...
-    private Genotype ancestorGenotype = null;
+    // Mutations in the most recent common ancestor (MRCA), shared by
+    // every component in this sample, computed on demand...
+    private MutationSet sharedMutations = null;
 
-    // The aggregate genotype containing all unique mutations,
-    // computed on demand...
-    private Genotype aggregateGenotype = null;
+    // All unique (distinct) mutations found among all components in
+    // this sample, computed on demand...
+    private MutationSet uniqueMutations = null;
 
     // Variant allele frequency distribution, computed on demand...
     private VAF vaf = null;
@@ -111,31 +113,29 @@ public final class BulkSample extends Ordinal {
     }
 
     /**
-     * Returns the aggregate genotype containing every unique mutation
-     * in this sample.
+     * Returns the mutations contained in the most recent common
+     * ancestor (MRCA), shared by every component in this sample.
      *
-     * @return the aggregate genotype containing every unique mutation
-     * in this sample.
+     * @return the mutations contained in the most recent common
+     * ancestor (MRCA), shared by every component in this sample.
      */
-    public Genotype getAggregateGenotype() {
-        if (aggregateGenotype == null)
-            aggregateGenotype = Genotype.aggregate(TumorComponent.getGenotypes(componentSet));
+    public MutationSet getSharedMutations() {
+        if (sharedMutations == null)
+            sharedMutations = Genotype.findShared(TumorComponent.getGenotypes(componentSet));
 
-        return aggregateGenotype;
+        return sharedMutations;
     }
 
     /**
-     * Returns the ancestral genotype with mutations shared by every
-     * component in this sample.
+     * Returns all unique (distinct) mutations in this sample.
      *
-     * @return the ancestral genotype with mutations shared by every
-     * component in this sample.
+     * @return all unique (distinct) mutations in this sample.
      */
-    public Genotype getAncestorGenotype() {
-        if (ancestorGenotype == null)
-            ancestorGenotype = Genotype.ancestor(TumorComponent.getGenotypes(componentSet));
+    public MutationSet getUniqueMutations() {
+        if (uniqueMutations == null)
+            uniqueMutations = Genotype.findUnique(TumorComponent.getGenotypes(componentSet));
 
-        return ancestorGenotype;
+        return uniqueMutations;
     }
 
     /**

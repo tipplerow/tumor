@@ -94,80 +94,6 @@ public abstract class Genotype extends Ordinal {
     protected abstract List<Mutation> fromParentOriginal();
 
     /**
-     * Assembles the aggregate genotype containing every unique
-     * mutation from a group of genotypes.
-     *
-     * @param genotypes the genotypes to analyze.
-     *
-     * @return a new {@code FixedGenotype} containing every unique
-     * mutation from the input genotypes; the mutations are classified
-     * as original mutations in the aggregate and it has no original
-     * mutations.
-     */
-    public static Genotype aggregate(Genotype... genotypes) {
-        return aggregate(Set.of(genotypes));
-    }
-
-    /**
-     * Assembles the aggregate genotype containing every unique
-     * mutation from a group of genotypes.
-     *
-     * @param genotypes the genotypes to analyze.
-     *
-     * @return a new {@code FixedGenotype} containing every unique
-     * mutation from the input genotypes; the mutations are classified
-     * as original mutations in the aggregate and it has no original
-     * mutations.
-     */
-    public static Genotype aggregate(Set<Genotype> genotypes) {
-        //
-        // Sort the mutations by their ordinal index, which should
-        // reflect the temporal order of appearance...
-        //
-        List<Mutation> mutations = new ArrayList<Mutation>(findUnique(genotypes));
-        Collections.sort(mutations);
-
-        return FixedGenotype.founder(mutations);
-    }
-
-    /**
-     * Finds the ancestral genotype containing all mutations that are
-     * shared by all genotypes in a group.
-     *
-     * @param genotypes the genotypes to analyze.
-     *
-     * @return a new {@code FixedGenotype} containing mutations that
-     * are shared by every input genotype; those common mutations are
-     * classified as original mutations in the ancestor and it has no
-     * original mutations.
-     */
-    public static Genotype ancestor(Genotype... genotypes) {
-        return ancestor(Set.of(genotypes));
-    }
-
-    /**
-     * Finds the ancestral genotype containing all mutations that are
-     * shared by all genotypes in a collection.
-     *
-     * @param genotypes the genotypes to analyze.
-     *
-     * @return a new {@code FixedGenotype} containing mutations that
-     * are shared by every input genotype; those common mutations are
-     * classified as original mutations in the ancestor and it has no
-     * original mutations.
-     */
-    public static Genotype ancestor(Set<Genotype> genotypes) {
-        //
-        // Sort the mutations by their ordinal index, which should
-        // reflect the temporal order of appearance...
-        //
-        List<Mutation> mutations = new ArrayList<Mutation>(findCommon(genotypes));
-        Collections.sort(mutations);
-
-        return FixedGenotype.founder(mutations);
-    }
-
-    /**
      * Counts the number of times each mutation occurs in a collection
      * of genotypes.
      *
@@ -196,8 +122,8 @@ public abstract class Genotype extends Ordinal {
      * @return a new set containing the mutations that are shared
      * by all of the genotypes in the input collection.
      */
-    public static Set<Mutation> findCommon(Collection<? extends Genotype> genotypes) {
-        Collection<Genotype> contributors    = findCommonContributors(genotypes);
+    public static MutationSet findShared(Collection<? extends Genotype> genotypes) {
+        Collection<Genotype> contributors    = findSharedContributors(genotypes);
         Multiset<Mutation>   mutationCounts  = count(contributors);
         Set<Mutation>        commonMutations = new HashSet<Mutation>();
 
@@ -205,10 +131,10 @@ public abstract class Genotype extends Ordinal {
             if (mutationCounts.count(mutation) == contributors.size())
                 commonMutations.add(mutation);
 
-        return commonMutations;
+        return MutationSet.wrap(commonMutations);
     }
 
-    private static Collection<Genotype> findCommonContributors(Collection<? extends Genotype> genotypes) {
+    private static Collection<Genotype> findSharedContributors(Collection<? extends Genotype> genotypes) {
         //
         // An important performance enhancement: a genotype whose
         // parent is also in the input set cannot contribute any
@@ -229,14 +155,15 @@ public abstract class Genotype extends Ordinal {
     }
 
     /**
-     * Assembles every unique mutation from a collection of genotypes.
+     * Assembles every unique (distinct) mutation from a collection of
+     * genotypes.
      *
      * @param genotypes the genotypes to analyze.
      *
-     * @return a new set containing every unique mutation present in
-     * the input collection of genotypes.
+     * @return a new set containing every unique mutation present at
+     * least once in the input collection of genotypes.
      */
-    public static Set<Mutation> findUnique(Collection<? extends Genotype> genotypes) {
+    public static MutationSet findUnique(Collection<? extends Genotype> genotypes) {
         //
         // An important performance enhancement: a genotype whose
         // parent is also in the input set can only contribute its
@@ -259,7 +186,7 @@ public abstract class Genotype extends Ordinal {
                 CollectionUtil.addAll(uniqueMutations, genotype.scanAccumulatedMutations());
         }
 
-        return uniqueMutations;
+        return MutationSet.wrap(uniqueMutations);
     }
 
     /**

@@ -27,14 +27,20 @@ public final class MutGenThresholdRecord implements ReportRecord {
     // Bulk sample location...
     private final Coord sampleSite;
 
-    // Number of mutations in the MRCA...
-    private final int mrcaMutCount;
+    // Total number of unique mutations...
+    private final long uniqueCount;
+
+    // Number of clonal mutations...
+    private final long clonalCount;
+
+    // Fraction of mutations that are clonal...
+    private final double clonalFrac;
 
     // Fractional threshold for VAF reporting...
     private final double vafThreshold;
 
     // Number of mutations present above the VAF threshold...
-    private final int aboveThresholdCount;
+    private final long aboveThresholdCount;
 
     // Fraction of mutations present above the VAF threshold...
     private final double aboveThresholdFrac;
@@ -42,9 +48,11 @@ public final class MutGenThresholdRecord implements ReportRecord {
     private MutGenThresholdRecord(int    maxMutationTime,
                                   long   maxMutationCount,
                                   Coord  sampleSite,
-                                  int    mrcaMutCount,
+                                  long   uniqueCount,
+                                  long   clonalCount,
+                                  double clonalFrac,
                                   double vafThreshold,
-                                  int    aboveThresholdCount,
+                                  long   aboveThresholdCount,
                                   double aboveThresholdFrac) {
         this.trialIndex = TumorDriver.global().getTrialIndex();
 
@@ -52,7 +60,9 @@ public final class MutGenThresholdRecord implements ReportRecord {
         this.maxMutationCount = maxMutationCount;
 
         this.sampleSite   = sampleSite;
-        this.mrcaMutCount = mrcaMutCount;
+        this.uniqueCount  = uniqueCount;
+        this.clonalCount  = clonalCount;
+        this.clonalFrac   = clonalFrac;
         this.vafThreshold = vafThreshold;
 
         this.aboveThresholdCount = aboveThresholdCount;
@@ -73,32 +83,38 @@ public final class MutGenThresholdRecord implements ReportRecord {
 
         Coord sampleSite = bulkSample.getCenterSite();
 
-        int    mrcaMutCount = bulkSample.getAncestorGenotype().countAccumulatedMutations();
-        double vafThreshold = MutGenThresholdReport.instance().getVAFThreshold();
-
         VAF vaf = bulkSample.getVAF();
 
-        double aboveThresholdFrac  = vaf.computeFractionAbove(vafThreshold);
-        int    aboveThresholdCount = (int) (aboveThresholdFrac * vaf.countMutations());
+        long   uniqueCount  = vaf.countMutations();
+        long   clonalCount  = vaf.countClonal();
+        double clonalFrac   = DoubleUtil.ratio(clonalCount, uniqueCount);
+        double vafThreshold = MutGenThresholdReport.instance().getVAFThreshold();
+
+        long   aboveThresholdCount = vaf.countAbove(vafThreshold);
+        double aboveThresholdFrac  = DoubleUtil.ratio(aboveThresholdCount, uniqueCount);
 
         return new MutGenThresholdRecord(maxMutationTime,
                                          maxMutationCount,
                                          sampleSite,
-                                         mrcaMutCount,
+                                         uniqueCount,
+                                         clonalCount,
+                                         clonalFrac,
                                          vafThreshold,
                                          aboveThresholdCount,
                                          aboveThresholdFrac);
         }
 
     @Override public String formatLine() {
-        return String.format("%d,%d,%d,%d,%d,%d,%d,%.2f,%d,%.4f",
+        return String.format("%d,%d,%d,%d,%d,%d,%d,%d,%.4g,%.2f,%d,%.4f",
                              trialIndex,
                              maxMutationTime,
                              maxMutationCount,
                              sampleSite.x,
                              sampleSite.y,
                              sampleSite.z,
-                             mrcaMutCount,
+                             uniqueCount,
+                             clonalCount,
+                             clonalFrac,
                              vafThreshold,
                              aboveThresholdCount,
                              aboveThresholdFrac);
@@ -115,7 +131,9 @@ public final class MutGenThresholdRecord implements ReportRecord {
             + ",sampleSiteX"
             + ",sampleSiteY"
             + ",sampleSiteZ"
-            + ",mrcaMutCount"
+            + ",uniqueCount"
+            + ",clonalCount"
+            + ",clonalFrac"
             + ",vafThreshold"
             + ",aboveThresholdCount"
             + ",aboveThresholdFrac";

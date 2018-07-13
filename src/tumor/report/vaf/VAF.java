@@ -87,13 +87,7 @@ public final class VAF {
      * @return the fraction of mutations above a threshold frequency.
      */
     public double computeFractionAbove(double threshold) {
-        long numberAbove = 0;
-
-        for (double frequency : map.values())
-            if (frequency > threshold)
-                ++numberAbove;
-
-        return DoubleUtil.ratio(numberAbove, map.size());
+        return DoubleUtil.ratio(countAbove(threshold), map.size());
     }
 
     /**
@@ -104,19 +98,57 @@ public final class VAF {
      * @return the fraction of mutations below a threshold frequency.
      */
     public double computeFractionBelow(double threshold) {
-        long numberBelow = 0;
-
-        for (double frequency : map.values())
-            if (frequency < threshold)
-                ++numberBelow;
-
-        return DoubleUtil.ratio(numberBelow, map.size());
+        return DoubleUtil.ratio(countBelow(threshold), map.size());
     }
 
     /**
-     * Returns the number of the mutations in this VAF.
+     * Counts the number of mutations above a threshold frequency.
      *
-     * @return the number of the mutations in this VAF.
+     * @param threshold the threshold frequency.
+     *
+     * @return the number of mutations above the specified frequency.
+     */
+    public long countAbove(double threshold) {
+        long count = 0;
+
+        for (double frequency : map.values())
+            if (frequency > threshold)
+                ++count;
+
+        return count;
+    }
+
+    /**
+     * Counts the number of mutations below a threshold frequency.
+     *
+     * @param threshold the threshold frequency.
+     *
+     * @return the number of mutations below the specified frequency.
+     */
+    public long countBelow(double threshold) {
+        long count = 0;
+
+        for (double frequency : map.values())
+            if (frequency < threshold)
+                ++count;
+
+        return count;
+    }
+
+    /**
+     * Returns the number of clonal mutations in this VAF (present in
+     * every component).
+     *
+     * @return the number of clonal mutations in this VAF.
+     */
+    public long countClonal() {
+        return countAbove(0.999999999999);
+    }
+
+    /**
+     * Returns the total number of the mutations in this VAF.
+     *
+     * @return the total number of the mutations in this VAF.
      */
     public long countMutations() {
         return map.size();
