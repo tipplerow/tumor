@@ -28,12 +28,12 @@ public final class MutationSet extends AbstractSet<Mutation> {
     /**
      * The single globally-sharable empty mutation set.
      */
-    public static final MutationSet EMPTY = create();
+    public static final MutationSet EMPTY = of();
 
     /**
      * The mutations responsible for transformation to malignancy.
      */
-    public static final MutationSet TRANSFORMERS = create(Mutation.TRANSFORMER);
+    public static final MutationSet TRANSFORMERS = of(Mutation.TRANSFORMER);
 
     /**
      * Wraps a sequence of mutations in a {@code MutationSet}.
@@ -42,7 +42,7 @@ public final class MutationSet extends AbstractSet<Mutation> {
      *
      * @return a mutation set containing the specified mutations.
      */
-    public static MutationSet create(Mutation... mutations) {
+    public static MutationSet of(Mutation... mutations) {
         return new MutationSet(Set.of(mutations));
     }
 

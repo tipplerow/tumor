@@ -13,76 +13,76 @@ public class MutationSetTest {
         TumorDriver.junit();
     }
 
-    private static final Mutation neutral1 = Mutation.neutral();
-    private static final Mutation neutral2 = Mutation.neutral();
-    private static final Mutation neutral3 = Mutation.neutral();
-    private static final Mutation neutral4 = Mutation.neutral();
-    private static final Mutation neutral5 = Mutation.neutral();
+    private static final Mutation M1 = Mutation.neutral();
+    private static final Mutation M2 = Mutation.neutral();
+    private static final Mutation M3 = Mutation.neutral();
+    private static final Mutation M4 = Mutation.neutral();
+    private static final Mutation M5 = Mutation.neutral();
 
     private static final MutationSet founderSet = 
-        MutationSet.create(neutral1, neutral2, neutral3);
+        MutationSet.of(M1, M2, M3);
 
     @Test(expected = UnsupportedOperationException.class) 
     public void testAdd() {
-        MutationSet set = MutationSet.create(neutral1);
-        set.add(neutral2);
+        MutationSet set = MutationSet.of(M1);
+        set.add(M2);
     }
 
     @Test public void testContains() {
-        assertFalse(MutationSet.EMPTY.contains(neutral1));
+        assertFalse(MutationSet.EMPTY.contains(M1));
 
-        assertTrue(founderSet.contains(neutral1));
-        assertTrue(founderSet.contains(neutral2));
-        assertTrue(founderSet.contains(neutral3));
-        assertFalse(founderSet.contains(neutral4));
+        assertTrue(founderSet.contains(M1));
+        assertTrue(founderSet.contains(M2));
+        assertTrue(founderSet.contains(M3));
+        assertFalse(founderSet.contains(M4));
     }
 
     @Test public void testDifference() {
-        MutationSet set1 = MutationSet.create(neutral1, neutral2, neutral3, neutral4);
-        MutationSet set2 = MutationSet.create(neutral3, neutral4, neutral5);
-        MutationSet set3 = MutationSet.create(neutral1, neutral2);
-        MutationSet set4 = MutationSet.create(neutral5);
+        MutationSet set1 = MutationSet.of(M1, M2, M3, M4);
+        MutationSet set2 = MutationSet.of(M3, M4, M5);
+        MutationSet set3 = MutationSet.of(M1, M2);
+        MutationSet set4 = MutationSet.of(M5);
 
         assertEquals(set3, set1.difference(set2));
         assertEquals(set4, set2.difference(set1));
     }
 
     @Test public void testDistance() {
-        MutationSet set1 = MutationSet.create(neutral1, neutral2);
+        MutationSet set1 = MutationSet.of(M1, M2);
 
-        assertEquals(2, set1.distance(MutationSet.create()));
-        assertEquals(1, set1.distance(MutationSet.create(neutral1)));
-        assertEquals(1, set1.distance(MutationSet.create(neutral2)));
-        assertEquals(0, set1.distance(MutationSet.create(neutral1, neutral2)));
-        assertEquals(1, set1.distance(MutationSet.create(neutral1, neutral2, neutral3)));
-        assertEquals(2, set1.distance(MutationSet.create(neutral1, neutral2, neutral3, neutral4)));
-        assertEquals(3, set1.distance(MutationSet.create(neutral1, neutral2, neutral3, neutral4, neutral5)));
+        assertEquals(2, set1.distance(MutationSet.of()));
+        assertEquals(1, set1.distance(MutationSet.of(M1)));
+        assertEquals(1, set1.distance(MutationSet.of(M2)));
+        assertEquals(0, set1.distance(MutationSet.of(M1, M2)));
+        assertEquals(1, set1.distance(MutationSet.of(M1, M2, M3)));
+        assertEquals(2, set1.distance(MutationSet.of(M1, M2, M3, M4)));
+        assertEquals(3, set1.distance(MutationSet.of(M1, M2, M3, M4, M5)));
 
-        assertEquals(3, MutationSet.create(neutral1, neutral2, neutral3, neutral4, neutral5).distance(set1));
+        assertEquals(3, MutationSet.of(M1, M2, M3, M4, M5).distance(set1));
     }
 
     @Test public void testEquals() {
-        MutationSet set1 = MutationSet.create(neutral1, neutral2, neutral3);
-        MutationSet set2 = MutationSet.create(neutral1, neutral2, neutral3);
-        MutationSet set3 = MutationSet.create(neutral1, neutral3, neutral2);
+        MutationSet set1 = MutationSet.of(M1, M2, M3);
+        MutationSet set2 = MutationSet.of(M1, M2, M3);
+        MutationSet set3 = MutationSet.of(M1, M3, M2);
 
         assertTrue(set1.equals(set2));
         assertTrue(set1.equals(set3));
     }
 
     @Test public void testHashCode() {
-        MutationSet set1 = MutationSet.create(neutral1, neutral2, neutral3);
-        MutationSet set2 = MutationSet.create(neutral1, neutral2, neutral3);
-        MutationSet set3 = MutationSet.create(neutral1, neutral3, neutral2);
+        MutationSet set1 = MutationSet.of(M1, M2, M3);
+        MutationSet set2 = MutationSet.of(M1, M2, M3);
+        MutationSet set3 = MutationSet.of(M1, M3, M2);
 
         assertTrue(set1.hashCode() == set2.hashCode());
         assertTrue(set1.hashCode() == set3.hashCode());
     }
 
     @Test public void testIntersection() {
-        MutationSet set1 = MutationSet.create(neutral1, neutral2, neutral3, neutral4);
-        MutationSet set2 = MutationSet.create(neutral3, neutral4, neutral5);
-        MutationSet set3 = MutationSet.create(neutral3, neutral4);
+        MutationSet set1 = MutationSet.of(M1, M2, M3, M4);
+        MutationSet set2 = MutationSet.of(M3, M4, M5);
+        MutationSet set3 = MutationSet.of(M3, M4);
 
         assertEquals(set3, set1.intersection(set2));
         assertEquals(set3, set2.intersection(set1));
@@ -90,7 +90,7 @@ public class MutationSetTest {
 
     @Test(expected = UnsupportedOperationException.class) 
     public void testRemove1() {
-        founderSet.remove(neutral1);
+        founderSet.remove(M1);
     }
 
     @Test(expected = UnsupportedOperationException.class) 
@@ -104,9 +104,9 @@ public class MutationSetTest {
     }
 
     @Test public void testUnion() {
-        MutationSet set1 = MutationSet.create(neutral1, neutral2, neutral3, neutral4);
-        MutationSet set2 = MutationSet.create(neutral3, neutral4, neutral5);
-        MutationSet set3 = MutationSet.create(neutral1, neutral2, neutral3, neutral4, neutral5);
+        MutationSet set1 = MutationSet.of(M1, M2, M3, M4);
+        MutationSet set2 = MutationSet.of(M3, M4, M5);
+        MutationSet set3 = MutationSet.of(M1, M2, M3, M4, M5);
 
         assertEquals(set3, set1.union(set2));
         assertEquals(set3, set2.union(set1));

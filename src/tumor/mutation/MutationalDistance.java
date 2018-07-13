@@ -21,7 +21,7 @@ import jam.math.DoubleUtil;
  * <p>Let {@code S1} and {@code S2} be the sets of mutations contained
  * in genotypes {@code G1} and {@code G2}, {@code U = union(S1, S2)}
  * and {@code I = intersect(S1, S2)}.  The mutational distance defined
- * above may be computed as {@code D = card(U) - 2 * card(I)}, where
+ * above may be computed as {@code D = card(U) - card(I)}, where
  * {@code card(x)} is the cardinality of set {@code x}.
  *
  * <p>A continuous <em>fractional mutational distance</em> {@code d}
@@ -113,7 +113,7 @@ public final class MutationalDistance {
      * genotypes.
      */
     public int intDistance() {
-        return countUnique - 2 * countShared;
+        return countUnique - countShared;
     }
 
     /**
