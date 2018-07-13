@@ -3,6 +3,7 @@ package tumor.report.metastasis;
 
 import jam.report.ReportRecord;
 
+import tumor.driver.TumorDriver;
 import tumor.mutation.MutationalDistance;
 import tumor.report.bulk.BulkSample;
 
@@ -11,6 +12,9 @@ import tumor.report.bulk.BulkSample;
  * a bulk sample from the primary tumor.
  */
 public final class MetMutDistRecord implements ReportRecord {
+    // The simulation trial index...
+    private final int trialIndex;
+
     // The time of dissemination...
     private final int disseminationTime;
 
@@ -54,6 +58,8 @@ public final class MetMutDistRecord implements ReportRecord {
                              long   sharedMutCount,
                              int    intMutDistance,
                              double fracMutDistance) {
+        this.trialIndex = TumorDriver.global().getTrialIndex();
+
         this.disseminationTime  = disseminationTime;
         this.disseminationSize  = disseminationSize;
         this.bulkSamplingTime   = bulkSamplingTime;
@@ -108,7 +114,8 @@ public final class MetMutDistRecord implements ReportRecord {
     }
 
     @Override public String formatLine() {
-        return String.format("%d,%d,%d,%d,%d,%d,%d,%d,%d,%.8f",
+        return String.format("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%.8f",
+                             trialIndex,
                              disseminationTime,
                              disseminationSize,
                              bulkSamplingTime,
@@ -126,7 +133,8 @@ public final class MetMutDistRecord implements ReportRecord {
     }
 
     @Override public String getHeaderLine() {
-        return "disseminationTime"
+        return "trialIndex"
+            + ",disseminationTime"
             + ",disseminationSize"
             + ",bulkSamplingTime"
             + ",primaryTumorSize"
