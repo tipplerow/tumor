@@ -18,6 +18,7 @@ import jam.sim.DiscreteTimeSimulation;
 import tumor.carrier.ComponentType;
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
+import tumor.lattice.LatticeTumor;
 import tumor.mutation.Genotype;
 import tumor.mutation.Mutation;
 import tumor.report.ComponentAncestryRecord;
@@ -398,6 +399,20 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      */
     public Tumor<E> getTumor() {
         return tumor;
+    }
+
+    /**
+     * Returns the active lattice tumor for the current simulation
+     * trial.
+     *
+     * @return the active lattice tumor for the current simulation
+     * trial.
+     *
+     * @throws ClassCastException unless the tumor in the current
+     * simulation trial is a lattice tumor.
+     */
+    public LatticeTumor<E> getLatticeTumor() {
+        return (LatticeTumor<E>) tumor;
     }
 
     /**
