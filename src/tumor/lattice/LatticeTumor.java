@@ -31,6 +31,7 @@ import jam.vector.VectorView;
 import tumor.capacity.CapacityModel;
 import tumor.carrier.Carrier;
 import tumor.carrier.Tumor;
+import tumor.carrier.TumorCell;
 import tumor.carrier.TumorComponent;
 import tumor.carrier.TumorEnv;
 import tumor.growth.GrowthRate;
@@ -291,6 +292,22 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Collects a single tumor cell from a specified sample site.
+     *
+     * <p>If the site contains more than one cell, a single cell is
+     * chosen at random (with each cell having equal probability).
+     *
+     * @param sampleSite the tumor site to sample.
+     *
+     * @return a single cell selected from the specified sample site.
+     *
+     * @throws IllegalStateException if the sample site is empty.
+     */
+    public TumorCell collectSingleCellSample(Coord sampleSite) {
+        return TumorCell.sample(collectSingleComponentSample(sampleSite));
+    }
+
+    /**
      * Collects a single component from a specified sample site.
      *
      * <p>If the site contains more than one component, one component
@@ -303,7 +320,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      *
      * @throws IllegalStateException if the sample site is empty.
      */
-    public E collectSingleSample(Coord sampleSite) {
+    public E collectSingleComponentSample(Coord sampleSite) {
         Collection<E> components = viewComponents(sampleSite);
 
         if (components.isEmpty())
@@ -313,6 +330,19 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
             return CollectionUtil.peek(components);
 
         return Carrier.random(new ArrayList<E>(components));
+    }
+
+    /**
+     * Returns a vector drawn from the center of mass of this tumor to
+     * a lattice site.
+     *
+     * @param coord the end-point for the radial vector.
+     *
+     * @return the vector from the center of mass of this tumor to the
+     * specified lattice site.
+     */
+    public JamVector computeRadialVector(Coord coord) {
+        return coord.toVector().minus(getVectorMoment().getCM());
     }
 
     /**
