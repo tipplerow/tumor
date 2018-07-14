@@ -10,6 +10,7 @@ import jam.sim.StepRecord;
 
 import tumor.carrier.Carrier;
 import tumor.carrier.TumorComponent;
+import tumor.report.TumorSample;
 
 /**
  * Represents the contents of one lattice site in a bulk sample.
@@ -46,12 +47,12 @@ public final class BulkSampleSiteRecord extends StepRecord implements ReportReco
      * @return new site records for all lattice sites in the bulk
      * sample.
      */
-    public static Collection<BulkSampleSiteRecord> split(BulkSample bulkSample) {
+    public static Collection<BulkSampleSiteRecord> split(TumorSample bulkSample) {
         int trialIndex = bulkSample.getTrialIndex();
         int timeStep   = bulkSample.getCollectionTime();
 
         long  sampleIndex = bulkSample.getIndex();
-        Coord centerSite  = bulkSample.getCenterSite();
+        Coord centerSite  = bulkSample.getSampleSite();
 
         Collection<Coord> sampleSites = bulkSample.viewComponentMap().keySet();
         Collection<BulkSampleSiteRecord> records = new ArrayList<BulkSampleSiteRecord>(sampleSites.size());

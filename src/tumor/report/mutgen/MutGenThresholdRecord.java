@@ -7,8 +7,8 @@ import jam.report.ReportRecord;
 
 import tumor.driver.TumorDriver;
 import tumor.mutation.MutationGenerator;
-import tumor.report.bulk.BulkSample;
-import tumor.report.vaf.VAF;
+import tumor.report.TumorSample;
+import tumor.report.VAF;
 
 /**
  * Characterizes the number and clonality of mutations in a bulk
@@ -77,16 +77,16 @@ public final class MutGenThresholdRecord implements ReportRecord {
      *
      * @return the mutation generator threshold record for the sample.
      */
-    public static MutGenThresholdRecord compute(BulkSample bulkSample) {
+    public static MutGenThresholdRecord compute(TumorSample bulkSample) {
         int  maxMutationTime  = MutationGenerator.getMaxMutationTime();
         long maxMutationCount = MutationGenerator.getMaxMutationCount();
 
-        Coord sampleSite = bulkSample.getCenterSite();
+        Coord sampleSite = bulkSample.getSampleSite();
 
         VAF vaf = bulkSample.getVAF();
 
-        long   uniqueCount  = vaf.countMutations();
-        long   clonalCount  = vaf.countClonal();
+        long   uniqueCount  = vaf.countDistinctMutations();
+        long   clonalCount  = vaf.countClonalMutations();
         double clonalFrac   = DoubleUtil.ratio(clonalCount, uniqueCount);
         double vafThreshold = MutGenThresholdReport.instance().getVAFThreshold();
 

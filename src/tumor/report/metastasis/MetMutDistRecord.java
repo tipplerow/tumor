@@ -1,75 +1,33 @@
 
 package tumor.report.metastasis;
 
+import jam.report.LineBuilder;
 import jam.report.ReportRecord;
 
-import tumor.driver.TumorDriver;
 import tumor.mutation.MutationalDistance;
-import tumor.report.bulk.BulkSample;
+import tumor.report.TumorSample;
 
 /**
  * Characterizes the mutational distance beween a metastasis seed and
  * a bulk sample from the primary tumor.
  */
 public final class MetMutDistRecord implements ReportRecord {
-    // The simulation trial index...
-    private final int trialIndex;
+    private final TumorSample metSample;
+    private final TumorSample bulkSample;
+    private final MutationalDistance mutDist;
 
-    // The time of dissemination...
-    private final int disseminationTime;
+    private MetMutDistRecord(TumorSample metSample, TumorSample bulkSample, MutationalDistance mutDist) {
+        validateMetSample(metSample);
+        TumorSample.assertCommonTrial(metSample, bulkSample);
 
-    // The size of the primary tumor at the time of dissemination...
-    private final long disseminationSize;
+        this.metSample  = metSample;
+        this.bulkSample = bulkSample;
+        this.mutDist    = mutDist;
+    }
 
-    // The time of bulk sampling in the primary tumor...
-    private final int bulkSamplingTime;
-
-    // The size of the primary tumor at the time of bulk sampling...
-    private final long primaryTumorSize;
-
-    // Number of clonal mutations in the metastatis...
-    private final long metClonalMutCount;
-
-    // Total number of unique mutations in the primary bulk sample...
-    private final long bulkTotalMutCount;
-
-    // Number of clonal mutations in the primary bulk sample...
-    private final long bulkClonalMutCount;
-
-    // Number of mutations shared between the metastasis and bulk
-    // sample...
-    private final long sharedMutCount;
-
-    // Integral mutational distance between the metastasis and primary
-    // tumor...
-    private final int intMutDistance;
-
-    // Fractional mutational distance between the metastasis and
-    // primary tumor...
-    private final double fracMutDistance;
-
-    private MetMutDistRecord(int    disseminationTime,
-                             long   disseminationSize,
-                             int    bulkSamplingTime,
-                             long   primaryTumorSize,
-                             long   metClonalMutCount,
-                             long   bulkTotalMutCount,
-                             long   bulkClonalMutCount,
-                             long   sharedMutCount,
-                             int    intMutDistance,
-                             double fracMutDistance) {
-        this.trialIndex = TumorDriver.global().getTrialIndex();
-
-        this.disseminationTime  = disseminationTime;
-        this.disseminationSize  = disseminationSize;
-        this.bulkSamplingTime   = bulkSamplingTime;
-        this.primaryTumorSize   = primaryTumorSize;
-        this.metClonalMutCount  = metClonalMutCount;
-        this.bulkTotalMutCount  = bulkTotalMutCount;
-        this.bulkClonalMutCount = bulkClonalMutCount;
-        this.sharedMutCount     = sharedMutCount;
-        this.intMutDistance     = intMutDistance;
-        this.fracMutDistance    = fracMutDistance;
+    private void validateMetSample(TumorSample metSample) {
+        if (metSample.countCells() != 1)
+            throw new IllegalArgumentException("Metastasis sample has more than one cell.");
     }
 
     /**
@@ -82,50 +40,89 @@ public final class MetMutDistRecord implements ReportRecord {
      *
      * @return the mutation distance record for the two samples.
      */
-    public static MetMutDistRecord compute(MetSample metSample, BulkSample bulkSample) {
-        int  disseminationTime = metSample.getDisseminationTime();
-        long disseminationSize = metSample.getTumorSize();
-
-        int  bulkSamplingTime = bulkSample.getCollectionTime();
-        long primaryTumorSize = bulkSample.getTumorSize();
-
-        long metClonalMutCount  = metSample.getMutationSet().size();
-        long bulkTotalMutCount  = bulkSample.getUniqueMutations().size();
-        long bulkClonalMutCount = bulkSample.getSharedMutations().size();
-
+    public static MetMutDistRecord compute(TumorSample metSample, TumorSample bulkSample) {
         MutationalDistance mutDist =
-            MutationalDistance.compute(metSample.getMutationSet(),
-                                       bulkSample.getSharedMutations());
+            MutationalDistance.compute(metSample.getVAF().viewClonalMutations(),
+                                       bulkSample.getVAF().viewClonalMutations());
 
-        long   sharedMutCount  = mutDist.countShared();
-        int    intMutDistance  = mutDist.intDistance();
-        double fracMutDistance = mutDist.fracDistance();
+        return new MetMutDistRecord(metSample, bulkSample, mutDist);
+    }
 
-        return new MetMutDistRecord(disseminationTime,
-                                    disseminationSize,
-                                    bulkSamplingTime,
-                                    primaryTumorSize,
-                                    metClonalMutCount,
-                                    bulkTotalMutCount,
-                                    bulkClonalMutCount,
-                                    sharedMutCount,
-                                    intMutDistance,
-                                    fracMutDistance);
+    public int getTrialIndex() {
+        return metSample.getTrialIndex();
+    }
+
+    public long getMetIndex() {
+        return metSample.getIndex();
+    }
+
+    public long getBulkIndex() {
+        return bulkSample.getIndex();
+    }
+
+    public int getDisseminationTime() {
+        return metSample.getCollectionTime();
+    }
+
+    public long getDisseminationSize() {
+        return metSample.getTumorSize();
+    }
+
+    public int getBulkSampleTime() {
+        return bulkSample.getCollectionTime();
+    }
+
+    public long getPrimaryTumorSize() {
+        return bulkSample.getTumorSize();
+    }
+
+    public long getMetClonalMutCount() {
+        return metSample.getVAF().countClonalMutations();
+    }
+        
+    public long getBulkClonalMutCount() {
+        return bulkSample.getVAF().countClonalMutations();
+    }
+
+    public long getBulkTotalMutCount() {
+        return bulkSample.getVAF().countDistinctMutations();
+    }
+
+    public int getSharedMutCount() {
+        return mutDist.countShared();
+    }
+
+    public int getIntMutDistance() {
+        return mutDist.intDistance();
+    }
+
+    public double getFracMutDistance() {
+        return mutDist.fracDistance();
+    }
+
+    public double getRadialAlignment() {
+        return TumorSample.computeRadialAlignment(metSample, bulkSample);
     }
 
     @Override public String formatLine() {
-        return String.format("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%.8f",
-                             trialIndex,
-                             disseminationTime,
-                             disseminationSize,
-                             bulkSamplingTime,
-                             primaryTumorSize,
-                             metClonalMutCount,
-                             bulkTotalMutCount,
-                             bulkClonalMutCount,
-                             sharedMutCount,
-                             intMutDistance,
-                             fracMutDistance);
+        LineBuilder builder = LineBuilder.csv();
+
+        builder.append(getTrialIndex());
+        builder.append(getMetIndex());
+        builder.append(getBulkIndex());
+        builder.append(getDisseminationTime());
+        builder.append(getDisseminationSize());
+        builder.append(getBulkSampleTime());
+        builder.append(getPrimaryTumorSize());
+        builder.append(getMetClonalMutCount());
+        builder.append(getBulkClonalMutCount());
+        builder.append(getBulkTotalMutCount());
+        builder.append(getSharedMutCount());
+        builder.append(getIntMutDistance());
+        builder.append(getFracMutDistance());
+        builder.append(getRadialAlignment());
+
+        return builder.toString();
     }
 
     @Override public String getBaseName() {
@@ -133,16 +130,23 @@ public final class MetMutDistRecord implements ReportRecord {
     }
 
     @Override public String getHeaderLine() {
-        return "trialIndex"
-            + ",disseminationTime"
-            + ",disseminationSize"
-            + ",bulkSamplingTime"
-            + ",primaryTumorSize"
-            + ",metClonalMutCount"
-            + ",bulkTotalMutCount"
-            + ",bulkClonalMutCount"
-            + ",sharedMutCount"
-            + ",intMutDistance"
-            + ",fracMutDistance";
+        LineBuilder builder = LineBuilder.csv();
+
+        builder.append("trialIndex");
+        builder.append("metIndex");
+        builder.append("bulkIndex");
+        builder.append("disseminationTime");
+        builder.append("disseminationSize");
+        builder.append("bulkSampleTime");
+        builder.append("primaryTumorSize");
+        builder.append("metClonalMutCount");
+        builder.append("bulkClonalMutCount");
+        builder.append("bulkTotalMutCount");
+        builder.append("sharedMutCount");
+        builder.append("intMutDistance");
+        builder.append("fracMutDistance");
+        builder.append("radialAlignment");
+
+        return builder.toString();
     }
 }

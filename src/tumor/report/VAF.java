@@ -1,36 +1,40 @@
 
-package tumor.report.vaf;
+package tumor.report;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
-import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
 import jam.app.JamLogger;
-import jam.math.DoubleRange;
 import jam.math.DoubleUtil;
 import jam.math.StatSummary;
 import jam.vector.JamVector;
 import jam.vector.VectorView;
 
 import tumor.carrier.TumorComponent;
-import tumor.mutation.Genotype;
 import tumor.mutation.Mutation;
+import tumor.mutation.MutationSet;
 
 /**
  * Represents the variant allele frequency (VAF) in a population: maps
  * a mutation to the fraction of cells containing that mutation.
  */
 public final class VAF {
-    private final Object2DoubleMap<Mutation> map;
+    private final long cellCount;
+    private final long componentCount;
+    private Object2LongMap<Mutation> mutationCounts;
 
-    private VAF(Object2DoubleMap<Mutation> map) {
-        this.map = map;
+    private JamVector   frequencyDist   = null;
+    private MutationSet clonalMutations = null;
+
+    private VAF(long cellCount, long componentCount, Object2LongMap<Mutation> mutationCounts) {
+        this.cellCount      = cellCount;
+        this.componentCount = componentCount;
+        this.mutationCounts = mutationCounts;
     }
 
     /**
@@ -43,62 +47,25 @@ public final class VAF {
     public static VAF compute(Collection<? extends TumorComponent> components) {
         JamLogger.info("Computing VAF for [%d] tumor components...", components.size());
 
-        Object2DoubleMap<Mutation> mutationFreq =
-            computeFrequencies(countMutations(components), TumorComponent.countCells(components));
+        long cellCount = TumorComponent.countCells(components);
+        long componentCount = components.size();
+        Object2LongMap<Mutation> mutationCounts = countMutations(components);
 
-        return new VAF(mutationFreq);
-    }
-
-    private static Object2DoubleMap<Mutation> computeFrequencies(Object2LongMap<Mutation> mutationCounts, long totalCellCount) {
-        Object2DoubleMap<Mutation> mutationFreq =
-            new Object2DoubleOpenHashMap<Mutation>(mutationCounts.size());
-
-        for (Object2LongMap.Entry<Mutation> entry : mutationCounts.object2LongEntrySet()) {
-            double frequency =
-                DoubleUtil.ratio(entry.getLongValue(), totalCellCount);
-
-            DoubleRange.FRACTIONAL.validate("Mutation frequency", frequency);
-            mutationFreq.put(entry.getKey(), frequency);
-        }
-
-        return mutationFreq;
+        return new VAF(cellCount, componentCount, mutationCounts);
     }
 
     private static Object2LongMap<Mutation> countMutations(Collection<? extends TumorComponent> components) {
-        Object2LongOpenHashMap<Mutation> counts =
-            new Object2LongOpenHashMap<Mutation>();
+        Object2LongOpenHashMap<Mutation> counts = new Object2LongOpenHashMap<Mutation>();
 
         for (TumorComponent component : components) {
-            Genotype genotype = component.getGenotype();
-            Iterator<Mutation> iterator = genotype.scanAccumulatedMutations();
+            Iterator<Mutation> iterator =
+                component.getGenotype().scanAccumulatedMutations();
 
             while (iterator.hasNext())
                 counts.addTo(iterator.next(), component.countCells());
         }
 
         return counts;
-    }
-
-    /**
-     * Computes the fraction of mutations above a threshold frequency.
-     *
-     * @param threshold the threshold frequency.
-     *
-     * @return the fraction of mutations above a threshold frequency.
-     */
-    public double computeFractionAbove(double threshold) {
-        return DoubleUtil.ratio(countAbove(threshold), map.size());
-    }
-
-    /**
-     * Computes the fraction of mutations below a threshold frequency.
-     *
-     * @param threshold the threshold frequency.
-     *
-     * @return the fraction of mutations below a threshold frequency.
-     */
-    public double computeFractionBelow(double threshold) {
-        return DoubleUtil.ratio(countBelow(threshold), map.size());
     }
 
     /**
@@ -110,9 +77,10 @@ public final class VAF {
      */
     public long countAbove(double threshold) {
         long count = 0;
+        VectorView frequencies = getFrequencyDist();
 
-        for (double frequency : map.values())
-            if (frequency > threshold)
+        for (int index = 0; index < frequencies.length(); ++index)
+            if (frequencies.getDouble(index) > threshold)
                 ++count;
 
         return count;
@@ -127,12 +95,22 @@ public final class VAF {
      */
     public long countBelow(double threshold) {
         long count = 0;
+        VectorView frequencies = getFrequencyDist();
 
-        for (double frequency : map.values())
-            if (frequency < threshold)
+        for (int index = 0; index < frequencies.length(); ++index)
+            if (frequencies.getDouble(index) < threshold)
                 ++count;
 
         return count;
+    }
+
+    /**
+     * Returns the total number of cells that contributed to this VAF.
+     *
+     * @return the total number of cells that contributed to this VAF.
+     */
+    public long countCells() {
+        return cellCount;
     }
 
     /**
@@ -141,8 +119,19 @@ public final class VAF {
      *
      * @return the number of clonal mutations in this VAF.
      */
-    public long countClonal() {
+    public long countClonalMutations() {
         return countAbove(0.999999999999);
+    }
+
+    /**
+     * Returns the total number of tumor components that contributed
+     * to this VAF.
+     *
+     * @return the total number of tumor components that contributed
+     * to this VAF.
+     */
+    public long countComponents() {
+        return componentCount;
     }
 
     /**
@@ -150,8 +139,19 @@ public final class VAF {
      *
      * @return the total number of the mutations in this VAF.
      */
-    public long countMutations() {
-        return map.size();
+    public long countDistinctMutations() {
+        return mutationCounts.size();
+    }
+
+    /**
+     * Returns the number of cells containing a given mutation.
+     *
+     * @param mutation the mutation of interest.
+     *
+     * @return the number of cells containing the specified mutation.
+     */
+    public long countOccurrence(Mutation mutation) {
+        return mutationCounts.getLong(mutation);
     }
 
     /**
@@ -163,16 +163,46 @@ public final class VAF {
      * (or zero if the mutation is not present in this VAF).
      */
     public double getFrequency(Mutation mutation) {
-        return map.getDouble(mutation);
+        return DoubleUtil.ratio(countOccurrence(mutation), cellCount);
     }
 
     /**
      * Returns the complete mutation frequency distribution.
      *
-     * @return a vector containing all mutation frequencies in this map.
+     * @return a vector containing all mutation frequencies in this VAF.
      */
     public VectorView getFrequencyDist() {
-        return JamVector.copyOf(map.values());
+        if (frequencyDist == null)
+            frequencyDist = computeFrequencyDist();
+
+        return frequencyDist;
+    }
+
+    private JamVector computeFrequencyDist() {
+        int index = 0;
+        JamVector frequencies = new JamVector((int) countDistinctMutations());
+
+        for (Object2LongMap.Entry<Mutation> entry : mutationCounts.object2LongEntrySet())
+            frequencies.set(index++, computeFrequency(entry));
+
+        return frequencies;
+    }
+
+    private double computeFrequency(Object2LongMap.Entry<Mutation> entry) {
+        return DoubleUtil.ratio(entry.getLongValue(), cellCount);
+    }
+
+    /**
+     * Identifies clonal mutations (present in every cell) in this
+     * VAF.
+     *
+     * @param mutation the mutation of interest.
+     *
+     * @return {@code true} iff the specified mutation is present in
+     * every cell in this VAF.
+     */
+    public boolean isClonal(Mutation mutation) {
+        return countOccurrence(mutation) == cellCount;
     }
 
     /**
@@ -185,11 +215,37 @@ public final class VAF {
     }
 
     /**
-     * Returns a read-only view of the mutations in this map.
+     * Returns a read-only view of the distinct mutations in this VAF.
      *
-     * @return a read-only view of the mutations in this map.
+     * @return a read-only view of the distinct mutations in this VAF.
      */
-    public Set<Mutation> viewMutations() {
-        return Collections.unmodifiableSet(map.keySet());
+    public MutationSet viewClonalMutations() {
+        if (clonalMutations == null)
+            clonalMutations = createClonalMutations();
+
+        return clonalMutations;
+    }
+
+    private MutationSet createClonalMutations() {
+        Set<Mutation> clonal = new HashSet<Mutation>();
+
+        for (Object2LongMap.Entry<Mutation> entry : mutationCounts.object2LongEntrySet())
+            if (isClonal(entry))
+                clonal.add(entry.getKey());
+
+        return MutationSet.wrap(clonal);
+    }
+
+    private boolean isClonal(Object2LongMap.Entry<Mutation> entry) {
+        return entry.getLongValue() == cellCount;
+    }
+
+    /**
+     * Returns a read-only view of all distinct mutations in this VAF.
+     *
+     * @return a read-only view of all distinct mutations in this VAF.
+     */
+    public MutationSet viewDistinctMutations() {
+        return MutationSet.wrap(mutationCounts.keySet());
     }
 }

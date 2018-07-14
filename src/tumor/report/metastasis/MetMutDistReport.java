@@ -17,7 +17,7 @@ import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.mutation.Genotype;
 import tumor.report.TumorReport;
-import tumor.report.bulk.BulkSample;
+import tumor.report.TumorSample;
 import tumor.report.bulk.BulkSampleCollector;
 import tumor.report.bulk.BulkSampleSpace;
 
@@ -38,11 +38,11 @@ public final class MetMutDistReport extends TumorReport {
 
     // Metastatis samples taken from the growing primary tumor at
     // regular intervals during the current simulation trial...
-    private List<MetSample> metSamples;
+    private List<TumorSample> metSamples;
 
     // Bulk samples taken from the final primary tumor at the end of
     // the current simulation trial...
-    private List<BulkSample> bulkSamples;
+    private List<TumorSample> bulkSamples;
 
     // Writes the report records after each completed simulation
     // trial...
@@ -142,7 +142,7 @@ public final class MetMutDistReport extends TumorReport {
         //
         // New records for the next trial...
         //
-        metSamples = new ArrayList<MetSample>();
+        metSamples = new ArrayList<TumorSample>();
         bulkSamples = null;
     }
 
@@ -159,7 +159,7 @@ public final class MetMutDistReport extends TumorReport {
     }
 
     private void collectMetSample() {
-        metSamples.add(MetSample.collect(getLatticeTumor()));
+        metSamples.add(TumorSample.metastasis());
     }
 
     @Override public void finalizeTrial() {
@@ -175,8 +175,8 @@ public final class MetMutDistReport extends TumorReport {
         int recordIndex = 1;
         int recordCount = metSamples.size() * bulkSamples.size();
 
-        for (MetSample metSample : metSamples) {
-            for (BulkSample bulkSample : bulkSamples) {
+        for (TumorSample metSample : metSamples) {
+            for (TumorSample bulkSample : bulkSamples) {
                 JamLogger.info("Generating metastasis mutational distance record [%d] of [%d]...", recordIndex, recordCount);
                 reportWriter.write(MetMutDistRecord.compute(metSample, bulkSample));
                 ++recordIndex;

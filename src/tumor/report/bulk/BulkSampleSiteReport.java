@@ -9,7 +9,7 @@ import jam.math.IntRange;
 import jam.report.ReportWriter;
 
 import tumor.report.TumorReport;
-import tumor.report.bulk.BulkSample;
+import tumor.report.TumorSample;
 import tumor.report.bulk.BulkSampleSpace;
 
 /**
@@ -117,10 +117,10 @@ public final class BulkSampleSiteReport extends TumorReport {
     }
 
     private void writeSampleSiteRecords() {
-        Collection<BulkSample> bulkSamples =
+        Collection<TumorSample> bulkSamples =
             BulkSampleCollector.collect(sampleSpace, sampleSize);
 
-        for (BulkSample bulkSample : bulkSamples)
+        for (TumorSample bulkSample : bulkSamples)
             reportWriter.write(BulkSampleSiteRecord.split(bulkSample));
     }
 

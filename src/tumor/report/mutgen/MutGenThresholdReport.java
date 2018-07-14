@@ -18,7 +18,7 @@ import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.mutation.Genotype;
 import tumor.report.TumorReport;
-import tumor.report.bulk.BulkSample;
+import tumor.report.TumorSample;
 import tumor.report.bulk.BulkSampleCollector;
 import tumor.report.bulk.BulkSampleSpace;
 
@@ -33,7 +33,7 @@ public final class MutGenThresholdReport extends TumorReport {
 
     // Bulk samples taken from the final primary tumor at the end of
     // the current simulation trial...
-    private List<BulkSample> bulkSamples;
+    private List<TumorSample> bulkSamples;
 
     // Writes the report records after each completed simulation
     // trial...
@@ -174,7 +174,7 @@ public final class MutGenThresholdReport extends TumorReport {
     private void writeReportRecords() {
         JamLogger.info("Writing mutation generator threshold records...");
 
-        for (BulkSample bulkSample : bulkSamples)
+        for (TumorSample bulkSample : bulkSamples)
             reportWriter.write(MutGenThresholdRecord.compute(bulkSample));
 
         reportWriter.flush();

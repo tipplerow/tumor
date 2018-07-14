@@ -8,19 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import jam.app.JamLogger;
-
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.lattice.LatticeTumor;
+import tumor.report.TumorSample;
 
 /**
  * Collects bulk samples from the active primary tumor and maintains
  * them in a cache for later analysis.
  */
 public final class BulkSampleCollector {
-    private static final Map<SampleListKey, List<BulkSample>> sampleMap =
-        new HashMap<SampleListKey, List<BulkSample>>();
+    private static final Map<SampleListKey, List<TumorSample>> sampleMap =
+        new HashMap<SampleListKey, List<TumorSample>>();
 
     private BulkSampleCollector() {
     }
@@ -66,24 +65,22 @@ public final class BulkSampleCollector {
      *
      * @return an unmodifiable list containing the bulk samples.
      */
-    public static List<BulkSample> collect(BulkSampleSpace sampleSpace, long targetSize) {
-        JamLogger.info("Collecting [%d] bulk tumor samples...", sampleSpace.viewBasis().size());
-
+    public static List<TumorSample> collect(BulkSampleSpace sampleSpace, long targetSize) {
         int trialIndex = TumorDriver.global().getTrialIndex();
         int timeStep   = TumorDriver.global().getTimeStep();
 
-        List<BulkSample> sampleList =
-            sampleSpace.collect((LatticeTumor<? extends TumorComponent>) TumorDriver.global().getTumor(), targetSize);
+        List<TumorSample> sampleList = getSampleList(trialIndex, timeStep, sampleSpace, targetSize);
+        sampleList.addAll(sampleSpace.collect(targetSize));
 
         return Collections.unmodifiableList(sampleList);
     }
 
-    private static List<BulkSample> getSampleList(int trialIndex, int timeStep, BulkSampleSpace sampleSpace, long targetSize) {
+    private static List<TumorSample> getSampleList(int trialIndex, int timeStep, BulkSampleSpace sampleSpace, long targetSize) {
         SampleListKey    key  = new SampleListKey(trialIndex, timeStep, sampleSpace, targetSize);
-        List<BulkSample> list = sampleMap.get(key);
+        List<TumorSample> list = sampleMap.get(key);
 
         if (list == null) {
-            list = new ArrayList<BulkSample>(sampleSpace.viewBasis().size());
+            list = new ArrayList<TumorSample>(sampleSpace.viewBasis().size());
             sampleMap.put(key, list);
         }
 
@@ -108,8 +105,8 @@ public final class BulkSampleCollector {
      *
      * @throws IllegalStateException if the samples were not previously collected.
      */
-    public static List<BulkSample> require(int trialIndex, int timeStep, BulkSampleSpace sampleSpace, long targetSize) {
-        List<BulkSample> sampleList = getSampleList(trialIndex, timeStep, sampleSpace, targetSize);
+    public static List<TumorSample> require(int trialIndex, int timeStep, BulkSampleSpace sampleSpace, long targetSize) {
+        List<TumorSample> sampleList = getSampleList(trialIndex, timeStep, sampleSpace, targetSize);
 
         if (sampleList.isEmpty())
             throw new IllegalStateException(String.format("Sample [%d:%d:%s:%d] was not collected.",

@@ -10,9 +10,6 @@ import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.lattice.LatticeTumor;
 
-import tumor.report.bulk.BulkSample;
-import tumor.report.bulk.BulkSampleSpace;
-
 /**
  * Provides a base class for simulation reports that may process data
  * after each completed time step and simulation trial.
@@ -70,7 +67,8 @@ public abstract class TumorReport {
      * lattice tumor.
      */
     public LatticeTumor<? extends TumorComponent> getLatticeTumor() {
-        return (LatticeTumor<? extends TumorComponent>) getTumor();
+        //return (LatticeTumor<? extends TumorComponent>) getTumor();
+        return getDriver().getLatticeTumor();
     }
 
     /**

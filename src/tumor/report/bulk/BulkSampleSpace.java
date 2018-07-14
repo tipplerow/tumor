@@ -2,15 +2,13 @@
 package tumor.report.bulk;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
+import jam.app.JamLogger;
 import jam.lattice.Coord;
 import jam.vector.VectorView;
 
-import tumor.carrier.TumorComponent;
-import tumor.lattice.LatticeTumor;
+import tumor.report.TumorSample;
 
 /**
  * Enumerates pre-defined spatial distributions used for bulk region
@@ -87,19 +85,18 @@ public enum BulkSampleSpace {
      * Collects bulk samples with the spatial distribution defined by
      * this enum value.
      *
-     * @param tumor the tumor from which to sample.
-     *
      * @param targetSize the minimum number of cells to include in
      * each sample.
      *
      * @return a list of bulk samples corresponding to the basis
      * vectors in this enum.
      */
-    public List<BulkSample> collect(LatticeTumor<? extends TumorComponent> tumor, long targetSize) {
-        List<BulkSample> samples = new ArrayList<BulkSample>(basis.size());
+    public List<TumorSample> collect(long targetSize) {
+        JamLogger.info("Collecting [%d] bulk tumor samples...", basis.size());
+        List<TumorSample> samples = new ArrayList<TumorSample>(basis.size());
 
         for (VectorView vector : basis)
-            samples.add(BulkSample.collect(tumor, vector, targetSize));
+            samples.add(TumorSample.bulk(vector, targetSize));
 
         return samples;
     }
