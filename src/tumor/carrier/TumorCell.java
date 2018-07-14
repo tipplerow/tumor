@@ -56,6 +56,22 @@ public final class TumorCell extends TumorComponent {
     }
 
     /**
+     * Extracts a single-cell sample from another tumor component.
+     *
+     * <p>This is a "virtual" sample: if the input component is a
+     * multi-cellular component, its cell count does not actually
+     * change.
+     *
+     * @param component the component to sample.
+     *
+     * @return a tumor cell with the same genotype and growth rate as
+     * the input component.
+     */
+    public static TumorCell sample(TumorComponent component) {
+        return new TumorCell(null, component.getGenotype().forClone(), component.getGrowthRate());
+    }
+
+    /**
      * Advances this tumor cell through one discrete time step.
      *
      * @param tumorEnv the local tumor environment where this cell
