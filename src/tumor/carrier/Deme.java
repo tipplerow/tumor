@@ -28,8 +28,8 @@ public final class Deme extends MultiCellularComponent {
     }
 
     /**
-     * Creates a founding deme containing the mutations responsible
-     * for transformation.
+     * Creates a founding deme containing the global mutations
+     * responsible for transformation.
      *
      * @param growthRate the intrinsic growth rate of the (identical)
      * cells in the founding deme.
@@ -41,6 +41,24 @@ public final class Deme extends MultiCellularComponent {
      */
     public static Deme founder(GrowthRate growthRate, long cellCount) {
         return new Deme(null, MutableGenotype.transformer(), growthRate, cellCount);
+    }
+
+    /**
+     * Creates a founding deme containing an arbitrary list of
+     * original mutations.
+     *
+     * @param mutations the original mutations in the founding deme.
+     *
+     * @param growthRate the intrinsic growth rate of the (identical)
+     * cells in the founding deme.
+     *
+     * @param cellCount the number of (identical) cells in the
+     * founding deme.
+     *
+     * @return the founding deme.
+     */
+    public static Deme founder(List<Mutation> mutations, GrowthRate growthRate, long cellCount) {
+        return new Deme(null, MutableGenotype.founder(mutations), growthRate, cellCount);
     }
 
     @Override public Deme divide(long cloneCellCount) {

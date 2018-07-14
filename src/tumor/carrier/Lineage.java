@@ -30,19 +30,37 @@ public final class Lineage extends MultiCellularComponent {
     public static final long DAUGHTER_CELL_COUNT = 1L;
 
     /**
-     * Creates a founding lineage containing the mutations responsible
-     * for transformation.
+     * Creates a founding lineage containing the global mutations
+     * responsible for transformation.
      *
      * @param growthRate the intrinsic growth rate of the (identical)
      * cells in the founding lineage.
      *
-     * @param cellCount the number of (identical) cells in the founding 
+     * @param cellCount the number of (identical) cells in the founding
      * lineage.
      *
      * @return the founding lineage.
      */
     public static Lineage founder(GrowthRate growthRate, long cellCount) {
         return new Lineage(null, FixedGenotype.TRANSFORMER, growthRate, cellCount);
+    }
+
+    /**
+     * Creates a founding lineage with an arbitrary list of original
+     * mutations.
+     *
+     * @param mutations the original mutations in the founder.
+     *
+     * @param growthRate the intrinsic growth rate of the (identical)
+     * cells in the founding lineage.
+     *
+     * @param cellCount the number of (identical) cells in the founding
+     * lineage.
+     *
+     * @return the founding lineage.
+     */
+    public static Lineage founder(List<Mutation> mutations, GrowthRate growthRate, long cellCount) {
+        return new Lineage(null, FixedGenotype.founder(mutations), growthRate, cellCount);
     }
 
     @Override public Lineage divide(long cloneCellCount) {
