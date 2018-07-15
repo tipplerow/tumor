@@ -80,10 +80,10 @@ public final class BulkVAFRecord implements ReportRecord {
         builder.append(getTumorSize());
         builder.append(getDistinctMutCount());
         builder.append(getClonalMutCount());
-        builder.append(getMinVAF());
-        builder.append(getMeanVAF());
-        builder.append(getMedianVAF());
-        builder.append(getMaxVAF());
+        builder.append(getMinVAF(),    "%.8f");
+        builder.append(getMeanVAF(),   "%.6f");
+        builder.append(getMedianVAF(), "%.6f");
+        builder.append(getMaxVAF(),    "%.2f");
 
         return builder.toString();
     }

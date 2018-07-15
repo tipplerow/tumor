@@ -119,8 +119,8 @@ public final class MetMutDistRecord implements ReportRecord {
         builder.append(getBulkTotalMutCount());
         builder.append(getSharedMutCount());
         builder.append(getIntMutDistance());
-        builder.append(getFracMutDistance());
-        builder.append(getRadialAlignment());
+        builder.append(getFracMutDistance(), "%.6f");
+        builder.append(getRadialAlignment(), "%.6f");
 
         return builder.toString();
     }
