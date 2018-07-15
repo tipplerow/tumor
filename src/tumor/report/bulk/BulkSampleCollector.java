@@ -66,13 +66,23 @@ public final class BulkSampleCollector {
      * @return an unmodifiable list containing the bulk samples.
      */
     public static List<TumorSample> collect(BulkSampleSpace sampleSpace, long targetSize) {
-        int trialIndex = TumorDriver.global().getTrialIndex();
-        int timeStep   = TumorDriver.global().getTimeStep();
+        int trialIndex = activeTrialIndex();
+        int timeStep   = activeTimeStep();
 
         List<TumorSample> sampleList = getSampleList(trialIndex, timeStep, sampleSpace, targetSize);
-        sampleList.addAll(sampleSpace.collect(targetSize));
+
+        if (sampleList.isEmpty())
+            sampleList.addAll(sampleSpace.collect(targetSize));
 
         return Collections.unmodifiableList(sampleList);
+    }
+
+    private static int activeTrialIndex() {
+        return TumorDriver.global().getTrialIndex();
+    }
+
+    private static int activeTimeStep() {
+        return TumorDriver.global().getTimeStep();
     }
 
     private static List<TumorSample> getSampleList(int trialIndex, int timeStep, BulkSampleSpace sampleSpace, long targetSize) {
@@ -88,7 +98,11 @@ public final class BulkSampleCollector {
     }
 
     /**
-     * Retrieves previously collected bulk samples.
+     * Retrieves bulk samples from the collection.
+     *
+     * <p>If the trial index and time step match the state of the
+     * active simulation, the samples will be collected if they are
+     * not already present in the collection.
      *
      * @param trialIndex the index of the simulation trial at the time
      * of collection.
@@ -103,15 +117,33 @@ public final class BulkSampleCollector {
      *
      * @return an unmodifiable list containing the bulk samples.
      *
-     * @throws IllegalStateException if the samples were not previously collected.
+     * @throws IllegalStateException if the requested samples were not
+     * previously collected and cannot be collected in the current
+     * simulation state (the trial index and time step do not match
+     * the current state of the active simulation).
      */
     public static List<TumorSample> require(int trialIndex, int timeStep, BulkSampleSpace sampleSpace, long targetSize) {
         List<TumorSample> sampleList = getSampleList(trialIndex, timeStep, sampleSpace, targetSize);
 
-        if (sampleList.isEmpty())
+        if (!sampleList.isEmpty()) {
+            //
+            // Return previously collected samples...
+            //
+            return Collections.unmodifiableList(sampleList);
+        }
+        else if (trialIndex == activeTrialIndex() && timeStep == activeTimeStep()) {
+            //
+            // Collect, store, and return...
+            //
+            return collect(sampleSpace, targetSize);
+        }
+        else {
+            //
+            // No matching samples and it is too late to generate
+            // them...
+            //
             throw new IllegalStateException(String.format("Sample [%d:%d:%s:%d] was not collected.",
                                                           trialIndex, timeStep, sampleSpace, targetSize));
-
-        return Collections.unmodifiableList(sampleList);
+        }
     }
 }

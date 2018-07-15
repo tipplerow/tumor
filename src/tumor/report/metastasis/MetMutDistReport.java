@@ -2,20 +2,13 @@
 package tumor.report.metastasis;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import jam.app.JamLogger;
 import jam.app.JamProperties;
-import jam.lattice.Coord;
 import jam.math.IntRange;
 import jam.report.ReportWriter;
-import jam.util.CollectionUtil;
-import jam.vector.VectorView;
 
-import tumor.carrier.TumorComponent;
-import tumor.driver.TumorDriver;
-import tumor.mutation.Genotype;
 import tumor.report.TumorReport;
 import tumor.report.TumorSample;
 import tumor.report.bulk.BulkSampleCollector;

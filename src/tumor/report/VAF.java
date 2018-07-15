@@ -28,6 +28,7 @@ public final class VAF {
     private final long componentCount;
     private Object2LongMap<Mutation> mutationCounts;
 
+    private StatSummary statSummary     = null;
     private JamVector   frequencyDist   = null;
     private MutationSet clonalMutations = null;
 
@@ -211,7 +212,10 @@ public final class VAF {
      * @return a statistical summary of the frequency distribution.
      */
     public StatSummary summarize() {
-        return StatSummary.compute(getFrequencyDist());
+        if (statSummary == null)
+            statSummary = StatSummary.compute(getFrequencyDist());
+
+        return statSummary;
     }
 
     /**
