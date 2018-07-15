@@ -10,6 +10,7 @@ import tumor.report.bulk.BulkVAFReport;
 import tumor.report.dimension.TumorDimensionReport;
 import tumor.report.metastasis.MetMutDistReport;
 import tumor.report.mutgen.MutGenThresholdReport;
+import tumor.report.variegate.VariegationReport;
 
 /**
  * Runs each requested report after every completed time step and
@@ -43,6 +44,9 @@ public final class ReportManager {
 
         if (TumorDimensionReport.reportRequested())
             reports.add(TumorDimensionReport.instance());
+
+        if (VariegationReport.reportRequested())
+            reports.add(VariegationReport.instance());
     }
 
     /**

@@ -207,6 +207,19 @@ public final class VAF {
     }
 
     /**
+     * Identifies private mutations (not present in every cell) in
+     * this VAF.
+     *
+     * @param mutation the mutation of interest.
+     *
+     * @return {@code false} iff the specified mutation is present in
+     * every cell in this VAF.
+     */
+    public boolean isPrivate(Mutation mutation) {
+        return !isClonal(mutation);
+    }
+
+    /**
      * Computes a statistical summary of the frequency distribution.
      *
      * @return a statistical summary of the frequency distribution.
