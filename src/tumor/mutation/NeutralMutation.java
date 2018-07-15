@@ -19,6 +19,10 @@ public final class NeutralMutation extends Mutation {
         return rate;
     }
 
+    @Override public double getSelectionCoeff() {
+        return 0.0;
+    }
+
     @Override public boolean isIndependent() {
         return true;
     }

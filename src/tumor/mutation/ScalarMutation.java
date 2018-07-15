@@ -40,15 +40,6 @@ public class ScalarMutation extends Mutation {
             throw new IllegalArgumentException("Invalid selection coefficient.");
     }
 
-    /**
-     * Returns the scalar selection coefficient for this mutation.
-     *
-     * @return the scalar selection coefficient for this mutation.
-     */
-    public double getSelectionCoeff() {
-        return selectionCoeff;
-    }
-
     @Override public GrowthRate apply(GrowthRate rate) {
         double B = rate.getBirthRate().doubleValue();
         double D = rate.getDeathRate().doubleValue();
@@ -59,6 +50,10 @@ public class ScalarMutation extends Mutation {
         double Dprime = D - delta;
 
         return new GrowthRate(Bprime, Dprime);
+    }
+
+    @Override public double getSelectionCoeff() {
+        return selectionCoeff;
     }
 
     @Override public boolean isIndependent() {

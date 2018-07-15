@@ -150,6 +150,13 @@ public abstract class Mutation extends Ordinal {
     public abstract GrowthRate apply(GrowthRate rate);
 
     /**
+     * Returns the scalar selection coefficient for this mutation.
+     *
+     * @return the scalar selection coefficient for this mutation.
+     */
+    public abstract double getSelectionCoeff();
+
+    /**
      * Identifies mutations that act independently of all others that
      * are present in the same carrier.
      *
