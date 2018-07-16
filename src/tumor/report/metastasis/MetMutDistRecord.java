@@ -6,6 +6,7 @@ import jam.report.ReportRecord;
 
 import tumor.mutation.MutationalDistance;
 import tumor.report.TumorSample;
+import tumor.report.dimension.TumorDimensionCache;
 
 /**
  * Characterizes the mutational distance beween a metastasis seed and
@@ -88,6 +89,14 @@ public final class MetMutDistRecord implements ReportRecord {
         return bulkSample.getVAF().countDistinctMutations();
     }
 
+    public int getBulkLastClonalMutTime() {
+        return bulkSample.getVAF().getLastClonalMutation().getOriginationTime();
+    }
+
+    public long getBulkLastClonalMutSize() {
+        return TumorDimensionCache.require(getTrialIndex(), getBulkLastClonalMutTime()).getCellCount();
+    }
+
     public int getSharedMutCount() {
         return mutDist.countShared();
     }
@@ -117,6 +126,8 @@ public final class MetMutDistRecord implements ReportRecord {
         builder.append(getMetClonalMutCount());
         builder.append(getBulkClonalMutCount());
         builder.append(getBulkTotalMutCount());
+        builder.append(getBulkLastClonalMutTime());
+        builder.append(getBulkLastClonalMutSize());
         builder.append(getSharedMutCount());
         builder.append(getIntMutDistance());
         builder.append(getFracMutDistance(), "%.6f");
@@ -142,6 +153,8 @@ public final class MetMutDistRecord implements ReportRecord {
         builder.append("metClonalMutCount");
         builder.append("bulkClonalMutCount");
         builder.append("bulkTotalMutCount");
+        builder.append("bulkLastClonalMutTime");
+        builder.append("bulkLastClonalMutSize");
         builder.append("sharedMutCount");
         builder.append("intMutDistance");
         builder.append("fracMutDistance");

@@ -67,7 +67,6 @@ public abstract class TumorReport {
      * lattice tumor.
      */
     public LatticeTumor<? extends TumorComponent> getLatticeTumor() {
-        //return (LatticeTumor<? extends TumorComponent>) getTumor();
         return getDriver().getLatticeTumor();
     }
 

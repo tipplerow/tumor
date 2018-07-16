@@ -13,6 +13,7 @@ import tumor.report.TumorReport;
 import tumor.report.TumorSample;
 import tumor.report.bulk.BulkSampleCollector;
 import tumor.report.bulk.BulkSampleSpace;
+import tumor.report.dimension.TumorDimensionCache;
 
 /**
  * Computes the mutational distance between tumor components that have
@@ -140,6 +141,11 @@ public final class MetMutDistReport extends TumorReport {
     }
 
     @Override public void processStep() {
+        // Save the tumor dimensions at each time step, since we want
+        // to know the tumor size at the time when the bulk MCRA was
+        // created...
+        TumorDimensionCache.snap();
+
         if (isSampleStep(metSampleInterval))
             collectMetSamples();
     }

@@ -6,6 +6,7 @@ import jam.report.LineBuilder;
 import jam.report.ReportRecord;
 
 import tumor.report.TumorSample;
+import tumor.report.dimension.TumorDimensionCache;
 
 /**
  * Characterizes the variant allele frequency (VAF) distribution
@@ -55,6 +56,14 @@ public final class BulkVAFRecord implements ReportRecord {
         return sample.getVAF().countClonalMutations();
     }
 
+    public int getLastClonalMutTime() {
+        return sample.getVAF().getLastClonalMutation().getOriginationTime();
+    }
+
+    public long getLastClonalMutSize() {
+        return TumorDimensionCache.require(getTrialIndex(), getLastClonalMutTime()).getCellCount();
+    }
+
     public double getMaxVAF() {
         return summary.getMax();
     }
@@ -80,6 +89,8 @@ public final class BulkVAFRecord implements ReportRecord {
         builder.append(getTumorSize());
         builder.append(getDistinctMutCount());
         builder.append(getClonalMutCount());
+        builder.append(getLastClonalMutTime());
+        builder.append(getLastClonalMutSize());
         builder.append(getMinVAF(),    "%.8f");
         builder.append(getMeanVAF(),   "%.6f");
         builder.append(getMedianVAF(), "%.6f");
@@ -101,6 +112,8 @@ public final class BulkVAFRecord implements ReportRecord {
         builder.append("tumorSize");
         builder.append("distinctMutCount");
         builder.append("clonalMutCount");
+        builder.append("lastClonalMutTime");
+        builder.append("lastClonalMutSize");
         builder.append("minVAF");
         builder.append("meanVAF");
         builder.append("medianVAF");
