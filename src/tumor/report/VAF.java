@@ -1,9 +1,12 @@
 
 package tumor.report;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
@@ -12,6 +15,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import jam.app.JamLogger;
 import jam.math.DoubleUtil;
 import jam.math.StatSummary;
+import jam.util.ListUtil;
 import jam.vector.JamVector;
 import jam.vector.VectorView;
 
@@ -28,9 +32,10 @@ public final class VAF {
     private final long componentCount;
     private Object2LongMap<Mutation> mutationCounts;
 
-    private StatSummary statSummary     = null;
-    private JamVector   frequencyDist   = null;
-    private MutationSet clonalMutations = null;
+    private StatSummary statSummary        = null;
+    private JamVector   frequencyDist      = null;
+    private MutationSet clonalMutations    = null;
+    private Mutation    lastClonalMutation = null;
 
     private VAF(long cellCount, long componentCount, Object2LongMap<Mutation> mutationCounts) {
         this.cellCount      = cellCount;
@@ -191,6 +196,36 @@ public final class VAF {
 
     private double computeFrequency(Object2LongMap.Entry<Mutation> entry) {
         return DoubleUtil.ratio(entry.getLongValue(), cellCount);
+    }
+
+    /**
+     * Returns the last clonal mutation to arise in the population
+     * from which this VAF was derived.
+     *
+     * @return the last clonal mutation to arise in the population
+     * from which this VAF was derived ({@code null} if there are
+     * no clonal mutations).
+     */
+    public Mutation getLastClonalMutation() {
+        if (viewClonalMutations().isEmpty())
+            return null;
+
+        if (lastClonalMutation == null)
+            lastClonalMutation = findLastClonalMutation();
+
+        return lastClonalMutation;
+    }
+
+    private Mutation findLastClonalMutation() {
+        //
+        // Sort clonal mutations according to their natural ordering
+        // by index: the index is incremented at creation time, so its
+        // ordering reflects the chronological order of creation...
+        //
+        List<Mutation> clonalList = new ArrayList<Mutation>(viewClonalMutations());
+        Collections.sort(clonalList);
+
+        return ListUtil.last(clonalList);
     }
 
     /**

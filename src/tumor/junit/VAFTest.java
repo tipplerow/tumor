@@ -76,6 +76,7 @@ public class VAFTest extends NumericTestBase {
         assertDouble(0.3, vaf.getFrequency(M8));
         assertDouble(0.4, vaf.getFrequency(M9));
 
+        assertEquals(M2, vaf.getLastClonalMutation());
         assertEquals(MutationSet.of(M1, M2), vaf.viewClonalMutations());
         assertEquals(MutationSet.of(M1, M2, M3, M4, M5, M6, M7, M8, M9), vaf.viewDistinctMutations());
     }
