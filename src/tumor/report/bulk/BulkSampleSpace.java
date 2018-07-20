@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jam.app.JamLogger;
-import jam.lattice.Coord;
 import jam.vector.VectorView;
 
 import tumor.report.TumorSample;
@@ -75,7 +74,7 @@ public enum BulkSampleSpace {
                     VectorView.wrap(-1, -1, -1),
                     VectorView.wrap( 1, -1, -1)));
 
-    private List<VectorView> basis;
+    private final List<VectorView> basis;
 
     private BulkSampleSpace(List<VectorView> basis) {
         this.basis = basis;
