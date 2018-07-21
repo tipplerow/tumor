@@ -17,12 +17,32 @@ import tumor.report.TumorSamplePair;
  */
 public enum BulkSamplePairSpace {
     /**
-     * Three maximally-distant sample pairs centered on the coordinate
-     * axes.
+     * One maximally-distant sample pair along each coordinate axis
+     * (three in total).
      */
     AXES(List.of(VectorPair.of(VectorView.wrap(1, 0, 0), VectorView.wrap(-1,  0,  0)),
                  VectorPair.of(VectorView.wrap(0, 1, 0), VectorView.wrap( 0, -1,  0)),
                  VectorPair.of(VectorView.wrap(0, 0, 1), VectorView.wrap( 0,  0, -1)))),
+
+    /**
+     * One maximally-distant sample pair from each direction in the
+     * Moore neighborhood (thirteen in total).
+     */
+    MOORE(List.of(VectorPair.of(VectorView.wrap( 1,  0,  0), VectorView.wrap(-1,  0,  0)),
+                  VectorPair.of(VectorView.wrap( 0,  1,  0), VectorView.wrap( 0, -1,  0)),
+                  VectorPair.of(VectorView.wrap( 0,  0,  1), VectorView.wrap( 0,  0, -1)),
+
+                  VectorPair.of(VectorView.wrap( 0, -1, -1), VectorView.wrap( 0,  1,  1)),
+                  VectorPair.of(VectorView.wrap(-1,  0, -1), VectorView.wrap( 1,  0,  1)),
+                  VectorPair.of(VectorView.wrap( 0,  1, -1), VectorView.wrap( 0, -1,  1)),
+                  VectorPair.of(VectorView.wrap( 1,  0, -1), VectorView.wrap(-1,  0,  1)),
+                  VectorPair.of(VectorView.wrap(-1, -1,  0), VectorView.wrap( 1,  1,  0)),
+                  VectorPair.of(VectorView.wrap(-1,  1,  0), VectorView.wrap( 1, -1,  0)),
+
+                  VectorPair.of(VectorView.wrap( 1,  1,  1), VectorView.wrap(-1, -1, -1)),
+                  VectorPair.of(VectorView.wrap(-1,  1,  1), VectorView.wrap( 1, -1, -1)),
+                  VectorPair.of(VectorView.wrap(-1, -1,  1), VectorView.wrap( 1,  1, -1)),
+                  VectorPair.of(VectorView.wrap( 1, -1,  1), VectorView.wrap(-1,  1, -1)))),
 
     /**
      * One maximally-distant sample pair from each three-dimensional
