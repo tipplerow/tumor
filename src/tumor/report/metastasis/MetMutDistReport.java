@@ -138,6 +138,11 @@ public final class MetMutDistReport extends TumorReport {
         //
         metSamples = new ArrayList<TumorSample>();
         bulkSamples = null;
+
+        // Save the tumor dimensions at each time step, since we want
+        // to know the tumor size at the time when the bulk MCRA was
+        // created...
+        TumorDimensionCache.snap();
     }
 
     @Override public void processStep() {
