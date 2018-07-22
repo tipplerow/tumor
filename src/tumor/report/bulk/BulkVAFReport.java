@@ -12,6 +12,7 @@ import tumor.report.TumorReport;
 import tumor.report.TumorSample;
 import tumor.report.bulk.BulkSampleCollector;
 import tumor.report.bulk.BulkSampleSpace;
+import tumor.report.dimension.TumorDimensionCache;
 
 /**
  * Characterizes the variant allele frequency (VAF) distribution
@@ -93,9 +94,17 @@ public final class BulkVAFReport extends TumorReport {
     }
 
     @Override public void initializeTrial() {
+        // Save the tumor dimensions at each time step, since we want
+        // to know the tumor size at the time when the bulk MCRA was
+        // created...
+        TumorDimensionCache.snap();
     }
 
     @Override public void processStep() {
+        // Save the tumor dimensions at each time step, since we want
+        // to know the tumor size at the time when the bulk MCRA was
+        // created...
+        TumorDimensionCache.snap();
     }
 
     @Override public void finalizeTrial() {
