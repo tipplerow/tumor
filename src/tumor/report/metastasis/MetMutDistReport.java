@@ -7,6 +7,7 @@ import java.util.List;
 import jam.app.JamLogger;
 import jam.app.JamProperties;
 import jam.math.IntRange;
+import jam.math.LongRange;
 import jam.report.ReportWriter;
 
 import tumor.report.TumorReport;
@@ -26,6 +27,8 @@ import tumor.report.dimension.TumorDimensionCache;
 public final class MetMutDistReport extends TumorReport {
     private final int metSampleCount;
     private final int metSampleInterval;
+
+    private final long minTumorSize;
 
     private final int bulkSampleSize;
     private final BulkSampleSpace bulkSampleSpace;
@@ -49,6 +52,8 @@ public final class MetMutDistReport extends TumorReport {
         this.metSampleCount    = resolveMetSampleCount();
         this.metSampleInterval = resolveMetSampleInterval();
 
+        this.minTumorSize = resolveMinTumorSize();
+
         this.bulkSampleSize  = resolveBulkSampleSize();
         this.bulkSampleSpace = resolveBulkSampleSpace();
     }
@@ -59,6 +64,10 @@ public final class MetMutDistReport extends TumorReport {
 
     private static int resolveMetSampleInterval() {
         return JamProperties.getRequiredInt(MET_SAMPLE_INTERVAL_PROPERTY, IntRange.POSITIVE);
+    }
+
+    private static long resolveMinTumorSize() {
+        return JamProperties.getRequiredLong(MIN_TUMOR_SIZE_PROPERTY, LongRange.POSITIVE);
     }
 
     private static int resolveBulkSampleSize() {
@@ -91,6 +100,12 @@ public final class MetMutDistReport extends TumorReport {
      * time steps between dissemination sampling times.
      */
     public static final String MET_SAMPLE_INTERVAL_PROPERTY = "tumor.report.metastasis.metSampleInterval";
+
+    /**
+     * Name of the system property that specifies the minimum tumor
+     * size (number of cells) required to collect metastasis samples.
+     */
+    public static final String MIN_TUMOR_SIZE_PROPERTY = "tumor.report.metastasis.minTumorSize";
 
     /**
      * Name of the system property that specifies the minimum number
@@ -153,6 +168,10 @@ public final class MetMutDistReport extends TumorReport {
 
         if (isSampleStep(metSampleInterval))
             collectMetSamples();
+    }
+
+    @Override public boolean isSampleStep(int sampleInterval) {
+        return getTumor().countCells() > minTumorSize && super.isSampleStep(sampleInterval);
     }
 
     private void collectMetSamples() {

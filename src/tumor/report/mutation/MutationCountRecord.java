@@ -4,6 +4,7 @@ package tumor.report.mutation;
 import jam.report.LineBuilder;
 import jam.report.ReportRecord;
 
+import tumor.driver.TumorDriver;
 import tumor.mutation.Mutation;
 import tumor.report.TumorRecord;
 
@@ -12,10 +13,14 @@ import tumor.report.TumorRecord;
  * trial.
  */
 public final class MutationCountRecord extends TumorRecord implements ReportRecord {
+    private final long cellCount;
+    private final long componentCount;
     private final long mutationCount;
 
     private MutationCountRecord() {
-        this.mutationCount = Mutation.count();
+        this.cellCount      = TumorDriver.global().getTumor().countCells();
+        this.componentCount = TumorDriver.global().getTumor().countComponents();
+        this.mutationCount  = Mutation.count();
     }
 
     /**
@@ -29,6 +34,14 @@ public final class MutationCountRecord extends TumorRecord implements ReportReco
         return new MutationCountRecord();
     }
 
+    public long getCellCount() {
+        return cellCount;
+    }
+
+    public long getComponentCount() {
+        return componentCount;
+    }
+
     public long getMutationCount() {
         return mutationCount;
     }
@@ -38,6 +51,8 @@ public final class MutationCountRecord extends TumorRecord implements ReportReco
 
         builder.append(getTrialIndex());
         builder.append(getTimeStep());
+        builder.append(getCellCount());
+        builder.append(getComponentCount());
         builder.append(getMutationCount());
 
         return builder.toString();
@@ -52,6 +67,8 @@ public final class MutationCountRecord extends TumorRecord implements ReportReco
 
         builder.append("trialIndex");
         builder.append("timeStep");
+        builder.append("cellCount");
+        builder.append("componentCount");
         builder.append("mutationCount");
 
         return builder.toString();
