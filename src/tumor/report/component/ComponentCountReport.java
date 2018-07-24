@@ -34,14 +34,14 @@ public final class ComponentCountReport extends TumorRecordReport<ComponentCount
      * Name of the system property that specifies whether this report
      * will be generated.
      */
-    public static final String RUN_REPORT_PROPERTY = "tumor.report.coord.runComponentCountReport";
+    public static final String RUN_REPORT_PROPERTY = "tumor.report.component.runComponentCountReport";
 
     /**
      * Name of the system property that specifies the number of time
      * steps between report record generation; leave unset to report
      * only at the end of the simulation.
      */
-    public static final String SAMPLE_INTERVAL_PROPERTY = "tumor.report.coord.componentCountSampleInterval";
+    public static final String SAMPLE_INTERVAL_PROPERTY = "tumor.report.component.componentCountSampleInterval";
 
     /**
      * Returns the single global report instance.
