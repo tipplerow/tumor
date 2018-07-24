@@ -5,9 +5,15 @@
 
 cd `dirname $0`
 
-./test-driver.sh BulkSampleSite/bulk-sample-site-test.prop bulk-sample-site.csv
+./test-driver.sh \
+    LatticeCell/lattice-cell-test.prop \
+    component-coord.csv.gz \
+    component-count.csv \
+    runtime.prop
 
 exit 0
+
+./test-driver.sh BulkSampleSite/bulk-sample-site-test.prop bulk-sample-site.csv
 
 BASE_FILES="cell-count-traj.csv component-ancestry.csv.gz final-cell-count.csv"
 COORD_FILES="component-coord.csv.gz"
