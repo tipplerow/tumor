@@ -1,10 +1,6 @@
 
 package tumor.report;
 
-import java.util.List;
-
-import jam.app.JamLogger;
-
 import tumor.carrier.Tumor;
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
@@ -89,7 +85,8 @@ public abstract class TumorReport {
     }
 
     /**
-     * Identifies time steps that must be reported.
+     * Identifies time steps when the system state must be sampled and
+     * the report must be updated and/or recorded.
      *
      * @param sampleInterval the report-specific sampling (update)
      * interval (expressed as a number of time steps).

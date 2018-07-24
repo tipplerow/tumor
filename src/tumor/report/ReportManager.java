@@ -7,6 +7,8 @@ import java.util.List;
 import tumor.report.bulk.BulkMutDistReport;
 import tumor.report.bulk.BulkSampleSiteReport;
 import tumor.report.bulk.BulkVAFReport;
+import tumor.report.component.ComponentCoordReport;
+import tumor.report.component.ComponentCountReport;
 import tumor.report.dimension.TumorDimensionReport;
 import tumor.report.metastasis.MetMutDistReport;
 import tumor.report.mutation.MutationCountReport;
@@ -36,6 +38,12 @@ public final class ReportManager {
 
         if (BulkVAFReport.reportRequested())
             reports.add(BulkVAFReport.instance());
+
+        if (ComponentCoordReport.reportRequested())
+            reports.add(ComponentCoordReport.instance());
+
+        if (ComponentCountReport.reportRequested())
+            reports.add(ComponentCountReport.instance());
 
         if (MetMutDistReport.reportRequested())
             reports.add(MetMutDistReport.instance());
