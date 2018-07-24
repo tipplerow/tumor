@@ -2,9 +2,7 @@
 package tumor.report.component;
 
 import java.util.Collection;
-
 import jam.app.JamProperties;
-
 import tumor.report.TumorRecordReport;
 
 /**
