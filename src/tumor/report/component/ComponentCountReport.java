@@ -28,7 +28,7 @@ public final class ComponentCountReport extends TumorRecordReport<ComponentCount
     /**
      * Base name of the report file.
      */
-    public static final String BASE_NAME = "component-coord.csv.gz";
+    public static final String BASE_NAME = "component-count.csv";
 
     /**
      * Name of the system property that specifies whether this report
