@@ -9,6 +9,7 @@ cd `dirname $0`
     LatticeCell/lattice-cell-test.prop \
     component-coord.csv.gz \
     component-count.csv \
+    mutation-count.csv \
     runtime.prop
 
 exit 0

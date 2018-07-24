@@ -19,4 +19,6 @@ tumor.report.component.componentCoordSampleInterval = 50
 tumor.report.component.componentCountSampleInterval = 1
 tumor.report.component.runComponentCoordReport = TRUE
 tumor.report.component.runComponentCountReport = TRUE
+tumor.report.mutation.mutationCountSampleInterval = 1
+tumor.report.mutation.runMutationCountReport = TRUE
 tumor.senesce.modelType = NONE

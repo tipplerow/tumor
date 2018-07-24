@@ -15,6 +15,9 @@ tumor.report.component.componentCoordSampleInterval = 50
 tumor.report.component.runComponentCountReport = TRUE
 tumor.report.component.componentCountSampleInterval = 1
 
+tumor.report.mutation.runMutationCountReport = TRUE
+tumor.report.mutation.mutationCountSampleInterval = 1
+
 tumor.growth.birthRate = 0.75
 tumor.growth.deathRate = 0.25
 
