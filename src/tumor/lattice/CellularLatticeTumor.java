@@ -126,6 +126,9 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         long growthCapacity =
             lattice.isAvailable(expansionCoord) ? 1 : 0;
 
+        if (growthCapacity == 0)
+            return;
+
         // Construct the appropriate local environment...
         TumorEnv localEnv = createLocalEnv(parent, parentCoord, growthCapacity);
 
