@@ -1,6 +1,7 @@
 
 package tumor.mutation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jam.app.JamProperties;
@@ -27,10 +28,16 @@ public abstract class MutationGenerator {
     }
 
     /**
-     * Name of the system property that defines the type for the
-     * global mutation generator.
+     * Name of the system property that defines the type of arrival
+     * rate for neoantigen mutations in the global mutation generator.
      */
-    public static final String GENERATOR_TYPE_PROPERTY = "tumor.mutation.generatorType";
+    public static final String NEOANTIGEN_RATE_TYPE_PROPERTY = "tumor.mutation.neoantigenRateType";
+
+    /**
+     * Name of the system property that defines the mean arrival rate
+     * for neoantigen mutations in the global mutation generator.
+     */
+    public static final String NEOANTIGEN_MEAN_RATE_PROPERTY = "tumor.mutation.neoantigenMeanRate";
 
     /**
      * Name of the system property that defines the type of arrival
@@ -43,6 +50,18 @@ public abstract class MutationGenerator {
      * for neutral mutations in the global mutation generator.
      */
     public static final String NEUTRAL_MEAN_RATE_PROPERTY = "tumor.mutation.neutralMeanRate";
+
+    /**
+     * Name of the system property that defines the type of arrival
+     * rate for resistance mutations in the global mutation generator.
+     */
+    public static final String RESISTANCE_RATE_TYPE_PROPERTY = "tumor.mutation.resistanceRateType";
+
+    /**
+     * Name of the system property that defines the mean arrival rate
+     * for resistance mutations in the global mutation generator.
+     */
+    public static final String RESISTANCE_MEAN_RATE_PROPERTY = "tumor.mutation.resistanceMeanRate";
 
     /**
      * Name of the system property that defines the type of arrival
@@ -133,31 +152,32 @@ public abstract class MutationGenerator {
     }
 
     private static MutationGenerator createGlobal() {
-        MutationGeneratorType generatorType = resolveGeneratorType();
+        List<MutationGenerator> generators = new ArrayList<MutationGenerator>();
 
-        switch (generatorType) {
-        case EMPTY:
-            return EmptyGenerator.INSTANCE;
+        if (JamProperties.isSet(NEOANTIGEN_RATE_TYPE_PROPERTY))
+            generators.add(globalNeoantigenGenerator());
 
-        case NEUTRAL:
-            return globalNeutral();
+        if (JamProperties.isSet(NEUTRAL_RATE_TYPE_PROPERTY))
+            generators.add(globalNeutralGenerator());
 
-        case NEUTRAL_SELECTIVE_FIXED:
-            return globalNeutralSelectiveFixed();
+        if (JamProperties.isSet(RESISTANCE_RATE_TYPE_PROPERTY))
+            generators.add(globalResistanceGenerator());
 
-        case SELECTIVE_FIXED:
-            return globalSelectiveFixed();
+        if (JamProperties.isSet(SELECTIVE_RATE_TYPE_PROPERTY))
+            generators.add(globalSelectiveGenerator());
 
-        default:
-            throw JamException.runtime("Unknown mutation generator type: [%s].", generatorType);
-        }
+        return CompositeGenerator.instance(generators);
     }
 
-    private static MutationGeneratorType resolveGeneratorType() {
-        return JamProperties.getRequiredEnum(GENERATOR_TYPE_PROPERTY, MutationGeneratorType.class);
+    private static MutationGenerator globalNeoantigenGenerator() {
+        MutationRate neoantigenRate =
+            MutationRate.resolveGlobal(NEOANTIGEN_RATE_TYPE_PROPERTY,
+                                       NEOANTIGEN_MEAN_RATE_PROPERTY);
+        
+        return new NeoantigenMutationGenerator(neoantigenRate);
     }
 
-    private static MutationGenerator globalNeutral() {
+    private static MutationGenerator globalNeutralGenerator() {
         MutationRate neutralRate =
             MutationRate.resolveGlobal(NEUTRAL_RATE_TYPE_PROPERTY,
                                        NEUTRAL_MEAN_RATE_PROPERTY);
@@ -165,7 +185,15 @@ public abstract class MutationGenerator {
         return new NeutralMutationGenerator(neutralRate);
     }
 
-    private static MutationGenerator globalSelectiveFixed() {
+    private static MutationGenerator globalResistanceGenerator() {
+        MutationRate resistanceRate =
+            MutationRate.resolveGlobal(RESISTANCE_RATE_TYPE_PROPERTY,
+                                       RESISTANCE_MEAN_RATE_PROPERTY);
+        
+        return new ResistanceMutationGenerator(resistanceRate);
+    }
+
+    private static MutationGenerator globalSelectiveGenerator() {
         double selectionCoeff = resolveSelectionCoeff();
         MutationRate selectiveRate =
             MutationRate.resolveGlobal(SELECTIVE_RATE_TYPE_PROPERTY,
@@ -174,9 +202,6 @@ public abstract class MutationGenerator {
         return new ScalarMutationGenerator(selectiveRate, selectionCoeff);
     }
 
-    private static MutationGenerator globalNeutralSelectiveFixed() {
-        return CompositeGenerator.create(globalNeutral(), globalSelectiveFixed());
-    }
 
     private static double resolveSelectionCoeff() {
         return JamProperties.getRequiredDouble(SELECTION_COEFF_PROPERTY);

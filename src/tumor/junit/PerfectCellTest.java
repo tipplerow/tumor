@@ -18,7 +18,6 @@ import static org.junit.Assert.*;
 
 public class PerfectCellTest extends NumericTestBase {
     static {
-        System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY, "EMPTY");
         TumorDriver.junit();
     }
 

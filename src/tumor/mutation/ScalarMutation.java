@@ -57,7 +57,7 @@ public class ScalarMutation extends Mutation {
     }
 
     @Override public MutationType getType() {
-        return MutationType.NEUTRAL;
+        return MutationType.SCALAR;
     }
 
     @Override public boolean isIndependent() {

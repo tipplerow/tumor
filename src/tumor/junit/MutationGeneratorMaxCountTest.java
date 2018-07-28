@@ -15,7 +15,6 @@ import static org.junit.Assert.*;
 
 public class MutationGeneratorMaxCountTest extends NumericTestBase {
     static {
-        System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY, "NEUTRAL");
         System.setProperty(MutationGenerator.NEUTRAL_RATE_TYPE_PROPERTY, "POISSON");
         System.setProperty(MutationGenerator.NEUTRAL_MEAN_RATE_PROPERTY, "0.1");
         System.setProperty(MutationGenerator.MAX_MUTATION_COUNT_PROPERTY, "100");

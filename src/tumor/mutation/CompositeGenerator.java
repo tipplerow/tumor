@@ -2,7 +2,6 @@
 package tumor.mutation;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -12,28 +11,14 @@ import java.util.List;
 public final class CompositeGenerator extends MutationGenerator {
     private final List<MutationGenerator> generators = new ArrayList<MutationGenerator>();
 
-    private CompositeGenerator(Collection<MutationGenerator> generators) {
+    private CompositeGenerator(List<MutationGenerator> generators) {
         validateGenerators(generators);
         this.generators.addAll(generators);
     }
 
-    private static void validateGenerators(Collection<MutationGenerator> generators) {
+    private static void validateGenerators(List<MutationGenerator> generators) {
         if (generators.size() < 2)
             throw new IllegalArgumentException("Two or more generators are required.");
-    }
-
-    /**
-     * Creates a composite mutation generator with two independent
-     * generators.
-     *
-     * @param gen1 the first generator.
-     *
-     * @param gen2 the second generator.
-     *
-     * @return the new composite generator.
-     */
-    public static CompositeGenerator create(MutationGenerator gen1, MutationGenerator gen2) {
-        return new CompositeGenerator(List.of(gen1, gen2));
     }
 
     /**
@@ -47,8 +32,31 @@ public final class CompositeGenerator extends MutationGenerator {
      * @throws IllegalArgumentException unless two or more generators
      * are supplied.
      */
-    public static CompositeGenerator create(Collection<MutationGenerator> generators) {
+    public static CompositeGenerator create(List<MutationGenerator> generators) {
         return new CompositeGenerator(generators);
+    }
+
+    /**
+     * Returns the most suitable mutation generator for an arbitrary
+     * list of independent generators.
+     *
+     * @param generators an arbitrary list of independent generators.
+     *
+     * @return an empty generator if the list is empty; the single
+     * generator if the list contains exactly one generator; or a
+     * composite generator if the list contains two or more.
+     */
+    public static MutationGenerator instance(List<MutationGenerator> generators) {
+        switch (generators.size()) {
+        case 0:
+            return EmptyGenerator.INSTANCE;
+
+        case 1:
+            return generators.get(0);
+
+        default:
+            return create(generators);
+        }
     }
 
     /**

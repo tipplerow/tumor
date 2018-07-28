@@ -17,7 +17,6 @@ import static org.junit.Assert.*;
 
 public class NeutralLineageTest extends NumericTestBase {
     static {
-        System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY,    "NEUTRAL");
         System.setProperty(MutationGenerator.NEUTRAL_RATE_TYPE_PROPERTY, "POISSON");
         System.setProperty(MutationGenerator.NEUTRAL_MEAN_RATE_PROPERTY, "0.001");
         TumorDriver.junit();

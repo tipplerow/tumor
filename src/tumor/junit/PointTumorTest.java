@@ -19,7 +19,6 @@ import static org.junit.Assert.*;
 
 public class PointTumorTest extends NumericTestBase {
     static {
-        System.setProperty(MutationGenerator.GENERATOR_TYPE_PROPERTY, "EMPTY");
         TumorDriver.junit();
     }
 
