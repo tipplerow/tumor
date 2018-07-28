@@ -4,14 +4,13 @@ package tumor.mutation;
 import tumor.growth.GrowthRate;
 
 /**
- * Represents mutations that leave the growth rate unchanged
- * (passenger mutations).
+ * Represents mutations that confer resistance to treatment.
  */
-public final class NeutralMutation extends Mutation {
+public final class ResistanceMutation extends Mutation {
     /**
-     * Creates a new neutral mutation.
+     * Creates a new resistance mutation.
      */
-    public NeutralMutation() {
+    public ResistanceMutation() {
         super();
     }
 
@@ -24,7 +23,7 @@ public final class NeutralMutation extends Mutation {
     }
 
     @Override public MutationType getType() {
-        return MutationType.NEUTRAL;
+        return MutationType.RESISTANCE;
     }
 
     @Override public boolean isIndependent() {

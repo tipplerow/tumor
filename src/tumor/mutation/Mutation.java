@@ -157,6 +157,13 @@ public abstract class Mutation extends Ordinal {
     public abstract double getSelectionCoeff();
 
     /**
+     * Returns the enumerated type for this mutation.
+     *
+     * @return the enumerated type for this mutation.
+     */
+    public abstract MutationType getType();
+
+    /**
      * Identifies mutations that act independently of all others that
      * are present in the same carrier.
      *

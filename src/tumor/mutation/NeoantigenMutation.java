@@ -4,14 +4,14 @@ package tumor.mutation;
 import tumor.growth.GrowthRate;
 
 /**
- * Represents mutations that leave the growth rate unchanged
- * (passenger mutations).
+ * Represents mutations that generate immunologically active
+ * neoantigens.
  */
-public final class NeutralMutation extends Mutation {
+public final class NeoantigenMutation extends Mutation {
     /**
-     * Creates a new neutral mutation.
+     * Creates a new neoantigen mutation.
      */
-    public NeutralMutation() {
+    public NeoantigenMutation() {
         super();
     }
 
@@ -24,7 +24,7 @@ public final class NeutralMutation extends Mutation {
     }
 
     @Override public MutationType getType() {
-        return MutationType.NEUTRAL;
+        return MutationType.NEOANTIGEN;
     }
 
     @Override public boolean isIndependent() {

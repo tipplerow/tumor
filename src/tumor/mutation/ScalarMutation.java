@@ -56,6 +56,10 @@ public class ScalarMutation extends Mutation {
         return selectionCoeff;
     }
 
+    @Override public MutationType getType() {
+        return MutationType.NEUTRAL;
+    }
+
     @Override public boolean isIndependent() {
         return true;
     }
