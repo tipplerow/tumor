@@ -6,6 +6,12 @@ package tumor.mutation;
  */
 public enum MutationType {
     /**
+     * Founding mutations responsible for the transformation to
+     * malignancy.
+     */
+    FOUNDER,
+
+    /**
      * Mutations that generate immunologically active neoantigens.
      */
     NEOANTIGEN,

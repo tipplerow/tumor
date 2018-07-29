@@ -33,7 +33,7 @@ public abstract class Mutation extends Ordinal {
     /**
      * The single mutation responsible for transformation to malignancy.
      */
-    public static final Mutation TRANSFORMER = neutral();
+    public static final Mutation TRANSFORMER = founder();
 
     /**
      * The mutations responsible for transformation to malignancy.
@@ -54,6 +54,15 @@ public abstract class Mutation extends Ordinal {
      */
     public static long count() {
         return ordinalIndex.peek();
+    }
+
+    /**
+     * Creates a new founding mutation.
+     *
+     * @return the new founding mutation.
+     */
+    public static FounderMutation founder() {
+        return new FounderMutation();
     }
 
     /**
