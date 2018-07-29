@@ -538,6 +538,37 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Selects unique lattice sites on the surface of this tumor at
+     * random (with a uniform distribution along the surface of the
+     * tumor).
+     *
+     * <p>It is difficult to count the number of surface sites, so the
+     * desired number of sites may exceed the number available. Rather
+     * than iterate until the desired number of unique sites has been
+     * sampled (which would result in an infinite loop), we return a
+     * set containing fewer than the target count if duplicates are
+     * sampled.
+     *
+     * @param sampleTrials the number of samples to generated (the
+     * maximum number of sites to select).
+     *
+     * @return a set containing at most {@code sampleTrials} unique
+     * sites selected randomly from the surface of this tumor; the set
+     * will contain fewer than {@code sampleTrials} coordinates if
+     * duplicate sites were sampled.
+     *
+     * @throws IllegalStateException if no surface sites can be found.
+     */
+    public Set<Coord> selectSurfaceSites(int sampleTrials) {
+        Set<Coord> surfaceSites = new HashSet<Coord>(sampleTrials);
+
+        for (int trialIndex = 0; trialIndex < sampleTrials; ++trialIndex)
+            surfaceSites.add(selectSurfaceSite());
+
+        return surfaceSites;
+    }
+
+    /**
      * Returns a read-only view of the underlying lattice.
      *
      * @return a read-only view of the underlying lattice.

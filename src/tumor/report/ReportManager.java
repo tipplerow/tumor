@@ -13,6 +13,7 @@ import tumor.report.dimension.TumorDimensionReport;
 import tumor.report.metastasis.MetMutDistReport;
 import tumor.report.mutation.MutationCountReport;
 import tumor.report.mutgen.MutGenThresholdReport;
+import tumor.report.surface.SurfaceSiteMutationTypeCountReport;
 import tumor.report.variegate.VariegationReport;
 
 /**
@@ -53,6 +54,9 @@ public final class ReportManager {
 
         if (MutGenThresholdReport.reportRequested())
             reports.add(MutGenThresholdReport.instance());
+
+        if (SurfaceSiteMutationTypeCountReport.reportRequested())
+            reports.add(SurfaceSiteMutationTypeCountReport.instance());
 
         if (TumorDimensionReport.reportRequested())
             reports.add(TumorDimensionReport.instance());

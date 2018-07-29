@@ -1,0 +1,105 @@
+
+package tumor.report.surface;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import jam.app.JamProperties;
+import jam.lattice.Coord;
+import jam.math.IntRange;
+
+import tumor.carrier.TumorComponent;
+import tumor.driver.TumorDriver;
+import tumor.lattice.LatticeTumor;
+import tumor.report.TumorRecordReport;
+
+/**
+ * Records the spatial coordinate of every component in the active
+ * tumor.
+ */
+public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<SurfaceSiteMutationTypeCountRecord> {
+    private final int siteCount;
+
+    // The single global instance, created on demand...
+    private static SurfaceSiteMutationTypeCountReport instance = null;
+
+    private SurfaceSiteMutationTypeCountReport() {
+        super(resolveSampleInterval());
+        this.siteCount = resolveSiteCount();
+    }
+
+    private static int resolveSampleInterval() {
+        return JamProperties.getOptionalInt(SAMPLE_INTERVAL_PROPERTY, 0);
+    }
+
+    private static int resolveSiteCount() {
+        return JamProperties.getRequiredInt(SITE_COUNT_PROPERTY, IntRange.POSITIVE);
+    }
+
+    /**
+     * Base name of the report file.
+     */
+    public static final String BASE_NAME = "surface-site-mutation-type-count.csv";
+
+    /**
+     * Name of the system property that specifies whether this report
+     * will be generated.
+     */
+    public static final String RUN_REPORT_PROPERTY =
+        "tumor.report.surface.SurfaceSiteMutationTypeCountReport.run";
+
+    /**
+     * Name of the system property that specifies the number of
+     * surface sites to sample at each recording interval.
+     */
+    public static final String SITE_COUNT_PROPERTY =
+        "tumor.report.surface.SurfaceSiteMutationTypeCountReport.siteCount";
+
+    /**
+     * Name of the system property that specifies the number of time
+     * steps between report record generation; leave unset to report
+     * only at the end of the simulation.
+     */
+    public static final String SAMPLE_INTERVAL_PROPERTY =
+        "tumor.report.surface.SurfaceSiteMutationTypeCountReport.sampleInterval";
+
+    /**
+     * Returns the single global report instance.
+     *
+     * @return the single global report instance.
+     */
+    public static SurfaceSiteMutationTypeCountReport instance() {
+        if (instance == null)
+            instance = new SurfaceSiteMutationTypeCountReport();
+
+        return instance;
+    }
+
+    /**
+     * Determines whether the metastasis mutational distance report
+     * will be executed.
+     *
+     * @return {@code true} iff the user has requested the metastasis
+     * mutational distance report.
+     */
+    public static boolean reportRequested() {
+        return JamProperties.getOptionalBoolean(RUN_REPORT_PROPERTY, false);
+    }
+
+    @Override protected List<SurfaceSiteMutationTypeCountRecord> generateRecords() {
+        TumorDriver<? extends TumorComponent> driver = TumorDriver.global();
+        LatticeTumor<? extends TumorComponent> tumor = driver.getLatticeTumor();
+
+        List<SurfaceSiteMutationTypeCountRecord> records =
+            new ArrayList<SurfaceSiteMutationTypeCountRecord>();
+
+        Set<Coord> siteCoords =
+            tumor.selectSurfaceSites(siteCount);
+
+        for (Coord siteCoord : siteCoords)
+            records.addAll(SurfaceSiteMutationTypeCountRecord.generate(tumor, siteCoord));
+
+        return records;
+    }
+}
