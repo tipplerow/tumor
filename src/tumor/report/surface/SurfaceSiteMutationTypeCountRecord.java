@@ -24,10 +24,11 @@ import tumor.report.mutation.MutationTypeSiteCountRecord;
  */
 public final class SurfaceSiteMutationTypeCountRecord extends MutationTypeSiteCountRecord {
     private SurfaceSiteMutationTypeCountRecord(Coord        siteCoord,
-                                               long         cellCount,
+                                               long         siteCellCount,
+                                               long         tumorCellCount,
                                                MutationType mutationType,
                                                long         mutationCount) {
-        super(siteCoord, cellCount, mutationType, mutationCount);
+        super(siteCoord, siteCellCount, tumorCellCount, mutationType, mutationCount);
     }
 
     /**
@@ -43,7 +44,7 @@ public final class SurfaceSiteMutationTypeCountRecord extends MutationTypeSiteCo
     public static List<SurfaceSiteMutationTypeCountRecord>
         generate(LatticeTumor<? extends TumorComponent> tumor, Coord siteCoord) {
 
-        long cellCount = 0;
+        long siteCellCount = 0;
         Multiset<MutationType> typeCounts = HashMultiset.create();
         Set<? extends TumorComponent> components = tumor.viewComponents(siteCoord);
 
@@ -58,7 +59,7 @@ public final class SurfaceSiteMutationTypeCountRecord extends MutationTypeSiteCo
 
             // Must accumulated the cell count separately just in case
             // a component contains no mutations...
-            cellCount += component.countCells();
+            siteCellCount += component.countCells();
         }
 
         List<SurfaceSiteMutationTypeCountRecord> records =
@@ -66,7 +67,8 @@ public final class SurfaceSiteMutationTypeCountRecord extends MutationTypeSiteCo
 
         for (MutationType mutationType : typeCounts.elementSet())
             records.add(new SurfaceSiteMutationTypeCountRecord(siteCoord,
-                                                               cellCount,
+                                                               siteCellCount,
+                                                               tumor.countCells(),
                                                                mutationType,
                                                                typeCounts.count(mutationType)));
 
