@@ -13,7 +13,7 @@ tumor.capacity.siteCapacity = 5000
 tumor.driver.trialIndex   = 1
 tumor.driver.initialSize  = 100
 tumor.driver.maxStepCount = 5000
-tumor.driver.maxTumorSize = 1E8
+tumor.driver.maxTumorSize = 1E7
 
 tumor.growth.birthRate = 0.55
 tumor.growth.deathRate = 0.45

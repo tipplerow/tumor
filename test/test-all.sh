@@ -6,13 +6,19 @@
 cd `dirname $0`
 
 ./test-driver.sh \
+    Neoantigen/neoantigen-test.prop \
+    bulk-site-mutation-type-count.csv \
+    surface-site-mutation-type-count.csv \
+    runtime.prop
+
+exit 0
+
+./test-driver.sh \
     LatticeCell/lattice-cell-test.prop \
     component-coord.csv.gz \
     component-count.csv \
     mutation-count.csv \
     runtime.prop
-
-exit 0
 
 ./test-driver.sh BulkSampleSite/bulk-sample-site-test.prop bulk-sample-site.csv
 
