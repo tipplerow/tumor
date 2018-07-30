@@ -12,6 +12,7 @@ import tumor.report.component.ComponentCountReport;
 import tumor.report.dimension.TumorDimensionReport;
 import tumor.report.metastasis.MetMutDistReport;
 import tumor.report.mutation.MutationCountReport;
+import tumor.report.mutation.BulkSiteMutationTypeCountReport;
 import tumor.report.mutation.SurfaceSiteMutationTypeCountReport;
 import tumor.report.mutgen.MutGenThresholdReport;
 import tumor.report.variegate.VariegationReport;
@@ -36,6 +37,9 @@ public final class ReportManager {
 
         if (BulkSampleSiteReport.reportRequested())
             reports.add(BulkSampleSiteReport.instance());
+
+        if (BulkSiteMutationTypeCountReport.reportRequested())
+            reports.add(BulkSiteMutationTypeCountReport.instance());
 
         if (BulkVAFReport.reportRequested())
             reports.add(BulkVAFReport.instance());

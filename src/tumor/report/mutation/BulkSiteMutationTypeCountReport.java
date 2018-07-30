@@ -1,12 +1,15 @@
 
 package tumor.report.mutation;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import jam.app.JamProperties;
 import jam.lattice.Coord;
 import jam.math.IntRange;
+import jam.math.JamRandom;
+import jam.util.ListUtil;
 
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
@@ -17,13 +20,13 @@ import tumor.report.TumorRecordReport;
  * Records the spatial coordinate of every component in the active
  * tumor.
  */
-public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<SiteMutationTypeCountRecord> {
+public final class BulkSiteMutationTypeCountReport extends TumorRecordReport<SiteMutationTypeCountRecord> {
     private final int siteCount;
 
     // The single global instance, created on demand...
-    private static SurfaceSiteMutationTypeCountReport instance = null;
+    private static BulkSiteMutationTypeCountReport instance = null;
 
-    private SurfaceSiteMutationTypeCountReport() {
+    private BulkSiteMutationTypeCountReport() {
         super(resolveSampleInterval());
         this.siteCount = resolveSiteCount();
     }
@@ -39,21 +42,21 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
     /**
      * Base name of the report file.
      */
-    public static final String BASE_NAME = "surface-site-mutation-type-count.csv";
+    public static final String BASE_NAME = "bulk-site-mutation-type-count.csv";
 
     /**
      * Name of the system property that specifies whether this report
      * will be generated.
      */
     public static final String RUN_REPORT_PROPERTY =
-        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.run";
+        "tumor.report.mutation.BulkSiteMutationTypeCountReport.run";
 
     /**
      * Name of the system property that specifies the number of
-     * surface sites to sample at each recording interval.
+     * bulk sites to sample at each recording interval.
      */
     public static final String SITE_COUNT_PROPERTY =
-        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.siteCount";
+        "tumor.report.mutation.BulkSiteMutationTypeCountReport.siteCount";
 
     /**
      * Name of the system property that specifies the number of time
@@ -61,16 +64,16 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
      * only at the end of the simulation.
      */
     public static final String SAMPLE_INTERVAL_PROPERTY =
-        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.sampleInterval";
+        "tumor.report.mutation.BulkSiteMutationTypeCountReport.sampleInterval";
 
     /**
      * Returns the single global report instance.
      *
      * @return the single global report instance.
      */
-    public static SurfaceSiteMutationTypeCountReport instance() {
+    public static BulkSiteMutationTypeCountReport instance() {
         if (instance == null)
-            instance = new SurfaceSiteMutationTypeCountReport();
+            instance = new BulkSiteMutationTypeCountReport();
 
         return instance;
     }
@@ -90,9 +93,15 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
         TumorDriver<? extends TumorComponent> driver = TumorDriver.global();
         LatticeTumor<? extends TumorComponent> tumor = driver.getLatticeTumor();
 
-        Set<Coord> siteCoords =
-            tumor.selectSurfaceSites(siteCount);
+        Set<Coord> occupiedCoords = tumor.getOccupiedCoord();
 
-        return SiteMutationTypeCountRecord.generate(BASE_NAME, siteCoords);
+        if (occupiedCoords.size() <= siteCount)
+            return SiteMutationTypeCountRecord.generate(BASE_NAME, occupiedCoords);
+
+        // Select the desired number of occupied sites randomly...
+        List<Coord> sampleCoords = new ArrayList<Coord>(occupiedCoords);
+        ListUtil.shuffle(sampleCoords, JamRandom.global());
+
+        return SiteMutationTypeCountRecord.generate(BASE_NAME, sampleCoords.subList(0, siteCount));
     }
 }
