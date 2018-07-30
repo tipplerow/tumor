@@ -351,6 +351,19 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
     }
 
     /**
+     * Returns the number of tumor components present at a given
+     * lattice site.
+     *
+     * @param coord the coordinate to examine.
+     *
+     * @return the number of tumor components present at the specified
+     * lattice site.
+     */
+    public long countComponents(Coord coord) {
+        return lattice.countOccupants(coord);
+    }
+
+    /**
      * Counts the number of mutations of each type at a given lattice
      * site.
      *

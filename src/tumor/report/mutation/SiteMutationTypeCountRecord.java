@@ -28,6 +28,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
     private final double normRadialDist;
 
     private final long siteCellCount;
+    private final long siteCompCount;
     private final long tumorCellCount;
     private final long mutationCount;
 
@@ -37,6 +38,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
                                         Coord  siteCoord,
                                         double normRadialDist,
                                         long   siteCellCount,
+                                        long   siteCompCount,
                                         long   tumorCellCount,
                                         long   mutationCount,
                                         MutationType mutationType) {
@@ -46,6 +48,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         this.normRadialDist = normRadialDist;
 
         this.siteCellCount  = siteCellCount;
+        this.siteCompCount  = siteCompCount;
         this.tumorCellCount = tumorCellCount;
         this.mutationCount  = mutationCount;
 
@@ -69,6 +72,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         LatticeTumor<? extends TumorComponent> tumor = driver.getLatticeTumor();
 
         long   siteCellCount  = tumor.countCells(siteCoord);
+        long   siteCompCount  = tumor.countComponents(siteCoord);
         long   tumorCellCount = tumor.countCells();
         double normRadialDist = siteCoord.normRadialDist(tumor.getVectorMoment());
 
@@ -83,6 +87,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
                                                         siteCoord,
                                                         normRadialDist,
                                                         siteCellCount,
+                                                        siteCompCount,
                                                         tumorCellCount,
                                                         typeCounts.count(mutationType),
                                                         mutationType));
@@ -124,6 +129,10 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         return siteCellCount;
     }
 
+    public long getSiteComponentCount() {
+        return siteCompCount;
+    }
+
     public long getTumorCellCount() {
         return tumorCellCount;
     }
@@ -147,6 +156,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         builder.append(siteCoord.z);
         builder.append(normRadialDist);
         builder.append(siteCellCount);
+        builder.append(siteCompCount);
         builder.append(mutationType);
         builder.append(mutationCount);
 
@@ -168,6 +178,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         builder.append("siteCoordZ");
         builder.append("normRadialDist");
         builder.append("siteCellCount");
+        builder.append("siteComponentCount");
         builder.append("mutationType");
         builder.append("mutationCount");
 
