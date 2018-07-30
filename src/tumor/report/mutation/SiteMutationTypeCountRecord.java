@@ -154,7 +154,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         builder.append(siteCoord.x);
         builder.append(siteCoord.y);
         builder.append(siteCoord.z);
-        builder.append(normRadialDist);
+        builder.append(String.format("%.4f", normRadialDist));
         builder.append(siteCellCount);
         builder.append(siteCompCount);
         builder.append(mutationType);
