@@ -1,0 +1,43 @@
+########################################################################
+# Simulation of tumor growth with lineages occupying a 3D cubic
+# lattice. Neoantigens arrive in a Poisson process, and we report
+# their prevalence on the surface of the tumor and within its bulk.
+########################################################################
+
+tumor.driver.componentType = LINEAGE
+tumor.driver.spatialType   = LATTICE
+
+tumor.capacity.modelType    = UNIFORM
+tumor.capacity.siteCapacity = 5000
+
+tumor.driver.trialIndex   = 1
+tumor.driver.initialSize  = 100
+tumor.driver.maxStepCount = 5000
+tumor.driver.maxTumorSize = 1E8
+
+tumor.growth.birthRate = 0.55
+tumor.growth.deathRate = 0.45
+
+tumor.growth.localModelType = INTRINSIC
+
+tumor.lattice.periodLength = 225
+
+tumor.migrate.modelType = PINNED
+
+tumor.mutation.neoantigenRateType = POISSON
+tumor.mutation.neoantigenMeanRate = 1E-4
+tumor.mutation.maxMutationCount   = 1E9
+
+tumor.report.mutation.BulkSiteMutationTypeCountReport.run = TRUE
+tumor.report.mutation.BulkSiteMutationTypeCountReport.siteCount = 1000
+tumor.report.mutation.BulkSiteMutationTypeCountReport.sampleInterval = 100
+
+tumor.report.mutation.SurfaceSiteMutationTypeCountReport.run = TRUE
+tumor.report.mutation.SurfaceSiteMutationTypeCountReport.siteCount = 1000
+tumor.report.mutation.SurfaceSiteMutationTypeCountReport.sampleInterval = 100
+
+tumor.senesce.modelType          = NEIGHBORHOOD_OCCUPANCY_FRACTION
+tumor.senesce.neighborhood       = MOORE
+tumor.senesce.occupancyThreshold = 0.95
+
+jam.math.randomSeed = 20071202
