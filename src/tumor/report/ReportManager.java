@@ -12,8 +12,8 @@ import tumor.report.component.ComponentCountReport;
 import tumor.report.dimension.TumorDimensionReport;
 import tumor.report.metastasis.MetMutDistReport;
 import tumor.report.mutation.MutationCountReport;
+import tumor.report.mutation.SurfaceSiteMutationTypeCountReport;
 import tumor.report.mutgen.MutGenThresholdReport;
-import tumor.report.surface.SurfaceSiteMutationTypeCountReport;
 import tumor.report.variegate.VariegationReport;
 
 /**

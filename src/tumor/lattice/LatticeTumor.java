@@ -11,8 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.EnumMultiset;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 
 import jam.app.JamProperties;
 import jam.dist.HypersphericalDistribution;
@@ -38,7 +40,10 @@ import tumor.growth.GrowthRate;
 import tumor.growth.LocalGrowthModel;
 import tumor.migrate.MigrationModel;
 import tumor.migrate.MigrationType;
+import tumor.mutation.Genotype;
+import tumor.mutation.Mutation;
 import tumor.mutation.MutationGenerator;
+import tumor.mutation.MutationType;
 import tumor.senesce.SenescenceModel;
 
 /**
@@ -343,6 +348,32 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      */
     public JamVector computeRadialVector(Coord coord) {
         return coord.toVector().minus(getVectorMoment().getCM());
+    }
+
+    /**
+     * Counts the number of mutations of each type at a given lattice
+     * site.
+     *
+     * @param coord the lattice site to examine.
+     *
+     * @return a multiset containing the number of mutations of each
+     * type present at the specified site.
+     */
+    public Multiset<MutationType> countMutationTypes(Coord coord) {
+        Set<E> components = viewComponents(coord);
+        Multiset<MutationType> typeCounts = EnumMultiset.create(MutationType.class);
+
+        for (TumorComponent component : components) {
+            Genotype genotype = component.getGenotype();
+            Iterator<Mutation> iterator = genotype.scanAccumulatedMutations();
+
+            while (iterator.hasNext()) {
+                Mutation mutation = iterator.next();
+                typeCounts.add(mutation.getType(), (int) component.countCells());
+            }
+        }
+
+        return typeCounts;
     }
 
     /**

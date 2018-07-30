@@ -1,5 +1,5 @@
 
-package tumor.report.surface;
+package tumor.report.mutation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ import tumor.report.TumorRecordReport;
  * Records the spatial coordinate of every component in the active
  * tumor.
  */
-public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<SurfaceSiteMutationTypeCountRecord> {
+public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<SiteMutationTypeCountRecord> {
     private final int siteCount;
 
     // The single global instance, created on demand...
@@ -47,14 +47,14 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
      * will be generated.
      */
     public static final String RUN_REPORT_PROPERTY =
-        "tumor.report.surface.SurfaceSiteMutationTypeCountReport.run";
+        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.run";
 
     /**
      * Name of the system property that specifies the number of
      * surface sites to sample at each recording interval.
      */
     public static final String SITE_COUNT_PROPERTY =
-        "tumor.report.surface.SurfaceSiteMutationTypeCountReport.siteCount";
+        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.siteCount";
 
     /**
      * Name of the system property that specifies the number of time
@@ -62,7 +62,7 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
      * only at the end of the simulation.
      */
     public static final String SAMPLE_INTERVAL_PROPERTY =
-        "tumor.report.surface.SurfaceSiteMutationTypeCountReport.sampleInterval";
+        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.sampleInterval";
 
     /**
      * Returns the single global report instance.
@@ -87,19 +87,13 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
         return JamProperties.getOptionalBoolean(RUN_REPORT_PROPERTY, false);
     }
 
-    @Override protected List<SurfaceSiteMutationTypeCountRecord> generateRecords() {
+    @Override protected List<SiteMutationTypeCountRecord> generateRecords() {
         TumorDriver<? extends TumorComponent> driver = TumorDriver.global();
         LatticeTumor<? extends TumorComponent> tumor = driver.getLatticeTumor();
-
-        List<SurfaceSiteMutationTypeCountRecord> records =
-            new ArrayList<SurfaceSiteMutationTypeCountRecord>();
 
         Set<Coord> siteCoords =
             tumor.selectSurfaceSites(siteCount);
 
-        for (Coord siteCoord : siteCoords)
-            records.addAll(SurfaceSiteMutationTypeCountRecord.generate(tumor, siteCoord));
-
-        return records;
+        return SiteMutationTypeCountRecord.generate(BASE_NAME, siteCoords);
     }
 }
