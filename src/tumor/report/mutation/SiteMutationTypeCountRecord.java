@@ -83,14 +83,15 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
             new ArrayList<SiteMutationTypeCountRecord>();
 
         for (MutationType mutationType : typeCounts.elementSet())
-            records.add(new SiteMutationTypeCountRecord(baseName,
-                                                        siteCoord,
-                                                        normRadialDist,
-                                                        siteCellCount,
-                                                        siteCompCount,
-                                                        tumorCellCount,
-                                                        typeCounts.count(mutationType),
-                                                        mutationType));
+            if (!mutationType.equals(MutationType.FOUNDER))
+                records.add(new SiteMutationTypeCountRecord(baseName,
+                                                            siteCoord,
+                                                            normRadialDist,
+                                                            siteCellCount,
+                                                            siteCompCount,
+                                                            tumorCellCount,
+                                                            typeCounts.count(mutationType),
+                                                            mutationType));
 
         return records;
     }
