@@ -15,6 +15,13 @@ import static org.junit.Assert.*;
 
 public class MutationRateTest extends NumericTestBase {
 
+    @Test public void testPoissonCompute() {
+        double mean = 0.2;
+        MutationRate rate = MutationRate.poisson(mean);
+        System.out.println(java.util.Arrays.toString(rate.computeMutationDistribution(100)));
+        System.out.println(java.util.Arrays.toString(rate.computeMutationCounts(100)));
+    }
+
     @Test public void testPoissonSample() {
         double mean = 0.1;
         MutationRate rate = MutationRate.poisson(mean);

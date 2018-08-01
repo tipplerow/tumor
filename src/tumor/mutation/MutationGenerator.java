@@ -152,7 +152,7 @@ public abstract class MutationGenerator {
     }
 
     private static MutationGenerator createGlobal() {
-        List<MutationGenerator> generators = new ArrayList<MutationGenerator>();
+        List<HomogeneousGenerator> generators = new ArrayList<HomogeneousGenerator>();
 
         if (JamProperties.isSet(NEOANTIGEN_RATE_TYPE_PROPERTY))
             generators.add(globalNeoantigenGenerator());
@@ -169,7 +169,7 @@ public abstract class MutationGenerator {
         return CompositeGenerator.instance(generators);
     }
 
-    private static MutationGenerator globalNeoantigenGenerator() {
+    private static HomogeneousGenerator globalNeoantigenGenerator() {
         MutationRate neoantigenRate =
             MutationRate.resolveGlobal(NEOANTIGEN_RATE_TYPE_PROPERTY,
                                        NEOANTIGEN_MEAN_RATE_PROPERTY);
@@ -177,7 +177,7 @@ public abstract class MutationGenerator {
         return new NeoantigenMutationGenerator(neoantigenRate);
     }
 
-    private static MutationGenerator globalNeutralGenerator() {
+    private static HomogeneousGenerator globalNeutralGenerator() {
         MutationRate neutralRate =
             MutationRate.resolveGlobal(NEUTRAL_RATE_TYPE_PROPERTY,
                                        NEUTRAL_MEAN_RATE_PROPERTY);
@@ -185,7 +185,7 @@ public abstract class MutationGenerator {
         return new NeutralMutationGenerator(neutralRate);
     }
 
-    private static MutationGenerator globalResistanceGenerator() {
+    private static HomogeneousGenerator globalResistanceGenerator() {
         MutationRate resistanceRate =
             MutationRate.resolveGlobal(RESISTANCE_RATE_TYPE_PROPERTY,
                                        RESISTANCE_MEAN_RATE_PROPERTY);
@@ -193,7 +193,7 @@ public abstract class MutationGenerator {
         return new ResistanceMutationGenerator(resistanceRate);
     }
 
-    private static MutationGenerator globalSelectiveGenerator() {
+    private static HomogeneousGenerator globalSelectiveGenerator() {
         double selectionCoeff = resolveSelectionCoeff();
         MutationRate selectiveRate =
             MutationRate.resolveGlobal(SELECTIVE_RATE_TYPE_PROPERTY,

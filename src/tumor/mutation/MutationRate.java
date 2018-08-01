@@ -1,6 +1,8 @@
 
 package tumor.mutation;
 
+import org.apache.commons.math3.util.MathArrays;
+
 import jam.app.JamProperties;
 import jam.dist.DiscretePDF;
 import jam.dist.PoissonDistribution;
@@ -16,6 +18,29 @@ import jam.math.JamRandom;
  */
 public abstract class MutationRate {
     private final double mean;
+
+    /**
+     * The maximum size of the daughter population for which the
+     * number of arriving mutations will be sampled individually.
+     * The number of mutations for larger daughter populations will
+     * be computed <em>semi-stochastically</em>.
+     */
+    public static final int EXPLICIT_SAMPLING_LIMIT = resolveSamplingLimit();
+
+    private static int resolveSamplingLimit() {
+        return JamProperties.getOptionalInt(EXPLICIT_SAMPLING_LIMIT_PROPERTY, EXPLICIT_SAMPLING_LIMIT_DEFAULT);
+    }
+
+    /**
+     * Name of the system property that defines the maximum daughter
+     * count for which explicit event sampling will be performed.
+     */
+    public static final String EXPLICIT_SAMPLING_LIMIT_PROPERTY = "tumor.mutation.explicitSamplingLimit";
+
+    /**
+     * Default value for the explicit event sampling limit.
+     */
+    public static final int EXPLICIT_SAMPLING_LIMIT_DEFAULT = 10;
 
     /**
      * Creates a new fixed mutation rate.
@@ -127,6 +152,44 @@ public abstract class MutationRate {
     }
 
     /**
+     * Computes the number of mutations arising in a generation of
+     * daughter cells.
+     *
+     * <p>Note that this is a <em>semi-stochastic</em> calculation,
+     * with a random number source used only to discretize the exact
+     * expectation value.
+     *
+     * @param daughterCount the number of daughter cells in the new
+     * generation.
+     *
+     * @return an array of length {@code daughterCount} where element
+     * {@code k} contains the number of mutations arising in daughter
+     * {@code k}.
+     */
+    public int[] computeMutationCounts(long daughterCount) {
+        //
+        // Generate a realization of the mutation distribution, D,
+        // where D[k] is the number of daughters receiving exactly
+        // "k" mutations...
+        //
+        long[] mutationDistribution = computeMutationDistribution(daughterCount);
+
+        // Now assign a mutation count to each daughter, but skip the
+        // zero count because it is the default value when the array
+        // is created...
+        int   daughterIndex  = 0;
+        int[] mutationCounts = new int[(int) daughterCount];
+        
+        for (int realizedCount = 1; realizedCount < mutationDistribution.length; ++realizedCount)
+            for (int atThisCount = 0; atThisCount < mutationDistribution[realizedCount]; ++atThisCount)
+                mutationCounts[daughterIndex++] = realizedCount;
+
+        // Now shuffle the mutation counts randomly...
+        MathArrays.shuffle(mutationCounts, JamRandom.global());
+        return mutationCounts;
+    }
+
+    /**
      * Computes the distribution of <em>expected</em> mutation counts
      * in a generation of daughter cells.
      *
@@ -143,6 +206,48 @@ public abstract class MutationRate {
     public abstract long[] computeMutationDistribution(long daughterCount);
 
     /**
+     * Returns the total number of mutations arising in a generation
+     * of daughter cells.
+     *
+     * <p>This method will use the efficient semi-stochastic algorithm
+     * for generations larger than the sampling limit and the explicit
+     * sampling algorithm for smaller populations.
+     *
+     * @param daughterCount the number of daughter cells in the new
+     * generation.
+     *
+     * @return the total number of mutations in the new generation.
+     */
+    public long resolveMutationCount(long daughterCount) {
+        if (daughterCount <= EXPLICIT_SAMPLING_LIMIT)
+            return sampleMutationCount(daughterCount);
+        else
+            return computeMutationCount(daughterCount);
+    }
+
+    /**
+     * Returns the number of mutations arising in each daughter from a
+     * new generation.
+     *
+     * <p>This method will use the efficient semi-stochastic algorithm
+     * for generations larger than the sampling limit and the explicit
+     * sampling algorithm for smaller populations.
+     *
+     * @param daughterCount the number of daughter cells in the new
+     * generation.
+     *
+     * @return an array of length {@code daughterCount} where element
+     * {@code k} contains the number of mutations arising in daughter
+     * {@code k}.
+     */
+    public int[] resolveMutationCounts(long daughterCount) {
+        if (daughterCount <= EXPLICIT_SAMPLING_LIMIT)
+            return sampleMutationCounts(daughterCount);
+        else
+            return computeMutationCounts(daughterCount);
+    }
+
+    /**
      * Stochastically samples the number of mutations arising in a
      * single daughter cell.
      *
@@ -151,8 +256,8 @@ public abstract class MutationRate {
     public abstract long sampleMutationCount();
 
     /**
-     * Stochastically samples the number of mutations arising in a
-     * generation of daughter cells.
+     * Stochastically samples the total number of mutations arising in
+     * a generation of daughter cells.
      *
      * @param daughterCount the number of new daughter cells in the
      * generation.
@@ -167,6 +272,26 @@ public abstract class MutationRate {
             result += sampleMutationCount();
 
         return result;
+    }
+
+    /**
+     * Stochastically samples the number of mutations arising in a
+     * generation of daughter cells.
+     *
+     * @param daughterCount the number of daughter cells in the new
+     * generation.
+     *
+     * @return an array of length {@code daughterCount} where element
+     * {@code k} contains the number of mutations arising in daughter
+     * {@code k}.
+     */
+    public int[] sampleMutationCounts(long daughterCount) {
+        int[] mutationCounts = new int[(int) daughterCount];
+
+        for (int daughterIndex = 0; daughterIndex < daughterCount; ++daughterIndex)
+            mutationCounts[daughterIndex] = (int) sampleMutationCount();
+
+        return mutationCounts;
     }
 
     /**

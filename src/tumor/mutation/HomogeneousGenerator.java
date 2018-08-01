@@ -12,11 +12,6 @@ import jam.app.JamProperties;
 public abstract class HomogeneousGenerator extends MutationGenerator {
     private final MutationRate mutationRate;
 
-    // For daughter populations larger than this size, the number of
-    // mutations will be computed semi-stochastically rather than by
-    // explicit sampling for each daughter cell.
-    private final int samplingLimit;
-
     /**
      * Creates a homogeneous mutation generator with a fixed mutation
      * rate.
@@ -24,34 +19,24 @@ public abstract class HomogeneousGenerator extends MutationGenerator {
      * @param mutationRate the fixed mutation rate.
      */
     protected HomogeneousGenerator(MutationRate mutationRate) {
-        this.mutationRate  = mutationRate;
-        this.samplingLimit = resolveSamplingLimit();
+        this.mutationRate = mutationRate;
     }
-
-    private static int resolveSamplingLimit() {
-        return JamProperties.getOptionalInt(EXPLICIT_SAMPLING_LIMIT_PROPERTY,
-                                            EXPLICIT_SAMPLING_LIMIT_DEFAULT);
-    }
-
-    /**
-     * Name of the system property that defines the maximum cell count
-     * for which explicit event sampling will be performed.
-     */
-    public static final String EXPLICIT_SAMPLING_LIMIT_PROPERTY = "tumor.mutation.explicitSamplingLimit";
-
-    /**
-     * Default value for the explicit event sampling limit.
-     */
-    public static final int EXPLICIT_SAMPLING_LIMIT_DEFAULT = 10;
 
     /**
      * Generates a single mutation.
      *
      * @return a new mutation.
      */
-    protected abstract Mutation generateOne();
+    public abstract Mutation generateOne();
 
-    private List<Mutation> generateList(long mutationCount) {
+    /**
+     * Generates a sequence of mutations.
+     *
+     * @param mutationCount the number of mutations to generate.
+     *
+     * @return a list containing the specified number of mutations.
+     */
+    public List<Mutation> generateList(long mutationCount) {
         List<Mutation> mutations = new ArrayList<Mutation>((int) mutationCount);
 
         for (int index = 0; index < mutationCount; ++index)
@@ -74,18 +59,11 @@ public abstract class HomogeneousGenerator extends MutationGenerator {
     }
 
     @Override public List<Mutation> generateDemeMutations(long daughterCount) {
-        return generateList(resolveDemeMutationCount(daughterCount));
-    }
-
-    private long resolveDemeMutationCount(long daughterCount) {
-        if (daughterCount <= samplingLimit)
-            return mutationRate.sampleMutationCount(daughterCount);
-        else
-            return mutationRate.computeMutationCount(daughterCount);
+        return generateList(mutationRate.resolveMutationCount(daughterCount));
     }
 
     @Override public List<List<Mutation>> generateLineageMutations(long daughterCount) {
-        if (daughterCount <= samplingLimit)
+        if (daughterCount <= MutationRate.EXPLICIT_SAMPLING_LIMIT)
             return sampleLineageMutations(daughterCount);
         else
             return computeLineageMutations(daughterCount);
