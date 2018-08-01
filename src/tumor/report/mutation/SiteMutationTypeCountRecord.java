@@ -30,9 +30,8 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
     private final long siteCellCount;
     private final long siteCompCount;
     private final long tumorCellCount;
-    private final long mutationCount;
 
-    private final MutationType mutationType;
+    private final Multiset<MutationType> mutationCounts;
 
     private SiteMutationTypeCountRecord(String baseName,
                                         Coord  siteCoord,
@@ -40,8 +39,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
                                         long   siteCellCount,
                                         long   siteCompCount,
                                         long   tumorCellCount,
-                                        long   mutationCount,
-                                        MutationType mutationType) {
+                                        Multiset<MutationType> mutationCounts) {
         this.baseName = baseName;
 
         this.siteCoord      = siteCoord;
@@ -50,13 +48,12 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         this.siteCellCount  = siteCellCount;
         this.siteCompCount  = siteCompCount;
         this.tumorCellCount = tumorCellCount;
-        this.mutationCount  = mutationCount;
 
-        this.mutationType   = mutationType;
+        this.mutationCounts = mutationCounts;
     }
 
     /**
-     * Generates type-count records for a single site in the tumor
+     * Generates a type-count record for a single site in the tumor
      * currently under simulation.
      *
      * @param baseName the base name of the report file where the
@@ -64,10 +61,9 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
      *
      * @param siteCoord the coordinate of the site to examine.
      *
-     * @return a list containing one type-count record for each
-     * mutation type found at the given site.
+     * @return the type-count record for the given site.
      */
-    public static List<SiteMutationTypeCountRecord> generate(String baseName, Coord siteCoord) {
+    public static SiteMutationTypeCountRecord generate(String baseName, Coord siteCoord) {
         TumorDriver<? extends TumorComponent> driver = TumorDriver.global();
         LatticeTumor<? extends TumorComponent> tumor = driver.getLatticeTumor();
 
@@ -79,21 +75,13 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         Multiset<MutationType> typeCounts =
             tumor.countMutationTypes(siteCoord);
 
-        List<SiteMutationTypeCountRecord> records =
-            new ArrayList<SiteMutationTypeCountRecord>();
-
-        for (MutationType mutationType : typeCounts.elementSet())
-            if (!mutationType.equals(MutationType.FOUNDER))
-                records.add(new SiteMutationTypeCountRecord(baseName,
-                                                            siteCoord,
-                                                            normRadialDist,
-                                                            siteCellCount,
-                                                            siteCompCount,
-                                                            tumorCellCount,
-                                                            typeCounts.count(mutationType),
-                                                            mutationType));
-
-        return records;
+        return new SiteMutationTypeCountRecord(baseName,
+                                               siteCoord,
+                                               normRadialDist,
+                                               siteCellCount,
+                                               siteCompCount,
+                                               tumorCellCount,
+                                               typeCounts);
     }
 
     /**
@@ -113,7 +101,7 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
             new ArrayList<SiteMutationTypeCountRecord>();
 
         for (Coord siteCoord : siteCoords)
-            records.addAll(generate(baseName, siteCoord));
+            records.add(generate(baseName, siteCoord));
 
         return records;
     }
@@ -138,12 +126,8 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         return tumorCellCount;
     }
 
-    public MutationType getMutationType() {
-        return mutationType;
-    }
-
-    public long getMutationCount() {
-        return mutationCount;
+    public Multiset<MutationType> getMutationCounts() {
+        return mutationCounts;
     }
 
     @Override public String formatLine() {
@@ -158,8 +142,9 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         builder.append(String.format("%.4f", normRadialDist));
         builder.append(siteCellCount);
         builder.append(siteCompCount);
-        builder.append(mutationType);
-        builder.append(mutationCount);
+
+        for (MutationType mutationType : MutationType.values())
+            builder.append(mutationCounts.count(mutationType));
 
         return builder.toString();
     }
@@ -180,8 +165,9 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         builder.append("normRadialDist");
         builder.append("siteCellCount");
         builder.append("siteComponentCount");
-        builder.append("mutationType");
-        builder.append("mutationCount");
+
+        for (MutationType mutationType : MutationType.values())
+            builder.append(String.format("%s.count", mutationType));
 
         return builder.toString();
     }
