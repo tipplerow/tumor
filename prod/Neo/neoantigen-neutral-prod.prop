@@ -27,8 +27,6 @@ tumor.lattice.periodLength = 225
 tumor.migrate.modelType = PINNED
 
 tumor.mutation.neoantigenRateType = POISSON
-tumor.mutation.selectiveRateType  = POISSON
-tumor.mutation.selectiveMeanRate  = 1E-5
 
 tumor.report.dimension.TumorDimensionReport.run = TRUE
 tumor.report.dimension.TumorDimensionReport.sampleInterval = 50

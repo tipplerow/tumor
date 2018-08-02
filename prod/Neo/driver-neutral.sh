@@ -3,17 +3,17 @@
 # Driver script for neoantigen simulation.
 ########################################################################
 
-PROP_FILE=neoantigen-prod.prop
+PROP_FILE=neoantigen-neutral-prod.prop
 
-if [ $# -ne 3 ]
+if [ $# -ne 2 ]
 then
-    echo "Usage:" `basename $0` "SITE_CAPACITY SELECTION_COEFF NEOANTIGEN_RATE"
+    echo "Usage:" `basename $0` "SITE_CAPACITY NEOANTIGEN_RATE"
     exit 1
 fi
 
 SITE_CAPACITY=$1
-SELECTION_COEFF=$2
-NEOANTIGEN_RATE=$3
+SELECTION_COEFF=0
+NEOANTIGEN_RATE=$2
 
 TRIAL_BEGIN=0
 TRIAL_END=25
@@ -36,7 +36,6 @@ do
                     -Djam.app.reportDir=${REPORT_BASE}/$SubDir \
                     -Dtumor.driver.trialIndex=$TrialIndex \
                     -Dtumor.capacity.siteCapacity=$SITE_CAPACITY \
-                    -Dtumor.mutation.selectionCoeff=$SELECTION_COEFF \
                     -Dtumor.mutation.neoantigenMeanRate=$NEOANTIGEN_RATE \
                     $PROP_FILE
 
