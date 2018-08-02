@@ -32,14 +32,14 @@ public final class MutationCountReport extends TumorRecordReport<MutationCountRe
      * Name of the system property that specifies whether this report
      * will be generated.
      */
-    public static final String RUN_REPORT_PROPERTY = "tumor.report.mutation.runMutationCountReport";
+    public static final String RUN_REPORT_PROPERTY = "tumor.report.mutation.MutationCountReport.run";
 
     /**
      * Name of the system property that specifies the number of time
      * steps between report record generation; leave unset to report
      * only at the end of the simulation.
      */
-    public static final String SAMPLE_INTERVAL_PROPERTY = "tumor.report.mutation.mutationCountSampleInterval";
+    public static final String SAMPLE_INTERVAL_PROPERTY = "tumor.report.mutation.MutationCountReport.sampleInterval";
 
     /**
      * Returns the single global report instance.

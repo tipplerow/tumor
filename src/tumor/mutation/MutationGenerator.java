@@ -24,7 +24,7 @@ public abstract class MutationGenerator {
     }
 
     private static long resolveMaxMutationCount() {
-        return JamProperties.getRequiredLong(MAX_MUTATION_COUNT_PROPERTY, LongRange.POSITIVE);
+        return JamProperties.getOptionalLong(MAX_MUTATION_COUNT_PROPERTY, Long.MAX_VALUE);
     }
 
     /**
