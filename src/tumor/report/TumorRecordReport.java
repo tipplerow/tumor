@@ -2,14 +2,14 @@
 package tumor.report;
 
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
+import jam.app.JamProperties;
+import jam.math.LongUtil;
 import jam.report.ReportRecord;
 import jam.report.ReportWriter;
-
-import tumor.carrier.Tumor;
-import tumor.carrier.TumorComponent;
-import tumor.driver.TumorDriver;
-import tumor.lattice.LatticeTumor;
+import jam.util.RegexUtil;
 
 /**
  * Provides a base class for simulation reports that may process data
@@ -22,19 +22,79 @@ public abstract class TumorRecordReport<R extends ReportRecord> extends TumorRep
     protected final int sampleInterval;
 
     /**
+     * Threshold tumor sizes (total number of cells) that trigger
+     * sampling/updating/output.
+     */
+    protected final List<Long> reportingSizes;
+
+    /**
      * Report writer for the concrete record type.
      */
     protected ReportWriter<R> reportWriter;
 
     /**
-     * Creates a new tumor report.
+     * Creates a new tumor-record report.
      *
      * @param sampleInterval the number of time steps between report
      * sampling/updating/output.
-     * 
+     *
+     * @param reportingSizes the threshold tumor sizes (total number
+     * of cells) that trigger sampling/updating/output.
      */
-    protected TumorRecordReport(int sampleInterval) {
+    protected TumorRecordReport(int sampleInterval, List<Long> reportingSizes) {
         this.sampleInterval = sampleInterval;
+        this.reportingSizes = reportingSizes;
+    }
+
+    /**
+     * Creates a new tumor-record report.
+     *
+     * @param sampleIntervalProperty the name of the system property that
+     * specifies the number of time steps between sampling/updating/output.
+     *
+     * @param reportingSizesProperty the name of the system property that
+     * specifies the threshold tumor sizes (total number of cells) that 
+     * trigger sampling/updating/output.
+     */
+    protected TumorRecordReport(String sampleIntervalProperty, String reportingSizesProperty) {
+        this(resolveSampleInterval(sampleIntervalProperty),
+             resolveReportingSizes(reportingSizesProperty));
+    }
+
+    /**
+     * Reads the sample interval from the sytem properties.
+     *
+     * @return the sample interval (or zero if the property is not
+     * set).
+     */
+    public static int resolveSampleInterval(String propertyName) {
+        return JamProperties.getOptionalInt(propertyName, 0);
+    }
+
+    /**
+     * Reads the threshold reporting sizes from the sytem properties.
+     *
+     * <p>The reporting sizes must be specified as a comma-separated
+     * list of (long) integer values.
+     *
+     * @return the threshold reporting sizes (or an empty list if the
+     * property is not set).
+     */
+    public static List<Long> resolveReportingSizes(String propertyName) {
+        if (JamProperties.isUnset(propertyName))
+            return List.of();
+
+        String propertyValue =
+            JamProperties.getRequired(propertyName);
+
+        String[]   fields = RegexUtil.COMMA.split(propertyValue);
+        List<Long> sizes  = new LinkedList<Long>();
+
+        for (String field : fields)
+            sizes.add(LongUtil.parseLong(field));
+
+        System.out.println(sizes);
+        return sizes;
     }
 
     /**
@@ -44,7 +104,7 @@ public abstract class TumorRecordReport<R extends ReportRecord> extends TumorRep
      * @return the records to be written for the current trial and
      * time step.
      */
-    protected abstract Collection<R> generateRecords();
+    public abstract Collection<R> generateRecords();
 
     /**
      * Identifies time steps when the system state must be sampled and
@@ -54,7 +114,28 @@ public abstract class TumorRecordReport<R extends ReportRecord> extends TumorRep
      * latest completed time step.
      */
     public boolean isSampleStep() {
+        return isSampleIntervalStep() || isReportingSizeStep();
+    }
+
+    private boolean isSampleIntervalStep() {
         return isSampleStep(sampleInterval);
+    }
+
+    private boolean isReportingSizeStep() {
+        if (reportingSizes.isEmpty())
+            return false;
+
+        long tumorSize = getTumor().countCells();
+        long threshold = reportingSizes.get(0);
+
+        if (tumorSize < threshold)
+            return false;
+
+        // This is the first time step that the tumor crossed the
+        // reporting size threshold; remove the threshold to allow
+        // the next one to become active...
+        reportingSizes.remove(0);
+        return true;
     }
 
     @Override public void initializeSimulation() {

@@ -2,7 +2,6 @@
 package tumor.report.mutation;
 
 import java.util.List;
-import jam.app.JamProperties;
 import tumor.report.TumorRecordReport;
 
 /**
@@ -16,11 +15,7 @@ public final class MutationCountReport extends TumorRecordReport<MutationCountRe
     private static MutationCountReport instance = null;
 
     private MutationCountReport() {
-        super(resolveSampleInterval());
-    }
-
-    private static int resolveSampleInterval() {
-        return JamProperties.getOptionalInt(SAMPLE_INTERVAL_PROPERTY, 0);
+        super(SAMPLE_INTERVAL_PROPERTY, REPORTING_SIZES_PROPERTY);
     }
 
     /**
@@ -42,6 +37,13 @@ public final class MutationCountReport extends TumorRecordReport<MutationCountRe
     public static final String SAMPLE_INTERVAL_PROPERTY = "tumor.report.mutation.MutationCountReport.sampleInterval";
 
     /**
+     * Name of the system property that specifies threshold tumor
+     * sizes (number of cells) to trigger report record generation.
+     */
+    public static final String REPORTING_SIZES_PROPERTY =
+        "tumor.report.mutation.MutationCountReport.reportingSizes";
+
+    /**
      * Returns the single global report instance.
      *
      * @return the single global report instance.
@@ -53,18 +55,7 @@ public final class MutationCountReport extends TumorRecordReport<MutationCountRe
         return instance;
     }
 
-    /**
-     * Determines whether the metastasis mutational distance report
-     * will be executed.
-     *
-     * @return {@code true} iff the user has requested the metastasis
-     * mutational distance report.
-     */
-    public static boolean reportRequested() {
-        return JamProperties.getOptionalBoolean(RUN_REPORT_PROPERTY, false);
-    }
-
-    @Override protected List<MutationCountRecord> generateRecords() {
+    @Override public List<MutationCountRecord> generateRecords() {
         return List.of(MutationCountRecord.snap());
     }
 }

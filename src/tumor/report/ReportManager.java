@@ -4,6 +4,8 @@ package tumor.report;
 import java.util.ArrayList;
 import java.util.List;
 
+import jam.app.JamProperties;
+
 import tumor.report.bulk.BulkMutDistReport;
 import tumor.report.bulk.BulkSampleSiteReport;
 import tumor.report.bulk.BulkVAFReport;
@@ -38,35 +40,39 @@ public final class ReportManager {
         if (BulkSampleSiteReport.reportRequested())
             reports.add(BulkSampleSiteReport.instance());
 
-        if (BulkSiteMutationTypeCountReport.reportRequested())
+        if (reportRequested(BulkSiteMutationTypeCountReport.RUN_REPORT_PROPERTY))
             reports.add(BulkSiteMutationTypeCountReport.instance());
 
         if (BulkVAFReport.reportRequested())
             reports.add(BulkVAFReport.instance());
 
-        if (ComponentCoordReport.reportRequested())
+        if (reportRequested(ComponentCoordReport.RUN_REPORT_PROPERTY))
             reports.add(ComponentCoordReport.instance());
 
-        if (ComponentCountReport.reportRequested())
+        if (reportRequested(ComponentCountReport.RUN_REPORT_PROPERTY))
             reports.add(ComponentCountReport.instance());
 
         if (MetMutDistReport.reportRequested())
             reports.add(MetMutDistReport.instance());
 
-        if (MutationCountReport.reportRequested())
+        if (reportRequested(MutationCountReport.RUN_REPORT_PROPERTY))
             reports.add(MutationCountReport.instance());
 
         if (MutGenThresholdReport.reportRequested())
             reports.add(MutGenThresholdReport.instance());
 
-        if (SurfaceSiteMutationTypeCountReport.reportRequested())
+        if (reportRequested(SurfaceSiteMutationTypeCountReport.RUN_REPORT_PROPERTY))
             reports.add(SurfaceSiteMutationTypeCountReport.instance());
 
-        if (TumorDimensionReport.reportRequested())
+        if (reportRequested(TumorDimensionReport.RUN_REPORT_PROPERTY))
             reports.add(TumorDimensionReport.instance());
 
         if (VariegationReport.reportRequested())
             reports.add(VariegationReport.instance());
+    }
+
+    private static boolean reportRequested(String propertyName) {
+        return JamProperties.getOptionalBoolean(propertyName, false);
     }
 
     /**
