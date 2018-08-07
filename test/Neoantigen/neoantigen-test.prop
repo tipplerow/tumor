@@ -31,10 +31,12 @@ tumor.mutation.maxMutationCount   = 1E9
 tumor.report.mutation.BulkSiteMutationTypeCountReport.run = TRUE
 tumor.report.mutation.BulkSiteMutationTypeCountReport.siteCount = 1000
 tumor.report.mutation.BulkSiteMutationTypeCountReport.sampleInterval = 100
+tumor.report.mutation.BulkSiteMutationTypeCountReport.reportingSizes = 1E5, 3E5, 1E6, 3E6
 
 tumor.report.mutation.SurfaceSiteMutationTypeCountReport.run = TRUE
 tumor.report.mutation.SurfaceSiteMutationTypeCountReport.siteCount = 1000
 tumor.report.mutation.SurfaceSiteMutationTypeCountReport.sampleInterval = 100
+tumor.report.mutation.SurfaceSiteMutationTypeCountReport.reportingSizes = 1E5, 3E5, 1E6, 3E6
 
 tumor.senesce.modelType          = NEIGHBORHOOD_OCCUPANCY_FRACTION
 tumor.senesce.neighborhood       = MOORE

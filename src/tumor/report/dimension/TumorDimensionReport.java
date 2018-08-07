@@ -3,8 +3,6 @@ package tumor.report.dimension;
 
 import java.util.List;
 
-import jam.app.JamProperties;
-
 import tumor.report.TumorRecordReport;
 
 /**
@@ -18,11 +16,7 @@ public final class TumorDimensionReport extends TumorRecordReport<TumorDimension
     private static TumorDimensionReport instance = null;
 
     private TumorDimensionReport() {
-        super(resolveSampleInterval());
-    }
-
-    private static int resolveSampleInterval() {
-        return JamProperties.getOptionalInt(SAMPLE_INTERVAL_PROPERTY, 0);
+        super(SAMPLE_INTERVAL_PROPERTY, REPORTING_SIZES_PROPERTY);
     }
 
     /**
@@ -45,6 +39,13 @@ public final class TumorDimensionReport extends TumorRecordReport<TumorDimension
         "tumor.report.dimension.TumorDimensionReport.sampleInterval";
 
     /**
+     * Name of the system property that specifies threshold tumor
+     * sizes (number of cells) to trigger report record generation.
+     */
+    public static final String REPORTING_SIZES_PROPERTY =
+        "tumor.report.dimension.TumorDimensionReport.reportingSizes";
+
+    /**
      * Returns the single global report instance.
      *
      * @return the single global report instance.
@@ -54,16 +55,6 @@ public final class TumorDimensionReport extends TumorRecordReport<TumorDimension
             instance = new TumorDimensionReport();
 
         return instance;
-    }
-
-    /**
-     * Determines whether the tumor dimension report will be executed.
-     *
-     * @return {@code true} iff the user has requested the tumor
-     * dimension report.
-     */
-    public static boolean reportRequested() {
-        return JamProperties.getOptionalBoolean(RUN_REPORT_PROPERTY, false);
     }
 
     @Override public List<TumorDimensionRecord> generateRecords() {

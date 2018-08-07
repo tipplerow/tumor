@@ -24,7 +24,7 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
     private static SurfaceSiteMutationTypeCountReport instance = null;
 
     private SurfaceSiteMutationTypeCountReport() {
-        super(resolveSampleInterval());
+        super(SAMPLE_INTERVAL_PROPERTY, REPORTING_SIZES_PROPERTY);
         this.siteCount = resolveSiteCount();
     }
 
@@ -64,6 +64,13 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
         "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.sampleInterval";
 
     /**
+     * Name of the system property that specifies threshold tumor
+     * sizes (number of cells) to trigger report record generation.
+     */
+    public static final String REPORTING_SIZES_PROPERTY =
+        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.reportingSizes";
+
+    /**
      * Returns the single global report instance.
      *
      * @return the single global report instance.
@@ -75,18 +82,7 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
         return instance;
     }
 
-    /**
-     * Determines whether the metastasis mutational distance report
-     * will be executed.
-     *
-     * @return {@code true} iff the user has requested the metastasis
-     * mutational distance report.
-     */
-    public static boolean reportRequested() {
-        return JamProperties.getOptionalBoolean(RUN_REPORT_PROPERTY, false);
-    }
-
-    @Override protected List<SiteMutationTypeCountRecord> generateRecords() {
+    @Override public List<SiteMutationTypeCountRecord> generateRecords() {
         TumorDriver<? extends TumorComponent> driver = TumorDriver.global();
         LatticeTumor<? extends TumorComponent> tumor = driver.getLatticeTumor();
 
