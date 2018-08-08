@@ -221,6 +221,23 @@ public abstract class Genotype extends Ordinal {
     }
 
     /**
+     * Counts the number of times each mutation type occurs in this
+     * genotype.
+     *
+     * @return a new multiset containing the number of times each
+     * mutation type occurs in this genotype.
+     */
+    public Multiset<MutationType> countMutationTypes() {
+        Iterator<Mutation> iterator = scanAccumulatedMutations();
+        Multiset<MutationType> counts = HashMultiset.create();
+
+        while (iterator.hasNext())
+            counts.add(iterator.next().getType());
+
+        return counts;
+    }
+
+    /**
      * Creates a canonical string representation for this genotype.
      *
      * <p>The string representation contains the ordinal index, a

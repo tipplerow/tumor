@@ -64,6 +64,9 @@ public abstract class TumorRecordReport<R extends ReportRecord> extends TumorRep
     /**
      * Reads the sample interval from the sytem properties.
      *
+     * @param propertyName the name of the system property specifying
+     * the sample interval.
+     *
      * @return the sample interval (or zero if the property is not
      * set).
      */
@@ -76,6 +79,9 @@ public abstract class TumorRecordReport<R extends ReportRecord> extends TumorRep
      *
      * <p>The reporting sizes must be specified as a comma-separated
      * list of (long) integer values.
+     *
+     * @param propertyName the name of the system property specifying
+     * the reporting sizes.
      *
      * @return the threshold reporting sizes (or an empty list if the
      * property is not set).

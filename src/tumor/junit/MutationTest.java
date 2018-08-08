@@ -26,8 +26,8 @@ public class MutationTest extends NumericTestBase {
         MutationList.create(neutral1, neutral2, neutral3);
 
     private static final ScalarMutation scalar1 = Mutation.scalar(-0.1);
-    private static final ScalarMutation scalar2 = Mutation.scalar( 0.2);
-    private static final ScalarMutation scalar3 = Mutation.scalar( 0.3);
+    private static final ScalarMutation scalar2 = Mutation.scalar( 0.01);
+    private static final ScalarMutation scalar3 = Mutation.scalar( 0.1);
 
     private static final MutationList scalarList =
         MutationList.create(scalar1, scalar2, scalar3);
@@ -60,6 +60,14 @@ public class MutationTest extends NumericTestBase {
     }
 
     @Test public void testScalar() {
+        GrowthRate rate = new GrowthRate(0.55, 0.45);
+
+        for (int k = 0; k < 10; ++k) {
+            System.out.println(rate);
+            System.out.println(rate.getNetRate());
+            rate = scalar1.apply(rate);
+        }
+        /*
         GrowthRate r0 = new GrowthRate(0.55, 0.45);
         GrowthRate r1 = scalar1.apply(r0);
         GrowthRate r2 = scalar2.apply(r0);
@@ -84,6 +92,7 @@ public class MutationTest extends NumericTestBase {
         assertTrue(scalar1.isIndependent());
         assertFalse(scalar1.isNeutral());
         assertTrue(scalar1.isSelective());
+        */
     }
 
     @Test public void testTransformer() {

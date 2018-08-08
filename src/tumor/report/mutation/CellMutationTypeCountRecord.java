@@ -12,6 +12,7 @@ import jam.report.LineBuilder;
 import jam.report.ReportRecord;
 import jam.vector.JamVector;
 
+import tumor.carrier.TumorCell;
 import tumor.carrier.TumorComponent;
 import tumor.driver.TumorDriver;
 import tumor.lattice.LatticeTumor;
@@ -19,40 +20,33 @@ import tumor.mutation.MutationType;
 import tumor.report.TumorRecord;
 
 /**
- * Records the number of mutations of a particular type at a given
- * lattice site.
+ * Records the number of mutations of each type present in a tumor
+ * cell.
  */
-public final class SiteMutationTypeCountRecord extends TumorRecord implements ReportRecord {
+public final class CellMutationTypeCountRecord extends TumorRecord implements ReportRecord {
     private final String baseName;
 
     private final Coord     siteCoord;
     private final JamVector cmVector;
     private final double    normRadialDist;
 
-    private final long siteCellCount;
-    private final long siteCompCount;
     private final long tumorCellCount;
 
     private final Multiset<MutationType> mutationCounts;
 
-    private SiteMutationTypeCountRecord(String    baseName,
+    private CellMutationTypeCountRecord(String    baseName,
                                         Coord     siteCoord,
                                         JamVector cmVector,
                                         double    normRadialDist,
-                                        long      siteCellCount,
-                                        long      siteCompCount,
                                         long      tumorCellCount,
                                         Multiset<MutationType> mutationCounts) {
         this.baseName = baseName;
 
-        this.siteCoord      = siteCoord;
-        this.cmVector       = cmVector;
+        this.siteCoord = siteCoord;
+        this.cmVector  = cmVector;
+
         this.normRadialDist = normRadialDist;
-
-        this.siteCellCount  = siteCellCount;
-        this.siteCompCount  = siteCompCount;
         this.tumorCellCount = tumorCellCount;
-
         this.mutationCounts = mutationCounts;
     }
 
@@ -67,27 +61,25 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
      *
      * @return the type-count record for the given site.
      */
-    public static SiteMutationTypeCountRecord generate(String baseName, Coord siteCoord) {
+    public static CellMutationTypeCountRecord generate(String baseName, Coord siteCoord) {
         TumorDriver<? extends TumorComponent> driver = TumorDriver.global();
         LatticeTumor<? extends TumorComponent> tumor = driver.getLatticeTumor();
 
-        long   siteCellCount  = tumor.countCells(siteCoord);
-        long   siteCompCount  = tumor.countComponents(siteCoord);
         long   tumorCellCount = tumor.countCells();
         double normRadialDist = siteCoord.normRadialDist(tumor.getVectorMoment());
 
         JamVector cmVector =
             siteCoord.cmVector(tumor.getVectorMoment().getCM());
 
-        Multiset<MutationType> typeCounts =
-            tumor.countMutationTypes(siteCoord);
+        TumorCell cell = tumor.collectSingleCellSample(siteCoord);
 
-        return new SiteMutationTypeCountRecord(baseName,
+        Multiset<MutationType> typeCounts =
+            cell.getGenotype().countMutationTypes();
+
+        return new CellMutationTypeCountRecord(baseName,
                                                siteCoord,
                                                cmVector,
                                                normRadialDist,
-                                               siteCellCount,
-                                               siteCompCount,
                                                tumorCellCount,
                                                typeCounts);
     }
@@ -104,9 +96,9 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
      * @return a list containing one type-count record for each
      * mutation type found at the given sites.
      */
-    public static List<SiteMutationTypeCountRecord> generate(String baseName, Collection<Coord> siteCoords) {
-        List<SiteMutationTypeCountRecord> records =
-            new ArrayList<SiteMutationTypeCountRecord>();
+    public static List<CellMutationTypeCountRecord> generate(String baseName, Collection<Coord> siteCoords) {
+        List<CellMutationTypeCountRecord> records =
+            new ArrayList<CellMutationTypeCountRecord>();
 
         for (Coord siteCoord : siteCoords)
             records.add(generate(baseName, siteCoord));
@@ -120,14 +112,6 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
 
     public double getNormRadialDist() {
         return normRadialDist;
-    }
-
-    public long getSiteCellCount() {
-        return siteCellCount;
-    }
-
-    public long getSiteComponentCount() {
-        return siteCompCount;
     }
 
     public long getTumorCellCount() {
@@ -151,8 +135,6 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         builder.append(cmVector.getDouble(1));
         builder.append(cmVector.getDouble(2));
         builder.append(String.format("%.4f", normRadialDist));
-        builder.append(siteCellCount);
-        builder.append(siteCompCount);
 
         for (MutationType mutationType : MutationType.values())
             builder.append(mutationCounts.count(mutationType));
@@ -177,8 +159,6 @@ public final class SiteMutationTypeCountRecord extends TumorRecord implements Re
         builder.append("cmVectorY");
         builder.append("cmVectorZ");
         builder.append("normRadialDist");
-        builder.append("siteCellCount");
-        builder.append("siteComponentCount");
 
         for (MutationType mutationType : MutationType.values())
             builder.append(String.format("%s.count", mutationType));
