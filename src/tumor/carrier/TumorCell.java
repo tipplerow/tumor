@@ -89,9 +89,7 @@ public final class TumorCell extends TumorComponent {
             return Collections.emptyList();
 
         // Stochastically sample the event to occur on this step...
-        long        netCapacity = tumorEnv.getGrowthCapacity();
-        GrowthRate  growthRate  = tumorEnv.getGrowthRate();
-        GrowthCount growthCount = growthRate.sampleCount(1L, netCapacity);
+        GrowthCount growthCount = resolveGrowthCount(tumorEnv);
 
         assert growthCount.getEventCount() <= 1;
 

@@ -632,6 +632,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
     }
 
     @Override protected void initializeTrial() {
+        TumorComponent.resetTotalGrowthCount();
         tumor = createTumor();
         recordStep();
         ReportManager.global().initializeTrial();

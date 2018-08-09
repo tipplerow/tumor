@@ -12,6 +12,7 @@ import tumor.report.bulk.BulkVAFReport;
 import tumor.report.component.ComponentCoordReport;
 import tumor.report.component.ComponentCountReport;
 import tumor.report.dimension.TumorDimensionReport;
+import tumor.report.growth.GrowthCountReport;
 import tumor.report.metastasis.MetMutDistReport;
 import tumor.report.mutation.MutationCountReport;
 import tumor.report.mutation.BulkSiteMutationTypeCountReport;
@@ -52,6 +53,9 @@ public final class ReportManager {
 
         if (reportRequested(ComponentCountReport.RUN_REPORT_PROPERTY))
             reports.add(ComponentCountReport.instance());
+
+        if (reportRequested(GrowthCountReport.RUN_REPORT_PROPERTY))
+            reports.add(GrowthCountReport.instance());
 
         if (MetMutDistReport.reportRequested())
             reports.add(MetMutDistReport.instance());

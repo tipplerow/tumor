@@ -23,6 +23,12 @@ import tumor.mutation.Mutation;
  * well defined growth rate, and are always contained within a tumor.
  */
 public abstract class TumorComponent extends Carrier {
+    //
+    // Total number of birth and death events 
+    //
+    private static long totalBirthCount = 0L;
+    private static long totalDeathCount = 0L;
+
     /**
      * The genotype for this component.
      */
@@ -174,6 +180,28 @@ public abstract class TumorComponent extends Carrier {
     public abstract GrowthRate getGrowthRate();
 
     /**
+     * Returns the total number of birth events that have occurred in
+     * the current simulation trial.
+     *
+     * @return the total number of birth events that have occurred in
+     * the current simulation trial.
+     */
+    public static long getTotalBirthCount() {
+        return totalBirthCount;
+    }
+
+    /**
+     * Returns the total number of death events that have occurred in
+     * the current simulation trial.
+     *
+     * @return the total number of death events that have occurred in
+     * the current simulation trial.
+     */
+    public static long getTotalDeathCount() {
+        return totalDeathCount;
+    }
+
+    /**
      * Determines whether another component is genetically identical
      * to this component.
      *
@@ -187,6 +215,14 @@ public abstract class TumorComponent extends Carrier {
     }
 
     /**
+     * Resets the total number of birth and death events to zero.
+     */
+    public static void resetTotalGrowthCount() {
+        totalBirthCount = 0L;
+        totalDeathCount = 0L;
+    }
+
+    /**
      * Determines the number of birth and death events for this tumor
      * component in a local tumor environment.
      *
@@ -196,10 +232,14 @@ public abstract class TumorComponent extends Carrier {
      * @return the number of birth and death events.
      */
     public GrowthCount resolveGrowthCount(TumorEnv tumorEnv) {
-        long netCapacity = tumorEnv.getGrowthCapacity();
-        GrowthRate growthRate = tumorEnv.getGrowthRate();
+        long        netCapacity = tumorEnv.getGrowthCapacity();
+        GrowthRate  growthRate  = tumorEnv.getGrowthRate();
+        GrowthCount growthCount = growthRate.resolveCount(countCells(), netCapacity);
 
-        return growthRate.resolveCount(countCells(), netCapacity);
+        totalBirthCount += growthCount.getBirthCount();
+        totalDeathCount += growthCount.getDeathCount();
+
+        return growthCount;
     }
 
     /**

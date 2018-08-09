@@ -60,7 +60,6 @@ public final class GrowthRate {
     private static final int DEATH_EVENT = 1;
     private static final int NO_EVENT    = 2;
 
-
     // Tumor components larger than this will use implicit computation
     // of birth and death rates...
     private static final long EXPLICIT_SAMPLING_LIMIT = resolveSamplingLimit();
