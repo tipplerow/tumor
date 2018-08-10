@@ -2,38 +2,20 @@
 package tumor.report.mutation;
 
 import java.util.List;
-import java.util.Set;
-
-import jam.app.JamProperties;
-import jam.lattice.Coord;
-import jam.math.IntRange;
-
-import tumor.carrier.TumorComponent;
-import tumor.driver.TumorDriver;
-import tumor.lattice.LatticeTumor;
-import tumor.report.TumorRecordReport;
 
 /**
- * Records the spatial coordinate of every component in the active
- * tumor.
+ * Records the number of mutations by type for sites on the surface of
+ * the primary tumor.
  */
-public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<SiteMutationTypeCountRecord> {
-    private final int siteCount;
-
+public final class SurfaceSiteMutationTypeCountReport extends MutationTypeCountReport {
     // The single global instance, created on demand...
     private static SurfaceSiteMutationTypeCountReport instance = null;
 
     private SurfaceSiteMutationTypeCountReport() {
-        super(SAMPLE_INTERVAL_PROPERTY, REPORTING_SIZES_PROPERTY);
-        this.siteCount = resolveSiteCount();
-    }
-
-    private static int resolveSampleInterval() {
-        return JamProperties.getOptionalInt(SAMPLE_INTERVAL_PROPERTY, 0);
-    }
-
-    private static int resolveSiteCount() {
-        return JamProperties.getRequiredInt(SITE_COUNT_PROPERTY, IntRange.POSITIVE);
+        super(SAMPLE_INTERVAL_PROPERTY,
+              REPORTING_SIZES_PROPERTY,
+              SITE_COUNT_PROPERTY,
+              TYPE_NAMES_PROPERTY);
     }
 
     /**
@@ -47,13 +29,6 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
      */
     public static final String RUN_REPORT_PROPERTY =
         "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.run";
-
-    /**
-     * Name of the system property that specifies the number of
-     * surface sites to sample at each recording interval.
-     */
-    public static final String SITE_COUNT_PROPERTY =
-        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.siteCount";
 
     /**
      * Name of the system property that specifies the number of time
@@ -71,6 +46,20 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
         "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.reportingSizes";
 
     /**
+     * Name of the system property that specifies the number of
+     * surface sites to sample at each recording interval.
+     */
+    public static final String SITE_COUNT_PROPERTY =
+        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.siteCount";
+
+    /**
+     * Name of the system property that specifies the mutation types
+     * to record.
+     */
+    public static final String TYPE_NAMES_PROPERTY =
+        "tumor.report.mutation.SurfaceSiteMutationTypeCountReport.typeNames";
+
+    /**
      * Returns the single global report instance.
      *
      * @return the single global report instance.
@@ -82,13 +71,9 @@ public final class SurfaceSiteMutationTypeCountReport extends TumorRecordReport<
         return instance;
     }
 
-    @Override public List<SiteMutationTypeCountRecord> generateRecords() {
-        TumorDriver<? extends TumorComponent> driver = TumorDriver.global();
-        LatticeTumor<? extends TumorComponent> tumor = driver.getLatticeTumor();
-
-        Set<Coord> siteCoords =
-            tumor.selectSurfaceSites(siteCount);
-
-        return SiteMutationTypeCountRecord.generate(BASE_NAME, siteCoords);
+    @Override public List<MutationTypeCountRecord> generateRecords() {
+        return MutationTypeCountRecord.forSites(BASE_NAME,
+                                                typeNames,
+                                                getLatticeTumor().selectSurfaceSites(siteCount));
     }
 }

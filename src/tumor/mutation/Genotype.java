@@ -227,12 +227,12 @@ public abstract class Genotype extends Ordinal {
      * @return a new multiset containing the number of times each
      * mutation type occurs in this genotype.
      */
-    public Multiset<MutationType> countMutationTypes() {
+    public Multiset<String> countMutationTypes() {
+        Multiset<String>   counts   = HashMultiset.create();
         Iterator<Mutation> iterator = scanAccumulatedMutations();
-        Multiset<MutationType> counts = HashMultiset.create();
 
         while (iterator.hasNext())
-            counts.add(iterator.next().getType());
+            counts.add(iterator.next().getType().name());
 
         return counts;
     }

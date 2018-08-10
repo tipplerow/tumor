@@ -5,38 +5,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import jam.app.JamProperties;
 import jam.lattice.Coord;
-import jam.math.IntRange;
 import jam.math.JamRandom;
 import jam.util.ListUtil;
 
-import tumor.carrier.TumorComponent;
-import tumor.driver.TumorDriver;
-import tumor.lattice.LatticeTumor;
-import tumor.report.TumorRecordReport;
-
 /**
- * Records the spatial coordinate of every component in the active
- * tumor.
+ * Records the number of mutations by type at sites throughout the
+ * bulk of the tumor.
  */
-public final class BulkSiteMutationTypeCountReport extends TumorRecordReport<SiteMutationTypeCountRecord> {
-    private final int siteCount;
-
+public final class BulkSiteMutationTypeCountReport extends MutationTypeCountReport {
     // The single global instance, created on demand...
     private static BulkSiteMutationTypeCountReport instance = null;
 
     private BulkSiteMutationTypeCountReport() {
-        super(SAMPLE_INTERVAL_PROPERTY, REPORTING_SIZES_PROPERTY);
-        this.siteCount = resolveSiteCount();
-    }
-
-    private static int resolveSampleInterval() {
-        return JamProperties.getOptionalInt(SAMPLE_INTERVAL_PROPERTY, 0);
-    }
-
-    private static int resolveSiteCount() {
-        return JamProperties.getRequiredInt(SITE_COUNT_PROPERTY, IntRange.POSITIVE);
+        super(SAMPLE_INTERVAL_PROPERTY,
+              REPORTING_SIZES_PROPERTY,
+              SITE_COUNT_PROPERTY,
+              TYPE_NAMES_PROPERTY);
     }
 
     /**
@@ -50,13 +35,6 @@ public final class BulkSiteMutationTypeCountReport extends TumorRecordReport<Sit
      */
     public static final String RUN_REPORT_PROPERTY =
         "tumor.report.mutation.BulkSiteMutationTypeCountReport.run";
-
-    /**
-     * Name of the system property that specifies the number of
-     * bulk sites to sample at each recording interval.
-     */
-    public static final String SITE_COUNT_PROPERTY =
-        "tumor.report.mutation.BulkSiteMutationTypeCountReport.siteCount";
 
     /**
      * Name of the system property that specifies the number of time
@@ -74,6 +52,20 @@ public final class BulkSiteMutationTypeCountReport extends TumorRecordReport<Sit
         "tumor.report.mutation.BulkSiteMutationTypeCountReport.reportingSizes";
 
     /**
+     * Name of the system property that specifies the number of
+     * bulk sites to sample at each recording interval.
+     */
+    public static final String SITE_COUNT_PROPERTY =
+        "tumor.report.mutation.BulkSiteMutationTypeCountReport.siteCount";
+
+    /**
+     * Name of the system property that specifies the mutation types
+     * to record.
+     */
+    public static final String TYPE_NAMES_PROPERTY =
+        "tumor.report.mutation.BulkSiteMutationTypeCountReport.typeNames";
+
+    /**
      * Returns the single global report instance.
      *
      * @return the single global report instance.
@@ -85,19 +77,16 @@ public final class BulkSiteMutationTypeCountReport extends TumorRecordReport<Sit
         return instance;
     }
 
-    @Override public List<SiteMutationTypeCountRecord> generateRecords() {
-        TumorDriver<? extends TumorComponent> driver = TumorDriver.global();
-        LatticeTumor<? extends TumorComponent> tumor = driver.getLatticeTumor();
-
-        Set<Coord> occupiedCoords = tumor.getOccupiedCoord();
+    @Override public List<MutationTypeCountRecord> generateRecords() {
+        Set<Coord> occupiedCoords = getLatticeTumor().getOccupiedCoord();
 
         if (occupiedCoords.size() <= siteCount)
-            return SiteMutationTypeCountRecord.generate(BASE_NAME, occupiedCoords);
+            return MutationTypeCountRecord.forSites(BASE_NAME, typeNames, occupiedCoords);
 
         // Select the desired number of occupied sites randomly...
         List<Coord> sampleCoords = new ArrayList<Coord>(occupiedCoords);
         ListUtil.shuffle(sampleCoords, JamRandom.global());
 
-        return SiteMutationTypeCountRecord.generate(BASE_NAME, sampleCoords.subList(0, siteCount));
+        return MutationTypeCountRecord.forSites(BASE_NAME, typeNames, sampleCoords.subList(0, siteCount));
     }
 }

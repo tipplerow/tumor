@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.EnumMultiset;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
@@ -43,7 +43,6 @@ import tumor.migrate.MigrationType;
 import tumor.mutation.Genotype;
 import tumor.mutation.Mutation;
 import tumor.mutation.MutationGenerator;
-import tumor.mutation.MutationType;
 import tumor.senesce.SenescenceModel;
 
 /**
@@ -372,9 +371,9 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * @return a multiset containing the number of mutations of each
      * type present at the specified site.
      */
-    public Multiset<MutationType> countMutationTypes(Coord coord) {
+    public Multiset<String> countMutationTypes(Coord coord) {
         Set<E> components = viewComponents(coord);
-        Multiset<MutationType> typeCounts = EnumMultiset.create(MutationType.class);
+        Multiset<String> typeCounts = HashMultiset.create();
 
         for (TumorComponent component : components) {
             Genotype genotype = component.getGenotype();
@@ -382,7 +381,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
             while (iterator.hasNext()) {
                 Mutation mutation = iterator.next();
-                typeCounts.add(mutation.getType(), (int) component.countCells());
+                typeCounts.add(mutation.getType().name(), (int) component.countCells());
             }
         }
 

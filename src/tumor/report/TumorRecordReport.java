@@ -61,32 +61,11 @@ public abstract class TumorRecordReport<R extends ReportRecord> extends TumorRep
              resolveReportingSizes(reportingSizesProperty));
     }
 
-    /**
-     * Reads the sample interval from the sytem properties.
-     *
-     * @param propertyName the name of the system property specifying
-     * the sample interval.
-     *
-     * @return the sample interval (or zero if the property is not
-     * set).
-     */
-    public static int resolveSampleInterval(String propertyName) {
+    private static int resolveSampleInterval(String propertyName) {
         return JamProperties.getOptionalInt(propertyName, 0);
     }
 
-    /**
-     * Reads the threshold reporting sizes from the sytem properties.
-     *
-     * <p>The reporting sizes must be specified as a comma-separated
-     * list of (long) integer values.
-     *
-     * @param propertyName the name of the system property specifying
-     * the reporting sizes.
-     *
-     * @return the threshold reporting sizes (or an empty list if the
-     * property is not set).
-     */
-    public static List<Long> resolveReportingSizes(String propertyName) {
+    private static List<Long> resolveReportingSizes(String propertyName) {
         if (JamProperties.isUnset(propertyName))
             return List.of();
 

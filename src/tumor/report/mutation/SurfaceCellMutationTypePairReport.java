@@ -4,14 +4,14 @@ package tumor.report.mutation;
 import java.util.List;
 
 /**
- * Records the number of mutations by type for cells on the surface of
- * the primary tumor.
+ * Records the similarity between mutation types for cells on the
+ * surface of the primary tumor.
  */
-public final class SurfaceCellMutationTypeCountReport extends MutationTypeCountReport {
+public final class SurfaceCellMutationTypePairReport extends MutationTypePairReport {
     // The single global instance, created on demand...
-    private static SurfaceCellMutationTypeCountReport instance = null;
+    private static SurfaceCellMutationTypePairReport instance = null;
 
-    private SurfaceCellMutationTypeCountReport() {
+    private SurfaceCellMutationTypePairReport() {
         super(SAMPLE_INTERVAL_PROPERTY,
               REPORTING_SIZES_PROPERTY,
               SITE_COUNT_PROPERTY,
@@ -21,14 +21,14 @@ public final class SurfaceCellMutationTypeCountReport extends MutationTypeCountR
     /**
      * Base name of the report file.
      */
-    public static final String BASE_NAME = "surface-cell-mutation-type-count.csv";
+    public static final String BASE_NAME = "surface-cell-mutation-type-pair.csv";
 
     /**
      * Name of the system property that specifies whether this report
      * will be generated.
      */
     public static final String RUN_REPORT_PROPERTY =
-        "tumor.report.mutation.SurfaceCellMutationTypeCountReport.run";
+        "tumor.report.mutation.SurfaceCellMutationTypePairReport.run";
 
     /**
      * Name of the system property that specifies the number of time
@@ -36,44 +36,44 @@ public final class SurfaceCellMutationTypeCountReport extends MutationTypeCountR
      * only at the end of the simulation.
      */
     public static final String SAMPLE_INTERVAL_PROPERTY =
-        "tumor.report.mutation.SurfaceCellMutationTypeCountReport.sampleInterval";
+        "tumor.report.mutation.SurfaceCellMutationTypePairReport.sampleInterval";
 
     /**
      * Name of the system property that specifies threshold tumor
      * sizes (number of cells) to trigger report record generation.
      */
     public static final String REPORTING_SIZES_PROPERTY =
-        "tumor.report.mutation.SurfaceCellMutationTypeCountReport.reportingSizes";
+        "tumor.report.mutation.SurfaceCellMutationTypePairReport.reportingSizes";
 
     /**
      * Name of the system property that specifies the number of
      * surface sites to sample at each recording interval.
      */
     public static final String SITE_COUNT_PROPERTY =
-        "tumor.report.mutation.SurfaceCellMutationTypeCountReport.siteCount";
+        "tumor.report.mutation.SurfaceCellMutationTypePairReport.siteCount";
 
     /**
      * Name of the system property that specifies the mutation types
      * to record.
      */
     public static final String TYPE_NAMES_PROPERTY =
-        "tumor.report.mutation.SurfaceCellMutationTypeCountReport.typeNames";
+        "tumor.report.mutation.SurfaceCellMutationTypePairReport.typeNames";
 
     /**
      * Returns the single global report instance.
      *
      * @return the single global report instance.
      */
-    public static SurfaceCellMutationTypeCountReport instance() {
+    public static SurfaceCellMutationTypePairReport instance() {
         if (instance == null)
-            instance = new SurfaceCellMutationTypeCountReport();
+            instance = new SurfaceCellMutationTypePairReport();
 
         return instance;
     }
 
-    @Override public List<MutationTypeCountRecord> generateRecords() {
-        return MutationTypeCountRecord.forCells(BASE_NAME,
-                                                typeNames,
-                                                getLatticeTumor().selectSurfaceSites(siteCount));
+    @Override public List<MutationTypePairRecord> generateRecords() {
+        return MutationTypePairRecord.forCells(BASE_NAME,
+                                               typeNames,
+                                               getLatticeTumor().selectSurfaceSites(siteCount));
     }
 }

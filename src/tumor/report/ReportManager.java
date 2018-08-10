@@ -17,6 +17,8 @@ import tumor.report.metastasis.MetMutDistReport;
 import tumor.report.mutation.MutationCountReport;
 import tumor.report.mutation.BulkSiteMutationTypeCountReport;
 import tumor.report.mutation.SurfaceCellMutationTypeCountReport;
+import tumor.report.mutation.SurfaceCellMutationTypeCorrReport;
+import tumor.report.mutation.SurfaceCellMutationTypePairReport;
 import tumor.report.mutation.SurfaceSiteMutationTypeCountReport;
 import tumor.report.mutgen.MutGenThresholdReport;
 import tumor.report.variegate.VariegationReport;
@@ -68,6 +70,12 @@ public final class ReportManager {
 
         if (reportRequested(SurfaceCellMutationTypeCountReport.RUN_REPORT_PROPERTY))
             reports.add(SurfaceCellMutationTypeCountReport.instance());
+
+        if (reportRequested(SurfaceCellMutationTypeCorrReport.RUN_REPORT_PROPERTY))
+            reports.add(SurfaceCellMutationTypeCorrReport.instance());
+
+        if (reportRequested(SurfaceCellMutationTypePairReport.RUN_REPORT_PROPERTY))
+            reports.add(SurfaceCellMutationTypePairReport.instance());
 
         if (reportRequested(SurfaceSiteMutationTypeCountReport.RUN_REPORT_PROPERTY))
             reports.add(SurfaceSiteMutationTypeCountReport.instance());
