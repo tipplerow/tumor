@@ -1,9 +1,8 @@
 ########################################################################
-# Simulation of tumor growth with individual tumor cells occupying a
-# 3D cubic lattice.
+# Simulation of tumor growth with lineages occupying a 3D cubic
+# lattice.
 #
-# Neoantigen-generating mutations and selective mutations arrive in
-# Poisson process with different rates.
+# Neoantigen-generating mutations arrive in a Poisson process.
 #
 # We characterize the number of neoantigens expressed on the tumor
 # surface as a function of time, tumor size, and mutation rate.
@@ -12,25 +11,25 @@
 tumor.driver.componentType = CELL
 tumor.driver.spatialType   = LATTICE
 
+tumor.driver.trialIndex   = 1
 tumor.driver.initialSize  = 25
 tumor.driver.maxStepCount = 5000
-tumor.driver.maxTumorSize = 1E7
+tumor.driver.maxTumorSize = 1E6
 
 tumor.growth.birthRate = 0.55
 tumor.growth.deathRate = 0.45
 
 tumor.growth.localModelType = INTRINSIC
 
-tumor.lattice.periodLength = 431 ## maxTumorSize = 1E7
-
-#tumor.lattice.periodLength = 200 ## maxTumorSize = 1E6
-#tumor.lattice.periodLength = 929 ## maxTumorSize = 1E8
+tumor.lattice.periodLength = 200
 
 tumor.migrate.modelType = PINNED
 
 tumor.mutation.neoantigenRateType = POISSON
+tumor.mutation.neoantigenMeanRate = 1E-3
 tumor.mutation.selectiveRateType  = POISSON
 tumor.mutation.selectiveMeanRate  = 3.4E-5
+tumor.mutation.selectionCoeff     = 0.1
 
 tumor.report.dimension.TumorDimensionReport.run = TRUE
 tumor.report.dimension.TumorDimensionReport.sampleInterval = 100
@@ -50,3 +49,5 @@ tumor.report.mutation.SurfaceCellMutationTypeCountReport.siteCount = 1E5
 tumor.report.mutation.SurfaceCellMutationTypeCountReport.typeNames = NEOANTIGEN, SCALAR
 
 tumor.senesce.modelType = NONE
+
+jam.math.randomSeed = 20071202

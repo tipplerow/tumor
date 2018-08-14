@@ -5,18 +5,20 @@
 
 PROP_FILE=neoantigen-prod.prop
 
-if [ $# -ne 3 ]
+if [ $# -ne 2 ]
 then
-    echo "Usage:" `basename $0` "SITE_CAPACITY SELECTION_COEFF NEOANTIGEN_RATE"
+    echo "Usage:" `basename $0` "SELECTION_COEFF NEOANTIGEN_RATE"
     exit 1
 fi
 
-SITE_CAPACITY=$1
-SELECTION_COEFF=$2
-NEOANTIGEN_RATE=$3
+SELECTION_COEFF=$1
+shift
+
+NEOANTIGEN_RATE=$1
+shift
 
 TRIAL_BEGIN=0
-TRIAL_END=25
+TRIAL_END=1
 
 REPORT_BASE=`dirname $0`
 cd $REPORT_BASE
@@ -25,7 +27,7 @@ TrialIndex=$TRIAL_BEGIN
 
 while [ $TrialIndex -lt $TRIAL_END ]
 do
-    SubDir=$(printf "C%s/S%.2f/R%s/Trial%02d" $SITE_CAPACITY $SELECTION_COEFF $NEOANTIGEN_RATE $TrialIndex)
+    SubDir=$(printf "S%.2f/NR%s/Trial%02d" $SELECTION_COEFF $NEOANTIGEN_RATE $TrialIndex)
 
     if [ ! -d $SubDir ]
     then
@@ -35,7 +37,6 @@ do
     tumor-driver.sh -Xmx96G \
                     -Djam.app.reportDir=${REPORT_BASE}/$SubDir \
                     -Dtumor.driver.trialIndex=$TrialIndex \
-                    -Dtumor.capacity.siteCapacity=$SITE_CAPACITY \
                     -Dtumor.mutation.selectionCoeff=$SELECTION_COEFF \
                     -Dtumor.mutation.neoantigenMeanRate=$NEOANTIGEN_RATE \
                     $PROP_FILE
