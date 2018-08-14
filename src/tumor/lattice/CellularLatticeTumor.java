@@ -23,8 +23,17 @@ public final class CellularLatticeTumor extends LatticeTumor<TumorCell> {
         super(parent, createLattice(), getMaxSiteCount());
     }
 
+    // Lattices of this size and smaller will be dense, larger will be
+    // sparse...
+    private static final int MAX_DENSE_PERIOD_LENGTH = 500;
+
     private static Lattice<TumorCell> createLattice() {
-        return Lattice.sparseSO(resolvePeriodLength());
+        int periodLength = resolvePeriodLength();
+
+        if (periodLength <= MAX_DENSE_PERIOD_LENGTH)
+            return Lattice.denseSO(periodLength);
+        else
+            return Lattice.sparseSO(periodLength);
     }
 
     private static long getMaxSiteCount() {
