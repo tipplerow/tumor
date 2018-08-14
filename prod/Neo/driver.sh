@@ -34,7 +34,7 @@ do
         mkdir -p $SubDir
     fi
 
-    tumor-driver.sh -Xmx96G \
+    tumor-driver.sh -Xmx32G \
                     -Djam.app.reportDir=${REPORT_BASE}/$SubDir \
                     -Dtumor.driver.trialIndex=$TrialIndex \
                     -Dtumor.mutation.selectionCoeff=$SELECTION_COEFF \
