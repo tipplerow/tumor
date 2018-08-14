@@ -44,6 +44,7 @@ import tumor.mutation.Genotype;
 import tumor.mutation.Mutation;
 import tumor.mutation.MutationGenerator;
 import tumor.senesce.SenescenceModel;
+import tumor.senesce.SenescenceType;
 
 /**
  * Represents a three-dimensional tumor whose components occupy sites
@@ -79,13 +80,6 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * The random number generator.
      */
     protected final JamRandom randomSource = JamRandom.global();
-
-    // Distribution of vectors randomly located on the surface of a
-    // sphere with radius equal to one-half the square root of three,
-    // used to select expansion sites while favoring spherical tumor
-    // shapes...
-    private static final HypersphericalDistribution EXPANSION_DISTRIB =
-        new HypersphericalDistribution(3, Math.sqrt(3.0) / 2.0);
 
     // Distribution of vectors randomly located on the surface of a
     // unit sphere, used to generate random search directions for
@@ -562,7 +556,7 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
      * found.
      */
     public Coord selectExpansionSite(Coord parentCoord) {
-        return parentCoord.plus(Coord.nearest(EXPANSION_DISTRIB.sample(randomSource)));
+        return ExpansionSiteSelector.INSTANCE.select(parentCoord, randomSource);
     }
 
     /**
@@ -808,8 +802,12 @@ public abstract class LatticeTumor<E extends TumorComponent> extends Tumor<E> {
 
     private void senesce() {
         //
-        // Only active cells may become senescent...
+        // Return immediately if there is no senescence...
         //
+        if (senescenceModel.getType().equals(SenescenceType.NONE))
+            return;
+
+        // Only active cells may become senescent...
         Iterator<E> iterator = active.iterator();
 
         while (iterator.hasNext()) {
