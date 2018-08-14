@@ -81,7 +81,7 @@ public final class NOFSenescence extends SenescenceModel {
         if (centerFraction < occupancyThreshold)
             return false;
 
-        long neighborCapacity = getNeighborhoodCapacity(coord);
+        long neighborCapacity = getNeighborhoodCapacity(tumor, coord);
         long neighborOccupancy = getNeighborhoodOccupancy(tumor, coord);
 
         long totalCapacity  = centerCapacity  + neighborCapacity;
@@ -93,8 +93,8 @@ public final class NOFSenescence extends SenescenceModel {
         return occupancyFraction >= occupancyThreshold;
     }
 
-    private long getNeighborhoodCapacity(Coord center) {
-        return CapacityModel.global().getNeighborhoodCapacity(center, neighborhood);
+    private long getNeighborhoodCapacity(LatticeTumor<?> tumor, Coord center) {
+        return tumor.getCapacityModel().getNeighborhoodCapacity(center, neighborhood);
     }
 
     public long getNeighborhoodOccupancy(LatticeTumor<?> tumor, Coord center) {
