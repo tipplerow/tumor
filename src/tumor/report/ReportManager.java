@@ -15,6 +15,7 @@ import tumor.report.dimension.TumorDimensionReport;
 import tumor.report.growth.GrowthCountReport;
 import tumor.report.metastasis.MetMutDistReport;
 import tumor.report.mutation.MutationCountReport;
+import tumor.report.mutation.BulkCellMutationTypeCountReport;
 import tumor.report.mutation.BulkSiteMutationTypeCountReport;
 import tumor.report.mutation.SurfaceCellMutationTypeCountReport;
 import tumor.report.mutation.SurfaceCellMutationTypeCorrReport;
@@ -43,6 +44,9 @@ public final class ReportManager {
 
         if (BulkSampleSiteReport.reportRequested())
             reports.add(BulkSampleSiteReport.instance());
+
+        if (reportRequested(BulkCellMutationTypeCountReport.RUN_REPORT_PROPERTY))
+            reports.add(BulkCellMutationTypeCountReport.instance());
 
         if (reportRequested(BulkSiteMutationTypeCountReport.RUN_REPORT_PROPERTY))
             reports.add(BulkSiteMutationTypeCountReport.instance());
