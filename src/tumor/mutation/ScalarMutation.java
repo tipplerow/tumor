@@ -41,12 +41,21 @@ public class ScalarMutation extends Mutation {
     }
 
     @Override public GrowthRate apply(GrowthRate rate) {
+        /*
         double B = rate.getBirthRate().doubleValue();
         double D = rate.getDeathRate().doubleValue();
         double s = selectionCoeff;
 
         double Bprime = Math.max(0.0, Math.min(1.0, 0.5 * (s + (2.0 + s) * B - s * D)));
         double Dprime = (B + D) - Bprime;
+        */
+
+        double B = rate.getBirthRate().doubleValue();
+        double D = rate.getDeathRate().doubleValue();
+        double s = selectionCoeff;
+
+        double Dprime = D * (1.0 - s);
+        double Bprime = (B + D) - Dprime;
 
         return new GrowthRate(Bprime, Dprime);
     }
