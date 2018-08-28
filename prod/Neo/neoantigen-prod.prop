@@ -7,6 +7,15 @@
 #
 # We characterize the number of neoantigens expressed on the tumor
 # surface as a function of time, tumor size, and mutation rate.
+#
+# The following properties must be specfied on the command line (by
+# the driver script):
+#
+# jam.app.reportDir
+# tumor.driver.trialIndex
+# tumor.mutation.selectionCoeff
+# tumor.mutation.neoantigenMeanRate
+#
 ########################################################################
 
 tumor.driver.componentType = CELL
@@ -33,20 +42,25 @@ tumor.mutation.selectiveRateType  = POISSON
 tumor.mutation.selectiveMeanRate  = 3.4E-5
 
 tumor.report.dimension.TumorDimensionReport.run = TRUE
-tumor.report.dimension.TumorDimensionReport.sampleInterval = 100
+tumor.report.dimension.TumorDimensionReport.sampleInterval = 10
 
 tumor.report.growth.GrowthCountReport.run = TRUE
-tumor.report.growth.GrowthCountReport.sampleInterval = 100
+tumor.report.growth.GrowthCountReport.sampleInterval = 10
 
 tumor.report.mutation.BulkCellMutationTypeCountReport.run = TRUE
 tumor.report.mutation.BulkCellMutationTypeCountReport.siteCount = 1E5
 tumor.report.mutation.BulkCellMutationTypeCountReport.typeNames = NEOANTIGEN, SCALAR
+tumor.report.mutation.BulkCellMutationTypeCountReport.reportingSizes = 1E3, 2E3, 5E3, 1E4, 2E4, 5E4, 1E5, 2E5, 5E5, 1E6, 2E6, 5E6
 
 tumor.report.mutation.MutationCountReport.run = TRUE
-tumor.report.mutation.MutationCountReport.sampleInterval = 100
+tumor.report.mutation.MutationCountReport.sampleInterval = 10
 
 tumor.report.mutation.SurfaceCellMutationTypeCountReport.run = TRUE
 tumor.report.mutation.SurfaceCellMutationTypeCountReport.siteCount = 1E5
 tumor.report.mutation.SurfaceCellMutationTypeCountReport.typeNames = NEOANTIGEN, SCALAR
+
+tumor.report.mutation.SurfaceCellMutationTypePairReport.run = TRUE
+tumor.report.mutation.SurfaceCellMutationTypePairReport.siteCount = 1E3
+tumor.report.mutation.SurfaceCellMutationTypePairReport.typeNames = NEOANTIGEN, SCALAR
 
 tumor.senesce.modelType = NONE
