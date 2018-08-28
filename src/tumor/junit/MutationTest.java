@@ -28,6 +28,7 @@ public class MutationTest extends NumericTestBase {
     private static final ScalarMutation scalar1 = Mutation.scalar(-0.1);
     private static final ScalarMutation scalar2 = Mutation.scalar( 0.01);
     private static final ScalarMutation scalar3 = Mutation.scalar( 0.1);
+    private static final ScalarMutation scalar4 = Mutation.scalar( 0.3);
 
     private static final MutationList scalarList =
         MutationList.create(scalar1, scalar2, scalar3);
@@ -43,7 +44,7 @@ public class MutationTest extends NumericTestBase {
         assertEquals(5, scalar2.getIndex());
         assertEquals(6, scalar3.getIndex());
 
-        assertEquals(7, Mutation.count());
+        assertEquals(8, Mutation.count());
     }
 
     @Test public void testNeutral() {
@@ -65,7 +66,7 @@ public class MutationTest extends NumericTestBase {
         for (int k = 0; k < 10; ++k) {
             System.out.println(rate);
             System.out.println(rate.getNetRate());
-            rate = scalar1.apply(rate);
+            rate = scalar4.apply(rate);
         }
         /*
         GrowthRate r0 = new GrowthRate(0.55, 0.45);

@@ -56,7 +56,7 @@ public class LineageCloneTest extends NumericTestBase {
         assertEquals(           88, clone.countCells());
     }
 
-    @Test(expected = AssertionError.class)
+    @Test(expected = RuntimeException.class)
     public void testTransferInvalid() {
         long       initCount  = 1000L;
         GrowthRate growthRate = GrowthRate.net(1.0);

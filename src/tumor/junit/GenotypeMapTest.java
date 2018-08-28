@@ -77,7 +77,7 @@ public class GenotypeMapTest extends NumericTestBase {
         assertFalse(map.contains(childGenotype));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void testGetDuplicate() {
         GenotypeMap map = GenotypeMap.create(founder, clone);
         map.getUnique(founder.getGenotype());
