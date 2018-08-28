@@ -10,7 +10,7 @@
 #        
 ########################################################################
 
-if [ $# -lt 2 ]
+if [ $# -ne 4 ]
 then
     echo "Usage:" `basename $0` "TRIAL_START TRIAL_END SELECTION_COEFF NEOANTIGEN_RATE"
     exit 1
