@@ -1,6 +1,7 @@
 
 Neo.meanTypeCount <- function(countFrame) {
-    data.frame(neoCount    = mean(countFrame$NEOANTIGEN.count),
+    data.frame(anyNeo      = mean(countFrame$NEOANTIGEN.count > 0.01),
+               neoCount    = mean(countFrame$NEOANTIGEN.count),
                scalarCount = mean(countFrame$SCALAR.count))
 }
 
@@ -9,8 +10,10 @@ Neo.aggregateTypeCounts <- function(dirName) {
     countFrames <- lapply(countFiles, Neo.loadFinal)
     meanFrames  <- lapply(countFrames, Neo.meanTypeCount)
     meanFrame   <- do.call(rbind, meanFrames)
-    
-    data.frame(neoMean    = mean(meanFrame$neoCount),
+
+    data.frame(anyNeo     = mean(meanFrame$anyNeo),
+               anyErr     = sd(meanFrame$anyNeo) / sqrt(nrow(meanFrame)),
+               neoMean    = mean(meanFrame$neoCount),
                neoErr     = sd(meanFrame$neoCount) / sqrt(nrow(meanFrame)),
                scalarMean = mean(meanFrame$scalarCount),
                scalarErr  = sd(meanFrame$scalarCount) / sqrt(nrow(meanFrame)))
@@ -36,15 +39,12 @@ Neo.aggregateTypeCountsByCoeff <- function(scalarCoeffs      = c(0.0, 0.01, 0.02
 }
 
 Neo.aggregateTypeCountsByNeoRate <- function(neoRates = c("1E-4", "2E-4", "5E-4", "1E-3", "2E-3", "5E-3", "1E-2"),
-                                             capacityDir       = "C5000",
-                                             scalarCoeffDir    = "S0.10",
-                                             scalarRateDir     = "SR1E-5",
-                                             neoantigenRateDir = "NR1E-3") {
+                                             scalarCoeffDir = "S0.10") {
     aggList <- list()
 
     for (neoRate in neoRates) {
         neoRateDir <- sprintf("NR%s", neoRate)
-        dirName    <- file.path(capacityDir, scalarCoeffDir, scalarRateDir, neoRateDir)
+        dirName    <- file.path(scalarCoeffDir, neoRateDir)
 
         meanFrame <- Neo.aggregateTypeCounts(dirName)
         meanFrame$neoRate <- as.numeric(neoRate)
@@ -66,7 +66,7 @@ Neo.aggregateTypePair <- function(pairFrame) {
         neoMean  <- mean(neoMatch)
         neoSD    <- sd(neoMatch)
 
-        scalarMatch <- as.numeric(x$SCALAR.count1     == x$SCALAR.count2)
+        scalarMatch <- as.numeric(x$SCALAR.count1 == x$SCALAR.count2)
         scalarMean  <- mean(scalarMatch)
         scalarSD    <- sd(scalarMatch)
 
@@ -205,3 +205,4 @@ Neo.barplotTypeCount <- function(frameList, colName, countMax = 6, ...) {
             legend.text = names(frameList))
 }
 
+Neo.plotSurfaceNeoCountBySize <- function(
