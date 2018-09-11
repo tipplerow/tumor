@@ -279,12 +279,8 @@ public final class MutationTypeCountRecord extends TumorRecord implements Report
         builder.append(getTrialIndex());
         builder.append(getTimeStep());
         builder.append(tumorCellCount);
-        builder.append(siteCoord.x);
-        builder.append(siteCoord.y);
-        builder.append(siteCoord.z);
-        builder.append(cmVector.getDouble(0));
-        builder.append(cmVector.getDouble(1));
-        builder.append(cmVector.getDouble(2));
+        builder.append(siteCoord);
+        appendRadialVector(builder, cmVector);
         builder.append(String.format("%.4f", normRadialDist));
         builder.append(siteCellCount);
         builder.append(siteCompCount);
