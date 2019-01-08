@@ -33,7 +33,6 @@ import tumor.report.ScalarMutationRecord;
  * Provides features common to all tumor simulation applications.
  */
 public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTimeSimulation {
-    private final int  trialIndex;
     private final int  initialSize;
     private final int  maxStepCount;
     private final int  snapInterval;
@@ -71,12 +70,6 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * structure for the tumor.
      */
     public static final String SPATIAL_TYPE_PROPERTY = "tumor.driver.spatialType";
-
-    /**
-     * Name of the system property that specifies the global (across
-     * all simulations) index of the trial to be executed.
-     */
-    public static final String TRIAL_INDEX_PROPERTY = "tumor.driver.trialIndex";
 
     /**
      * Name of the system property that defines the initial number of
@@ -222,7 +215,6 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      * already been defined.</em>
      */
     protected TumorDriver() {
-        this.trialIndex   = resolveTrialIndex();
         this.initialSize  = resolveInitialSize();
         this.maxStepCount = resolveMaxStepCount();
         this.snapInterval = resolveSnapInterval();
@@ -239,10 +231,6 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
 
         this.componentType = resolveComponentType();
         this.spatialType   = resolveSpatialType();
-    }
-
-    private static int resolveTrialIndex() {
-        return JamProperties.getRequiredInt(TRIAL_INDEX_PROPERTY, IntRange.NON_NEGATIVE);
     }
 
     private static int resolveInitialSize() {
@@ -595,14 +583,6 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
         // Only run a single trial...
         //
         return 1;
-    }
-
-    @Override protected int getTrialIndexOffset() {
-        //
-        // The global (across all simulations) index of the single
-        // trial to be executed...
-        //
-        return trialIndex;
     }
 
     @Override protected void initializeSimulation() {
