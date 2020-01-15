@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import jam.app.JamLogger;
@@ -313,7 +314,7 @@ public abstract class TumorDriver<E extends TumorComponent> extends DiscreteTime
      */
     public static void initialize(String... propertyFiles) {
         if (propertyFiles.length > 0)
-            JamProperties.loadFiles(propertyFiles, false);
+            JamProperties.loadFiles(List.of(propertyFiles), false);
             
         global = createGlobal();
     }
