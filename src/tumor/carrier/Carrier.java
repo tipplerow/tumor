@@ -168,6 +168,32 @@ public abstract class Carrier extends Propagator {
     public abstract List<Mutation> getOriginalMutations();
 
     /**
+     * Returns the replication state of this carrier.
+     *
+     * @return the replication state of this carrier.
+     */
+    public abstract State getState();
+
+    /**
+     * Identifies active carriers.
+     *
+     * @return {@code true} iff this carrier is active (able to
+     * divide).
+     */
+    public boolean isActive() {
+        return getState().equals(State.ACTIVE);
+    }
+
+    /**
+     * Identifies dead carriers.
+     *
+     * @return {@code true} iff this carrier has died.
+     */
+    public boolean isDead() {
+        return getState().equals(State.DEAD);
+    }
+
+    /**
      * Identifies empty carriers.
      *
      * @return {@code true} iff there are no cells remaining in this
@@ -175,6 +201,16 @@ public abstract class Carrier extends Propagator {
      */
     public boolean isEmpty() {
         return countCells() == 0;
+    }
+
+    /**
+     * Identifies senescent carriers.
+     *
+     * @return {@code true} iff this carrier is in a state of
+     * senescence.
+     */
+    public boolean isSenescent() {
+        return getState().equals(State.SENESCENT);
     }
 
     @SuppressWarnings("unchecked")
